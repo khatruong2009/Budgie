@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Runs the Dart parity harness against an exported copy of budget_app.
 #
-# Nothing inside budget_app/ is created or modified. The copy is taken from
-# the committed tree (git archive HEAD), so fixtures are tied to a commit.
+# budget_app/ was removed from the tree after 4.0.0 shipped; the copy is
+# taken from the `flutter-final` tag (git archive), the last commit that has
+# it, so fixtures are tied to that commit.
 #
 # In the copy, and only there:
 #   - a stub .env is added (budget_app bundles .env as an asset; its tests
@@ -31,11 +32,12 @@ HARNESS="$REPO_ROOT/native/ParityHarness"
 FIXTURES="$REPO_ROOT/native/Fixtures"
 WORK="${PARITY_WORK_DIR:-$(mktemp -d "${TMPDIR:-/tmp}/budgie-parity.XXXXXX")}"
 COPY="$WORK/budget_app"
-COMMIT="$(git -C "$REPO_ROOT" rev-parse HEAD)"
+FLUTTER_REF="flutter-final"
+COMMIT="$(git -C "$REPO_ROOT" rev-parse "$FLUTTER_REF^{commit}")"
 
 rm -rf "$COPY"
 mkdir -p "$WORK"
-git -C "$REPO_ROOT" archive --format=tar HEAD budget_app | tar -x -C "$WORK"
+git -C "$REPO_ROOT" archive --format=tar "$FLUTTER_REF" budget_app | tar -x -C "$WORK"
 
 printf 'OPENAI_API_KEY=parity-harness-dummy-key\n' > "$COPY/.env"
 

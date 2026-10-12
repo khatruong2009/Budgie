@@ -131,12 +131,13 @@ class Simulator:
 # ---------------------------------------------------------------- builds
 
 def build_flutter():
-    """The Flutter app at HEAD, built from an exported copy (budget_app/ is
-    never modified; the copy gets a stub .env)."""
+    """The Flutter app at the `flutter-final` tag (budget_app/ was removed
+    from the tree after 4.0.0 shipped), built from an exported copy that gets
+    a stub .env."""
     work = SCRATCH / "flutter"
     shutil.rmtree(work, ignore_errors=True)
     work.mkdir(parents=True)
-    subprocess.run(f"git -C '{REPO}' archive --format=tar HEAD budget_app | tar -x -C '{work}'", shell=True, check=True)
+    subprocess.run(f"git -C '{REPO}' archive --format=tar flutter-final budget_app | tar -x -C '{work}'", shell=True, check=True)
     (work / "budget_app" / ".env").write_text("OPENAI_API_KEY=rehearsal-dummy-key\n")
     app_dir = work / "budget_app"
     # `flutter build ios --simulator` also targets x86_64, which this Flutter

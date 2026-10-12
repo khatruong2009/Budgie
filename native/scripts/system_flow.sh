@@ -12,6 +12,8 @@
 #      through the system prompt (voice links open the voice sheet), and the
 #      Quick Add widget.
 # Usage: system_flow.sh <path/to/flutter/Runner.app>
+# Build the Runner.app from the flutter-final tag (budget_app/ is no longer
+# in the tree); upgrade_rehearsal.py's build_flutter() does exactly that.
 set -euo pipefail
 FLUTTER_APP="${1:?path to the Flutter Runner.app}"
 NATIVE="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)/native"

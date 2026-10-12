@@ -4,8 +4,8 @@ Dart tests that run the **real** Flutter code (`budget_app/`) to produce the
 fixture corpus in `native/Fixtures/`, and to verify that files written by the
 Swift app load in the Flutter app.
 
-Nothing in `budget_app/` is touched. `run.sh` exports `budget_app` at `HEAD`
-with `git archive` into a scratch directory, adds a stub `.env` (dummy key;
+`budget_app/` was removed from the tree after 4.0.0 shipped. `run.sh` exports
+it from the `flutter-final` tag with `git archive` into a scratch directory, adds a stub `.env` (dummy key;
 the app bundles `.env` as an asset), rewrites `DateTime.now()` to an
 injectable `parityNow()` so fixtures are deterministic, copies `parity/*.dart`
 to `test/parity/`, and runs `flutter test` there.

@@ -15,7 +15,7 @@ On macOS, from the repository root:
 python3 design/branding/export_assets.py
 ```
 
-Requires `sips`, Python 3, and the existing Flutter/Dart SDK and pinned `flutter_launcher_icons` dependency. The script exports PNGs into both Apple catalogs, updates launch and widget marks, then generates Android, web, macOS and Windows icons using the project's existing tool. The Android adaptive foreground uses a 12% inset to keep the tuft and wings inside round masks. The Apple app icon slots retain their existing sizes and metadata; App Store PNGs are opaque. Regenerating only with `dart run flutter_launcher_icons` will remove the Android inset, so use this script for the complete export.
+Requires `sips` and Python 3. The script exports PNGs into the native app's icon, logo and widget logo slots. The Apple app icon slots retain their existing sizes and metadata; App Store PNGs are opaque. (Until the Flutter app was removed, it also exported the Flutter iOS, Android, web, macOS and Windows icons; see the `flutter-final` tag.)
 
 The app interface colors and financial behavior are unchanged. Native and Flutter iOS icon and logo images are identical. No new difference from Flutter is introduced.
 
@@ -24,8 +24,6 @@ The app interface colors and financial behavior are unchanged. Native and Flutte
 [iOS Home Screen: app icon and Quick Add widget](ios-home-screen.png), captured after the Flutter-to-native upgrade and widget integration test passed.
 
 [Native Home header](native-home.png), captured on the same dedicated test simulator with synthetic test data.
-
-[Flutter Home header](flutter-home.png), captured after installing the updated Flutter simulator build on the dedicated test simulator.
 
 ## Verification — October 10, 2026
 
