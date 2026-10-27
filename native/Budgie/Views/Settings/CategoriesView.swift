@@ -46,6 +46,8 @@ struct CategoriesView: View {
                     ) { perform($0, on: item.category) }
                 })
                 .padding(EdgeInsets(top: 0, leading: Metrics.pageHorizontal, bottom: Metrics.spacingXL, trailing: Metrics.pageHorizontal))
+                .frame(maxWidth: Metrics.maxContentWidth)
+                .frame(maxWidth: .infinity)
             }
             // A new list per type, starting at the top: the kept offset of a
             // scrolled Expenses list left the shorter Income list above the
@@ -106,6 +108,8 @@ struct CategoriesView: View {
         }
         .padding(.horizontal, Metrics.pageHorizontal + Metrics.spacingXS)
         .frame(minHeight: 56)
+        .frame(maxWidth: Metrics.maxContentWidth)
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Row actions

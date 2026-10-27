@@ -36,6 +36,8 @@ struct CategoryTransactionsView: View {
                 total: total, month: drillIn.month, count: rows.count, color: color, symbol: symbol)
                 .padding(.horizontal, Metrics.pageHorizontal)
                 .padding(.top, 12)
+                .frame(maxWidth: Metrics.maxContentWidth)
+                .frame(maxWidth: .infinity)
             if rows.isEmpty {
                 EmptyStateView(
                     kind: .noData, symbol: "list.bullet.rectangle", title: MonthListCopy.emptyMonthTitle,
@@ -47,6 +49,8 @@ struct CategoryTransactionsView: View {
                     .foregroundStyle(BudgieColor.textTertiary)
                     .accessibilityAddTraits(.isHeader)
                     .padding(EdgeInsets(top: 28, leading: 24, bottom: 0, trailing: 24))
+                    .frame(maxWidth: Metrics.maxContentWidth)
+                    .frame(maxWidth: .infinity)
                 ScrollView {
                     // One card, a hairline between rows (SEE ALL's day
                     // cards). The swipe slides a row (on the card fill) over
@@ -69,6 +73,8 @@ struct CategoryTransactionsView: View {
                     }
                     .clipShape(RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
                     .padding(EdgeInsets(top: 12, leading: Metrics.pageHorizontal, bottom: Metrics.pageHorizontal, trailing: Metrics.pageHorizontal))
+                    .frame(maxWidth: Metrics.maxContentWidth)
+                    .frame(maxWidth: .infinity)
                 }
             }
         }

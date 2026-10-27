@@ -92,6 +92,8 @@ struct SettingsView: View {
             section("About", rows: aboutRows)
         }
         .padding(.bottom, Metrics.spacingL)
+        .frame(maxWidth: Metrics.maxContentWidth)
+        .frame(maxWidth: .infinity)
     }
 
     private func personalizationRows(_ data: FinancialData) -> [AnyView] {

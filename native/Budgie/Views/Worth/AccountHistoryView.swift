@@ -154,6 +154,8 @@ struct AccountHistoryView: View {
             // Flutter's (20, 8, 20, 32); the scroll view's safe area keeps
             // the last row clear of the tab bar (Flutter's sits under the dock).
             .padding(EdgeInsets(top: 8, leading: Metrics.pageHorizontal, bottom: 32, trailing: Metrics.pageHorizontal))
+            .frame(maxWidth: Metrics.maxContentWidth)
+            .frame(maxWidth: .infinity)
         }
         .accessibilityIdentifier("worth.history")
     }
