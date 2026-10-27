@@ -37,7 +37,7 @@ struct DiagnosticsView: View {
                 }
                 .padding(EdgeInsets(top: Metrics.spacingM, leading: Metrics.pageHorizontal, bottom: Metrics.spacingXL, trailing: Metrics.pageHorizontal))
                 .frame(maxWidth: Metrics.maxContentWidth)
-            .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
