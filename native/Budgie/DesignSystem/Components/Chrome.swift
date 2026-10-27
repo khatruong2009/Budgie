@@ -394,8 +394,8 @@ struct RecurrenceShape: Shape {
 // MARK: - Swipe to delete
 
 /// A card row that reveals a delete action when swiped left (Flutter
-/// `Dismissible` on the transaction list): past 40% of the width a medium
-/// haptic marks the threshold, and releasing there (or a leftward fling
+/// `Dismissible` on the transaction list): past 40% of the width (at most
+/// 163pt, see `maxArmDistance`) a medium haptic marks the threshold, and releasing there (or a leftward fling
 /// faster than 700pt/s, Flutter's minimum fling velocity) calls `onDelete`
 /// (which confirms) while the row springs back. Also offered as an
 /// accessibility action, since the gesture is not discoverable with
@@ -416,6 +416,10 @@ struct SwipeToDeleteRow<Content: View>: View {
     @State private var width: CGFloat = 1
     @State private var armed = false
     @State private var flings = 0
+
+    /// 40% of the widest iPhone row (a 440pt screen less 16pt gutters), so
+    /// a wide row (the Duo's open display) arms at a phone's distance.
+    private static var maxArmDistance: CGFloat { 163.2 }
 
     var body: some View {
         ZStack(alignment: .trailing) {
@@ -444,7 +448,7 @@ struct SwipeToDeleteRow<Content: View>: View {
 
     private func dragChanged(_ translation: CGFloat) {
         offset = min(0, translation)
-        let past = -offset > width * 0.4
+        let past = -offset > min(width * 0.4, Self.maxArmDistance)
         if past != armed { armed = past }
     }
 

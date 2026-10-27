@@ -343,9 +343,18 @@ struct WorthParityTests {
         #expect(scale.points([50], size: size).map { [$0.x, $0.y] } == [[0, 90], [300, 90]])
         #expect(scale.points([0, 100, 25], size: size).map { [$0.x, $0.y] } == [[0, 180], [150, 0], [300, 135]])
         let two = scale.points([10, 20], size: size)
-        #expect(NetWorthPresentation.nearestSpot(toX: 150, in: two) == nil)
+        // No 48pt threshold: a touch midway still picks a spot (the earlier on the tie).
+        #expect(NetWorthPresentation.nearestSpot(toX: 150, in: two) == 0)
+        #expect(NetWorthPresentation.nearestSpot(toX: 151, in: two) == 1)
         #expect(NetWorthPresentation.nearestSpot(toX: 48, in: two) == 0)
         #expect(NetWorthPresentation.nearestSpot(toX: 252, in: two) == 1)
+        #expect(NetWorthPresentation.nearestSpot(toX: 100, in: []) == nil)
+        // Wide plot, sparse points: every x lands on the nearest column.
+        let wide = scale.points([1, 2, 3], size: CGSize(width: 800, height: 10))
+        #expect(wide.map(\.x) == [0, 400, 800])
+        #expect(NetWorthPresentation.nearestSpot(toX: 199, in: wide) == 0)
+        #expect(NetWorthPresentation.nearestSpot(toX: 201, in: wide) == 1)
+        #expect(NetWorthPresentation.nearestSpot(toX: 601, in: wide) == 2)
         // A tie keeps the earlier spot (fl_chart replaces only on a smaller distance).
         let three = scale.points([1, 2, 3], size: CGSize(width: 80, height: 10))
         #expect(NetWorthPresentation.nearestSpot(toX: 20, in: three) == 0)
