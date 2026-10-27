@@ -251,6 +251,7 @@ private struct BudgetPickerSheet: View {
     let onAdd: () -> Void
 
     @Environment(AppModel.self) private var model
+    @Environment(\.sheetHostHeight) private var hostHeight
     @State private var headerHeight: CGFloat = 0
     @State private var listHeight: CGFloat = 0
 
@@ -311,7 +312,7 @@ private struct BudgetPickerSheet: View {
     private func detent(rows: Int) -> PresentationDetent {
         let header = headerHeight > 0 ? headerHeight : 12 + 29 + 6 + 17 + 16
         let list = listHeight > 0 ? listHeight : 8 + CGFloat(rows) * 64 + CGFloat(max(rows - 1, 0)) + 8 + 2 + 16
-        return .height(min(BudgetSheetLayout.handleHeight + header + list, BudgetSheetLayout.screenHeight * 0.75))
+        return .height(min(BudgetSheetLayout.handleHeight + header + list, hostHeight * 0.75))
     }
 
     private var title: String { kind == .edit ? "Edit budgets" : "Add a budget" }
@@ -369,18 +370,11 @@ private struct BudgetCategoryTile: View {
 // MARK: - Sheet sizing
 
 /// Sizes the budget sheets to their content the way Flutter's
-/// `MediaQuery` does: against the full window height. A `.height` detent is
-/// the grab handle plus the content: the system accounts for the bottom
-/// safe area (Flutter's `SafeArea`) and the keyboard itself.
-@MainActor
+/// `MediaQuery` does: against the full window height (`sheetHostHeight`,
+/// measured at the app root). A `.height` detent is the grab handle plus the
+/// content: the system accounts for the bottom safe area (Flutter's
+/// `SafeArea`) and the keyboard itself.
 enum BudgetSheetLayout {
     /// `budgieSheetChrome`'s grab-handle inset: 10 + 4 + 6.
     static let handleHeight: CGFloat = 20
-
-    /// Flutter `MediaQuery.sizeOf(context).height`.
-    static var screenHeight: CGFloat {
-        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-        let scene = scenes.first { $0.activationState == .foregroundActive } ?? scenes.first
-        return scene?.keyWindow?.bounds.height ?? scene?.screen.bounds.height ?? 844
-    }
 }

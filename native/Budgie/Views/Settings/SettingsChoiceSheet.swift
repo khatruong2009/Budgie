@@ -16,6 +16,7 @@ struct SettingsChoiceSheet<Value: Hashable & Sendable>: View {
     let onPick: (Value) async -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.sheetHostHeight) private var hostHeight
     @State private var picking = false
     @State private var headerHeight: CGFloat = 0
     @State private var listHeight: CGFloat = 0
@@ -58,7 +59,7 @@ struct SettingsChoiceSheet<Value: Hashable & Sendable>: View {
     private var detent: PresentationDetent {
         let header = headerHeight > 0 ? headerHeight : 12 + 29 + 16
         let list = listHeight > 0 ? listHeight : CGFloat(choices.count) * 49 + 6 + Metrics.spacingM
-        return .height(min(BudgetSheetLayout.handleHeight + header + list, BudgetSheetLayout.screenHeight * 0.75))
+        return .height(min(BudgetSheetLayout.handleHeight + header + list, hostHeight * 0.75))
     }
 
     /// A row: the label (15 w600) and the 24pt check box, at least 48 tall.

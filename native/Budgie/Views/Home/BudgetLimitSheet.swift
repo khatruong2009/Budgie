@@ -44,8 +44,27 @@ struct BudgetLimitSheet: View {
     }
 
     var body: some View {
+        // The space the sheet gives the content. A frame around the
+        // fixed-size content could not report less than the content's own
+        // height, so a sheet that had shrunk below it (after a fold with
+        // the keyboard up) was read as having room and the slack only grew.
+        Color.clear
+            .onGeometryChangeCompat {
+                untrimmedHeight = $0.height + keyboardSlack
+                updateKeyboardSlack()
+            }
+            .overlay(alignment: .top) { content }
+            .budgieSheetChrome()
+            .presentationDetents([
+                .height(
+                    BudgetSheetLayout.handleHeight + (contentHeight > 0 ? contentHeight : estimatedHeight) - keyboardSlack)
+            ])
+            .interactiveDismissDisabled(saving)
+    }
+
+    private var content: some View {
         let canSave = !saving && limit != nil
-        VStack(alignment: .leading, spacing: 0) {
+        return VStack(alignment: .leading, spacing: 0) {
             header
             field.padding(.top, 24)
             VStack(spacing: 12) {
@@ -78,17 +97,6 @@ struct BudgetLimitSheet: View {
             contentHeight = $0.height
             updateKeyboardSlack()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .onGeometryChangeCompat {
-            untrimmedHeight = $0.height + keyboardSlack
-            updateKeyboardSlack()
-        }
-        .budgieSheetChrome()
-        .presentationDetents([
-            .height(
-                BudgetSheetLayout.handleHeight + (contentHeight > 0 ? contentHeight : estimatedHeight) - keyboardSlack)
-        ])
-        .interactiveDismissDisabled(saving)
     }
 
     /// The content's height at the default text size, so the sheet opens at

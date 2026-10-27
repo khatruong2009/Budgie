@@ -123,6 +123,7 @@ struct AppRoot: View {
 
     var body: some View {
         RootView()
+            .budgieSheetHost()
             // Unstyled text uses Gabarito, as Flutter's ThemeData.fontFamily.
             .font(TextSpec.bodyLarge.font())
             .environment(model)
