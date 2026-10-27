@@ -214,8 +214,8 @@ struct AccountTrendChart: View {
 /// fl_chart's cubic (smoothness 0.28) only when there are more than two
 /// snapshots.
 ///
-/// Touch (fl_chart's built-in handling, threshold 48): while a finger is
-/// down, the spot nearest in x (within 48pt) shows fl_chart's default
+/// Touch (fl_chart's built-in handling, without its 48pt threshold, see
+/// PARITY_GAPS.md): while a finger is down, the spot nearest in x shows fl_chart's default
 /// indicators (a 4pt line up from the bottom and a dot, per line) and the
 /// tooltip above it; lifting clears it. A mostly vertical drag scrolls the
 /// page instead and clears it, as Flutter's scroll view wins the gesture

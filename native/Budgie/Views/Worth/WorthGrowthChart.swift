@@ -95,7 +95,7 @@ struct WorthGrowthCard: View {
 
 /// The chart box: the plot, the hover card over the scrubbed point, and the
 /// scrub gesture. A 150ms long press selects the spot nearest horizontally
-/// within 48pt (none in range keeps the selection), moving updates it with
+/// (no distance limit; PARITY_GAPS.md), moving updates it with
 /// a selection tick per new spot, and lifting clears it; there are no taps,
 /// so scrolling is untouched. VoiceOver reads a summary and steps through
 /// the points with swipe up / down.

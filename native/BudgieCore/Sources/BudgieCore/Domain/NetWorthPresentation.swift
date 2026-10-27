@@ -130,16 +130,16 @@ public enum NetWorthPresentation {
         return (x, useBottom ? 0.5 : -0.6, useBottom)
     }
 
-    /// Both Worth charts' touch hit (fl_chart `getNearestTouchedSpot` with
-    /// the default x-only `distanceCalculator` and `touchSpotThreshold`
-    /// 48, line_chart_painter.dart:1375-1420): the spot nearest to `x`
-    /// horizontally, the earlier one on a tie, or nil when none is within
-    /// the threshold.
-    public static func nearestSpot(toX x: CGFloat, in points: [CGPoint], threshold: CGFloat = 48) -> Int? {
+    /// Both Worth charts' touch hit: the spot nearest to `x` horizontally,
+    /// the earlier one on a tie, so a touch anywhere in the plot selects a
+    /// point (each owns the column out to halfway to its neighbours).
+    /// fl_chart's `getNearestTouchedSpot` (line_chart_painter.dart:1375-1420)
+    /// also requires the spot within `touchSpotThreshold` 48, which on a
+    /// wide plot leaves gaps between sparse points; see PARITY_GAPS.md.
+    public static func nearestSpot(toX x: CGFloat, in points: [CGPoint]) -> Int? {
         var best: (index: Int, distance: CGFloat)?
         for (index, point) in points.enumerated() {
             let distance = abs(point.x - x)
-            guard distance <= threshold else { continue }
             if best == nil || distance < best!.distance { best = (index, distance) }
         }
         return best?.index

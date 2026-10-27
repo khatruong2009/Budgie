@@ -1440,7 +1440,16 @@ the copy changes listed here.
 
 ## Deliberate differences (not yet approved)
 
-None.
+- **Chart scrub picks the nearest point anywhere in the plot (iPhone Duo, plan Phase 1).** The Worth
+  growth chart and the account trend chart select the point nearest the finger in x, with no distance
+  limit (each point owns the column out to halfway to its neighbours). Flutter's fl_chart only selects
+  a point within `touchSpotThreshold` 48pt, which on the Duo's open display leaves gaps (Worth 1Y:
+  67pt from each point, no tooltip). On a phone the result is the same wherever points are under
+  48pt from any touch; with only a few points a touch between them now selects one instead of nothing.
+- **Swipe-to-delete arms at most 163pt in (iPhone Duo, plan Phase 1).** Flutter's `Dismissible` arms at
+  40% of the row width; here the distance is capped at 163pt (40% of the widest iPhone row), so a
+  wide row on the Duo's open display needs the same swipe as a phone, not about 314pt. Phones are
+  unchanged.
 
 ## Platform
 
