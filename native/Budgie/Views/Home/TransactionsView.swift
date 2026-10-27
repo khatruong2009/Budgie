@@ -38,8 +38,14 @@ struct TransactionsView: View {
                         monthTaps += 1
                         chosenMonth = picked
                     }
+                    // A scroll view extends under the trailing and leading
+                    // safe area (the 27.1 rail); clip the chips to this
+                    // page's width.
+                    .clipped()
                     SummaryCard(summary: ledger.summary(forMonth: month), formatter: formatter)
                         .padding(.horizontal, Metrics.pageHorizontal)
+                        .frame(maxWidth: Metrics.maxContentWidth)
+                        .frame(maxWidth: .infinity)
                     monthContent(rows: ledger.newestFirst(inMonth: month), formatter: formatter)
                         .padding(.top, Metrics.spacingM)
                 }
@@ -134,6 +140,8 @@ struct TransactionsView: View {
                 // The scroll view already insets its content for the tab bar
                 // and home indicator; this is only breathing room.
                 .padding(.bottom, Metrics.spacingS)
+                .frame(maxWidth: Metrics.maxContentWidth)
+                .frame(maxWidth: .infinity)
             }
         }
     }

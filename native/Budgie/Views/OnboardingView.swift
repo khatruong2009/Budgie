@@ -87,6 +87,8 @@ struct OnboardingView: View {
             .accessibilityIdentifier("onboarding.next")
         }
         .padding(EdgeInsets(top: Metrics.spacingXS, leading: Metrics.spacingL, bottom: Metrics.spacingL, trailing: Metrics.spacingL))
+        .frame(maxWidth: Metrics.maxContentWidth)
+        .frame(maxWidth: .infinity)
         .background(BudgieColor.background.ignoresSafeArea())
     }
 

@@ -965,6 +965,7 @@ then. Launch hook (DEBUG): `BUDGIE_SKIP_ONBOARDING=1` starts past the tour,
 - Dots: active 22x8 accent capsule, others 8x8 `border`, 4pt margins,
   resized over 150ms linear. VoiceOver: one adjustable element "Tutorial
   page", value "n of 3".
+- The whole page is a column capped at 600pt (`Metrics.maxContentWidth`) and centred where the window is wider.
 - 24pt, then a full-width button (min 56pt, radius 16, accent fill,
   `onAccent` Gabarito Medium 14): "Continue" moves to the next page (300ms
   easeInOut; a jump under Reduce Motion) and announces it to VoiceOver;

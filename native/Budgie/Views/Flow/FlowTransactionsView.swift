@@ -59,6 +59,8 @@ struct FlowTransactionsView: View {
                 }
             }
             .padding(.bottom, Metrics.spacingL)
+            .frame(maxWidth: Metrics.maxContentWidth)
+            .frame(maxWidth: .infinity)
         }
         // A decimal pad has no return key; Flutter offers no way out either.
         .scrollDismissesKeyboard(.interactively)
