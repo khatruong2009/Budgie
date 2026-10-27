@@ -7,7 +7,7 @@ import SwiftUI
 /// selected chip is centred when the strip appears (without animation) and
 /// whenever the selection changes (300ms easeOut, none under Reduce
 /// Motion), and again when the strip's width changes (a fold or resize; it
-/// would otherwise keep its old offset), unless a finger is dragging it.
+/// would otherwise keep its old offset).
 /// The caller owns the tap haptic and the selection.
 struct MonthStrip: View {
     let months: [DartDateTime]
@@ -16,7 +16,6 @@ struct MonthStrip: View {
     let onSelect: (DartDateTime) -> Void
 
     @State private var width: CGFloat?
-    @GestureState private var dragging = false
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -32,12 +31,10 @@ struct MonthStrip: View {
             }
             // A horizontal scroll view takes all the height it is offered.
             .fixedSize(horizontal: false, vertical: true)
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 0).updating($dragging) { _, state, _ in state = true })
             .onGeometryChangeCompat { size in
                 let previous = width
                 width = size.width
-                guard previous != nil, previous != size.width, !dragging else { return }
+                guard previous != nil, previous != size.width else { return }
                 withAnimation(reduceMotion ? nil : Motion.easeOut(Motion.normal)) {
                     proxy.scrollTo(selected, anchor: .center)
                 }

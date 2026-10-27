@@ -439,8 +439,9 @@ struct RecurrenceShape: Shape {
 
 /// A card row that reveals a delete action when swiped left (Flutter
 /// `Dismissible` on the transaction list): past 40% of the width (at most
-/// 163pt, see `maxArmDistance`) a medium haptic marks the threshold, and releasing there (or a leftward fling
-/// faster than 700pt/s, Flutter's minimum fling velocity) calls `onDelete`
+/// 163pt, see `maxArmDistance`) a medium haptic marks the threshold, and
+/// releasing there (or a leftward fling faster than 700pt/s, Flutter's
+/// minimum fling velocity) calls `onDelete`
 /// (which confirms) while the row springs back. Also offered as an
 /// accessibility action, since the gesture is not discoverable with
 /// VoiceOver.
