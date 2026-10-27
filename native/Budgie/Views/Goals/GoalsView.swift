@@ -39,8 +39,6 @@ struct GoalsView: View {
                     content(goals)
                 }
             }
-            // Clears the add button (20 + 54 above the tab bar).
-            .padding(.bottom, 96)
         }
         .background(BudgieColor.background)
         .toolbar(.hidden, for: .navigationBar)
@@ -54,11 +52,12 @@ struct GoalsView: View {
                     }
             }
         }
-        .overlay(alignment: .bottomTrailing) {
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             GlowFab(label: "Add savings goal") { present(.add) }
                 .padding(.trailing, Metrics.fabInset)
                 .padding(.bottom, Metrics.fabInset)
                 .accessibilityIdentifier("goals.fab")
+                .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .sensoryFeedback(.impact(weight: .medium), trigger: completions)
         // `busy` is read here, in the body: the dialog is built outside it

@@ -3,24 +3,25 @@ import SwiftUI
 extension View {
     /// Hosts `model.toast` along the bottom edge (floating, radius 12,
     /// success, danger or neutral fill), dismissing it after its duration. VoiceOver
-    /// announces it.
-    func toastHost(bottomInset: CGFloat = 0) -> some View {
-        modifier(ToastHost(bottomInset: bottomInset))
+    /// announces it. The overlay sits inside the safe area, so a tab bar on
+    /// any edge keeps it clear; only one host per screen should be active.
+    func toastHost(isActive: Bool = true) -> some View {
+        modifier(ToastHost(isActive: isActive))
     }
 }
 
 private struct ToastHost: ViewModifier {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    let bottomInset: CGFloat
+    let isActive: Bool
 
     func body(content: Content) -> some View {
         content
             .overlay(alignment: .bottom) {
-                if let toast = model.toast {
+                if isActive, let toast = model.toast {
                     ToastView(toast: toast)
                         .padding(.horizontal, Metrics.spacingM)
-                        .padding(.bottom, bottomInset + Metrics.spacingS)
+                        .padding(.bottom, Metrics.spacingS)
                         .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
                         .id(toast.id)
                         .task(id: toast.id) {

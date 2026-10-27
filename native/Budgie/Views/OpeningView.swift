@@ -26,7 +26,7 @@ struct OpeningView: View {
                 let center = CGPoint(x: size.width / 2, y: size.height / 2)
 
                 ZStack {
-                    BudgieColor.background
+                    BudgieColor.background.ignoresSafeArea()
                     Image("logo")
                         .resizable().scaledToFit()
                         .frame(width: Self.logoSize, height: Self.logoSize)
@@ -53,7 +53,9 @@ struct OpeningView: View {
                 }
             }
         }
-        .ignoresSafeArea()
+        // Horizontal safe areas (the Duo's status column or rail) centre the
+        // bird; vertically it stays centred in the window, as on every iPhone.
+        .ignoresSafeArea(.container, edges: .vertical)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Budgie is opening")
     }
