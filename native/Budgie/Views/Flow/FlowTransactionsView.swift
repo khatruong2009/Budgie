@@ -756,6 +756,7 @@ private struct PickerSheet: View {
     let onPick: (Int) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.sheetHostHeight) private var hostHeight
     @State private var headerHeight: CGFloat = 0
     @State private var listHeight: CGFloat = 0
 
@@ -805,7 +806,7 @@ private struct PickerSheet: View {
         let header = headerHeight > 0 ? headerHeight : 12 + 14 + 12
         let rows = listHeight > 0 ? listHeight : CGFloat(options.count) * 49 - 1 + 4
         let natural = BudgetSheetLayout.handleHeight + header + min(rows, maxListHeight ?? .infinity) + 2 + Metrics.spacingM
-        return .height(min(natural, BudgetSheetLayout.screenHeight * 9 / 16))
+        return .height(min(natural, hostHeight * 9 / 16))
     }
 
     /// A row: the option (15 w600; w700 when selected) and the accent check,

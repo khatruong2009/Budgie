@@ -5,7 +5,10 @@ import SwiftUI
 extension View {
     /// The redesign's bottom-sheet chrome (REDESIGN_PLAN 4.3): card fill, 1pt
     /// card border along the rounded top, 30pt top radius, a 38 x 5 grab
-    /// handle in `hairline`.
+    /// handle in `hairline`. A sheet that does not span the window (a form
+    /// sheet, on the Duo's inner display) is rounded on all corners and
+    /// has no grab handle, which only a bottom sheet is dragged by; its
+    /// inset stays, so detent maths is the same.
     /// Apply to the root view inside `.sheet`.
     func budgieSheetChrome(radius: CGFloat = Metrics.sheetRadius) -> some View {
         modifier(SheetChrome(radius: radius))
@@ -14,26 +17,67 @@ extension View {
 
 private struct SheetChrome: ViewModifier {
     let radius: CGFloat
+    @Environment(\.sheetHostSize) private var host
+    @State private var sheetWidth: CGFloat = 0
+
+    /// A bottom sheet is at most a few points narrower than the window (the
+    /// floating inset); a form sheet is much narrower.
+    private var isFormSheet: Bool { host.width > 0 && sheetWidth > 0 && host.width - sheetWidth > 32 }
 
     func body(content: Content) -> some View {
+        let formSheet = isFormSheet
         content
             .safeAreaInset(edge: .top, spacing: 0) {
                 Capsule()
                     .fill(BudgieColor.hairline)
                     .frame(width: 38, height: 5)
+                    .opacity(formSheet ? 0 : 1)
                     .padding(.top, 8)
                     .padding(.bottom, 6)
                     .frame(maxWidth: .infinity)
+                    .onGeometryChangeCompat { sheetWidth = $0.width }
                     .accessibilityHidden(true)
             }
             .presentationDragIndicator(.hidden)
             .presentationCornerRadius(radius)
             .presentationBackground {
-                let shape = UnevenRoundedRectangle(topLeadingRadius: radius, topTrailingRadius: radius, style: .continuous)
+                let bottom = formSheet ? radius : 0
+                let shape = UnevenRoundedRectangle(
+                    topLeadingRadius: radius, bottomLeadingRadius: bottom, bottomTrailingRadius: bottom,
+                    topTrailingRadius: radius, style: .continuous)
                 BudgieColor.card
-                    .overlay(shape.strokeBorder(BudgieColor.cardBorder, lineWidth: 1).padding(.bottom, -2))
+                    .overlay(shape.strokeBorder(BudgieColor.cardBorder, lineWidth: 1).padding(.bottom, formSheet ? 0 : -2))
                     .ignoresSafeArea()
             }
+    }
+}
+
+// MARK: - Sheet host
+
+extension EnvironmentValues {
+    /// The window's size, measured at the app root and following a fold
+    /// (zero until measured). Sheets size themselves against it.
+    @Entry var sheetHostSize: CGSize = .zero
+
+    /// The window's height for capping a sheet, unbounded until measured.
+    var sheetHostHeight: CGFloat { sheetHostSize.height > 0 ? sheetHostSize.height : .infinity }
+}
+
+extension View {
+    /// Measures the window (safe areas included) and publishes it as
+    /// `sheetHostSize` to everything below, sheets included.
+    func budgieSheetHost() -> some View {
+        modifier(SheetHost())
+    }
+}
+
+private struct SheetHost: ViewModifier {
+    @State private var size: CGSize = .zero
+
+    func body(content: Content) -> some View {
+        content
+            .environment(\.sheetHostSize, size)
+            .background { Color.clear.ignoresSafeArea().onGeometryChangeCompat { size = $0 } }
     }
 }
 
