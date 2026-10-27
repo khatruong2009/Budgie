@@ -29,14 +29,13 @@ struct HomeView: View {
                     ProgressView().padding(.top, 48)
                 }
             }
-            // Clears the buttons (20 + 54 + 12 + 44 above the tab bar).
-            .padding(.bottom, 130)
         }
         .background(BudgieColor.background)
         .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(item: $page) { _ in TransactionsView() }
-        .overlay(alignment: .bottomTrailing) {
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             // The mic over the add button, centred on it (Flutter's Column).
+            // An inset follows the tab bar on any edge and clears the scroll.
             VStack(spacing: 12) {
                 GlowFab(symbol: "mic.fill", size: Metrics.micFabSize, label: "Add by voice") {
                     model.pendingAdd = .voice
@@ -50,6 +49,7 @@ struct HomeView: View {
             }
             .padding(.trailing, Metrics.fabInset)
             .padding(.bottom, Metrics.fabInset)
+            .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .sheet(item: $sheet, onDismiss: openPendingQuickCategory) { item in
             switch item {

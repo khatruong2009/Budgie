@@ -26,6 +26,7 @@ struct MainView: View {
         Group {
             if model.showsOnboarding {
                 OnboardingView()
+                    .toastHost()
             } else {
                 tabs
             }
@@ -39,8 +40,6 @@ struct MainView: View {
         // (Flutter), once unlocked and past the tour (D14, 1A.8).
         .onChange(of: model.pendingAdd, initial: true) { _, _ in AddFormPresenter.openPendingAdd(model) }
         .onChange(of: model.canOpenRoutes) { _, _ in AddFormPresenter.openPendingAdd(model) }
-        // Above the tab bar (49pt).
-        .toastHost(bottomInset: model.showsOnboarding ? 0 : 49)
     }
 
     /// `$tab`, beginning the `tabSwitch` interval at the tap.
@@ -59,18 +58,24 @@ struct MainView: View {
     private var tabs: some View {
         TabView(selection: tabSelection) {
             NavigationStack { HomeView() }
+                // Inside the tab, so the toast clears the bar on any edge.
+                .toastHost(isActive: tab == .home)
                 .tabItem { Label("Home", systemImage: "dollarsign.circle") }
                 .tag(Tab.home)
             NavigationStack { WorthView() }
+                .toastHost(isActive: tab == .worth)
                 .tabItem { Label("Worth", systemImage: "chart.line.uptrend.xyaxis") }
                 .tag(Tab.worth)
             NavigationStack { GoalsView() }
+                .toastHost(isActive: tab == .goals)
                 .tabItem { Label("Goals", systemImage: "flag") }
                 .tag(Tab.goals)
             NavigationStack { SpendView() }
+                .toastHost(isActive: tab == .spend)
                 .tabItem { Label("Spend", systemImage: "chart.pie") }
                 .tag(Tab.spend)
             NavigationStack { FlowView() }
+                .toastHost(isActive: tab == .flow)
                 .tabItem { Label("Flow", systemImage: "chart.bar") }
                 .tag(Tab.flow)
         }

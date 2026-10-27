@@ -43,7 +43,7 @@ struct WorthView: View {
                 .accessibilityHidden(true)
         }
         .toolbar(.hidden, for: .navigationBar)
-        .overlay(alignment: .bottomTrailing) {
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             if model.data != nil {
                 // The populated page passes the active tab's type; the empty
                 // state leaves it unset (asset), as Flutter.
@@ -53,6 +53,7 @@ struct WorthView: View {
                 .accessibilityIdentifier("worth.add")
                 .padding(.trailing, Metrics.fabInset)
                 .padding(.bottom, Metrics.fabInset)
+                .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
         .navigationDestination(item: $historyEntryID) { id in AccountHistoryView(entryID: id) }
@@ -88,7 +89,6 @@ struct WorthView: View {
                 }
                 .padding(EdgeInsets(top: 8 + 48, leading: Metrics.pageHorizontal, bottom: 0, trailing: Metrics.pageHorizontal))
             }
-            .padding(.bottom, 96)
         }
     }
 
@@ -132,8 +132,6 @@ struct WorthView: View {
                     .padding(.horizontal, Metrics.pageHorizontal)
                     .padding(.top, 16)
             }
-            // Clears the add button (20 + 54 above the tab bar).
-            .padding(.bottom, 96)
         }
     }
 
