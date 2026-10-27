@@ -89,7 +89,7 @@ Already fine:
 
 | # | Decision | Proposal |
 |---|---|---|
-| D18 | Which build carries Duo support | 4.0.0 is live on Duo in the 27.0 tier: it resizes and fills most of the inner display. Phase 0 judges it. If it loses state or input on a fold, or a sheet is unusable, ship **4.0.1 built with Xcode 27.0** containing only the SDK-independent Phase 1 fixes: fold lifecycle, reactive sheet height, readable width, `MonthStrip` recentring and the swipe arm cap. Building with 27.0 keeps horizontal bars, so the hard-coded insets stay correct. Otherwise skip 4.0.1. Duo support proper ships as **4.1, built with Xcode 27.1**. Never switch the SDK without Phase 1's bar-agnostic insets. *Phase 0 result* (BASELINE.md, "D18 evidence"): no fold loses data, text or a recording, and nothing locks. One sheet is unusable in a narrow case: the budget limit sheet after a fold with its keyboard up, until the user folds back. Xcode 27.0 is no longer installed, so a 4.0.1 also needs it reinstalled. **Undecided; the owner decides.** |
+| D18 | Which build carries Duo support | 4.0.0 is live on Duo in the 27.0 tier: it resizes and fills most of the inner display. Phase 0 judges it. If it loses state or input on a fold, or a sheet is unusable, ship **4.0.1 built with Xcode 27.0** containing only the SDK-independent Phase 1 fixes: fold lifecycle, reactive sheet height, readable width, `MonthStrip` recentring and the swipe arm cap. Building with 27.0 keeps horizontal bars, so the hard-coded insets stay correct. Otherwise skip 4.0.1. Duo support proper ships as **4.1, built with Xcode 27.1**. Never switch the SDK without Phase 1's bar-agnostic insets. *Phase 0 result* (BASELINE.md, "D18 evidence"): no fold loses data, text or a recording, and nothing locks. One sheet is unusable in a narrow case: the budget limit sheet after a fold with its keyboard up, until the user folds back. Xcode 27.0 is no longer installed, so a 4.0.1 also needs it reinstalled. **Decided 2026-10-27: no 4.0.1.** Duo support ships as 4.1, built with Xcode 27.1; the budget sheet height and the other live fixes ship there (Phase 1). |
 | D19 | Scenes and multi-window | Keep `UIApplicationSupportsMultipleScenes: false`. 50/50 Split View beside other apps still works. Two Budgie windows would need per-scene presenters and a shared-model review, and gain little for a budget app. |
 | D20 | How layouts adapt | One view tree. Switch layouts with `AnyLayout`, `ViewThatFits` and conditional modifiers, which keep child identity. Never use `if regular { A } else { B }` around a screen or a stateful subtree. Selections that both compact and regular layouts read stay in the tab root's existing `@State`, so they carry across a fold. |
 | D21 | Regular-width content | Show one more level of hierarchy where there is a list → detail: Spend (categories → category transactions), Worth (accounts → account history), Settings (sections → subpage), Flow SEE ALL (filters → results). Home, Flow and Goals become two-column dashboards with even columns. Editing stays in sheets and dialogs. |
@@ -117,7 +117,7 @@ Already fine:
    - New warnings under the 27.1 SDK. The zero-warning rule applies.
 
 ### Phase 1: resize-correct on every display (M)
-These changes help every iPhone and contain no wide-layout design. Items 3, 4, 6 (`MonthStrip`, swipe arm) and 7 are SDK-independent and fix live problems; they are the 4.0.1 candidate under D18.
+These changes help every iPhone and contain no wide-layout design. Items 3, 4, 6 (`MonthStrip`, swipe arm) and 7 are SDK-independent and fix live problems. D18 decided against a 4.0.1, so they ship in 4.1.
 1. **Bar-agnostic insets.**
    - Remove the hard-coded 49 (`MainView.swift:43`) and the FAB clearance paddings (HomeView:33, GoalsView:43, WorthView:91,136).
    - Place FABs and the toast host with `safeAreaInset` or `safeAreaBar` (the Xcode skill's recommendation; *Phase 0*) so they follow the tab bar on any edge and reserve their space, which also stops them covering the last row's trailing content. On 27.1, read `\.toolbarVerticalEdge` to keep FABs off the rail's edge.
@@ -178,7 +178,6 @@ Pre-27.1 iPhones never get regular width, because the app is portrait-only. So e
 | Phase | Size | Depends on |
 |---|---|---|
 | 0 Ground truth | S | Xcode 27.1 |
-| 4.0.1 hotfix (if D18 calls for it) | S | 0; Phase 1 items 3, 4, 6, 7, on Xcode 27.0 |
 | 1 Resize-correct | M | 0 |
 | 2 Regular-width layouts | L | 1 |
 | 5 Tooling (scripts, test geometry) | M | 0; runs alongside 1-2 |
@@ -186,7 +185,7 @@ Pre-27.1 iPhones never get regular width, because the app is portrait-only. So e
 | 4 System integration | S | 1, a real iPhone Duo |
 | 5 Docs and store | S | 2-4 |
 
-Release: 4.0.1 only if Phase 0 finds real breakage. 4.1 = Phases 0-5. If time is short, Phases 0, 1 and 4, plus readable width and Duo screenshots, are a shippable "works well" release, built with 27.1. Phases 2-3 are the "optimized" release.
+Release: no 4.0.1 (D18). 4.1 = Phases 0-5. If time is short, Phases 0, 1 and 4, plus readable width and Duo screenshots, are a shippable "works well" release, built with 27.1. Phases 2-3 are the "optimized" release.
 
 ## 6. Open risks
 - Every user who opens Budgie on a Duo today gets the stretched 27.0-tier layout. Phase 0 should start as soon as Xcode 27.1 is installed.
