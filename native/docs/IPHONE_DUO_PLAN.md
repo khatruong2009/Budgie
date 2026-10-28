@@ -137,6 +137,33 @@ These changes help every iPhone and contain no wide-layout design. Items 3, 4, 6
 7. **Readable width.** Apply `Metrics.maxContentWidth` to single-column pages (Settings and its subpages, Recurring, the SEE ALL lists, onboarding, forms), centred. This makes regular width acceptable before Phase 2.
 8. **Switch the build to Xcode 27.1.** Zero warnings. Then run all existing tests on a non-Duo iPhone in the 27.0 runtime (for example the stock iPhone 17) and on the Duo in 27.1, to prove no regression.
 
+*Done 2026-10-28 (branch `claude/iphone-duo`, 02bc560).*
+- **Items 1-7.**
+  - FABs and the toast follow the bar; the 49pt and the FAB paddings are gone.
+  - The opening bird is centred in the safe area.
+  - The sheet host height is measured, and the 844 fallback is deleted.
+  - `BudgetLimitSheet`'s keyboard slack no longer ratchets. That was the root cause of Save hiding under the pad after a fold.
+  - Form sheets have no grabber and are rounded on all corners. A Book half-width sheet counts as a form sheet.
+  - Swipe-to-delete arms at 40% of the row width, capped at 163.2pt.
+  - Chart scrubbing picks the nearest point (`PARITY_GAPS.md`).
+  - `MonthStrip` recentres on a width change.
+  - Pages are capped at 600pt.
+  - The month strips on SEE ALL and Worth are clipped to the safe area.
+  - `.presentationSizing(.fitted)` was not needed.
+- **Item 8, builds and iPhone 17.**
+  - Debug and Release build with 0 warnings; `swift test` runs 404 tests.
+  - On iPhone 17 (27.0), the app and UI tests pass except `SettingsUITests.testNumberFormatSheetChangesHowAmountsAreWritten`, which fails the same way at c093517.
+- **Item 8, the Duo (27.1).**
+  - Walked in Closed, Open, Open-rotated and Book, using Device Hub driven through accessibility.
+  - The existing UI tests cannot run in Closed or Open, because the helpers tap `tabBars.buttons["Home"]` and the rail is not a tab bar (Phase 5 item 2).
+  - In Open-rotated, the tests for the changed screens pass except three. `WorthUITests.testAccountLifecycle` (a short page behind the floating bar), `RecurringUITests.testRecurringFlow:276` and `TagsRulesUITests.testTagsAndRules:204` (keyboard) fail identically at c093517.
+- **Not reproduced on 27.1.**
+  - The Book scrim tap (item 5) needs a device.
+  - The inner-portrait add-form clipping is 27.0-tier only.
+- **Found during the walkthrough.**
+  - FABs still float over cards mid-scroll on the rail layouts.
+  - The launch-screen bird jumps to the safe-area centre at the handoff.
+
 ### Phase 2: regular-width layouts (L)
 Pre-27.1 iPhones never get regular width, because the app is portrait-only. So every new layout can sit behind `#available(iOS 27.1, *)` plus `horizontalSizeClass == .regular`, with today's layout as the fallback. In inner landscape the rail takes the trailing edge (951pt minus the rail); in inner portrait (669pt) the bars are horizontal. Both must work.
 1. **Home:** two columns via `AnyLayout`. Left: hero ring, flow chips, safe-to-spend. Right: budgets grid (4 columns, even) and recent activity. Keep the ring off the centre.
