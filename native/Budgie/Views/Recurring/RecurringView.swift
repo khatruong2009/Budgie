@@ -140,6 +140,7 @@ struct RecurringView: View {
                     message: "Create recurring transactions to automatically\ngenerate expenses and income on a schedule",
                     actionTitle: "Add Recurring", actionIdentifier: "recurring.empty.add"
                 ) { sheet = .add }
+                .frame(maxWidth: Metrics.maxContentWidth)
                 .frame(maxWidth: .infinity, minHeight: proxy.size.height)
             }
             .scrollBounceBehavior(.basedOnSize)

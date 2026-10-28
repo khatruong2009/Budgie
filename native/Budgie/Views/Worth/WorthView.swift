@@ -111,6 +111,9 @@ struct WorthView: View {
                     monthTaps += 1
                     Task { await select(picked) }
                 }
+                // Keep the chips out of the trailing safe area (the 27.1
+                // rail's status column), as on SEE ALL.
+                .clipped()
                 WorthHero(month: month, netWorth: assets - liabilities, change: model.netWorthChange(forMonth: month), formatter: formatter)
                     .padding(EdgeInsets(top: 16, leading: 24, bottom: 0, trailing: 24))
                 WorthGrowthCard(
