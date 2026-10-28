@@ -14,9 +14,9 @@ settings:
     # Q6 (resolved 2026-09-30): the last upload is 3.4.0 (1) (every Flutter
     # archive in ~/Library/Developer/Xcode/Archives uses build 1). 4.0.0 is a
     # new version train, so build 1 is valid; raise it for each re-upload of
-    # 4.0.0.
-    MARKETING_VERSION: "4.0.0"
-    CURRENT_PROJECT_VERSION: "4"
+    # 4.0.0. 4.1.0 (D18) continues the build count after 4.0.0 (4).
+    MARKETING_VERSION: "4.1.0"
+    CURRENT_PROJECT_VERSION: "5"
     SWIFT_VERSION: "6.0"
     ENABLE_USER_SCRIPT_SANDBOXING: YES
 packages:
