@@ -196,29 +196,3 @@ public final class UserDefaultsPreferences: PreferencesStore, @unchecked Sendabl
         return nil
     }
 }
-
-/// Preferences held in memory, for tests and previews.
-public final class InMemoryPreferences: PreferencesStore, @unchecked Sendable {
-    private let lock = NSLock()
-    private var values: [String: PreferenceValue]
-
-    public init(_ values: [String: PreferenceValue] = [:]) {
-        self.values = values
-    }
-
-    public func value(forKey key: String) -> PreferenceValue? {
-        lock.withLock { values[key] }
-    }
-
-    public func set(_ value: PreferenceValue?, forKey key: String) {
-        lock.withLock { values[key] = value }
-    }
-
-    public func allKeys() -> [String] {
-        lock.withLock { values.keys.sorted() }
-    }
-
-    public var all: [String: PreferenceValue] {
-        lock.withLock { values }
-    }
-}
