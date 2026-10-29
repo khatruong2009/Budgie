@@ -15,11 +15,6 @@ final class GoalsUITests: XCTestCase {
         app.tabBars.buttons["Goals"].tap()
     }
 
-    /// Any element with the identifier (cards and overlays are custom).
-    private func element(_ identifier: String) -> XCUIElement {
-        app.descendants(matching: .any)[identifier]
-    }
-
     private func replace(_ field: XCUIElement, with text: String) {
         field.tapSettled()
         if let value = field.value as? String, !value.isEmpty {
@@ -46,7 +41,7 @@ final class GoalsUITests: XCTestCase {
     }
 
     func testGoalLifecycle() throws {
-        XCTAssertTrue(element("goals.empty").waitForExistence(timeout: 10))
+        XCTAssertTrue(app.element("goals.empty").waitForExistence(timeout: 10))
 
         // Add a goal from the add button.
         app.buttons["goals.fab"].tap()
@@ -65,7 +60,7 @@ final class GoalsUITests: XCTestCase {
         XCTAssertTrue(finish.waitForExistence(timeout: 5))
         finish.tapSettled()
         app.buttons["goals.allocate.submit"].tapSettled()
-        XCTAssertTrue(waitForTransient(element("goals.celebration"), timeout: 2), "celebration shown")
+        XCTAssertTrue(waitForTransient(app.element("goals.celebration"), timeout: 2), "celebration shown")
         XCTAssertTrue(addMoney.waitForNonExistence(timeout: 5), "a complete goal has no Add money")
 
         // Rename it from the actions sheet.
@@ -93,6 +88,6 @@ final class GoalsUITests: XCTestCase {
         let confirm = app.buttons["goals.delete.confirm"]
         XCTAssertTrue(confirm.waitForExistence(timeout: 5))
         confirm.tap()
-        XCTAssertTrue(element("goals.empty").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.element("goals.empty").waitForExistence(timeout: 5))
     }
 }

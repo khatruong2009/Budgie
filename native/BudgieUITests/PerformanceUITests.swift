@@ -21,7 +21,6 @@ final class PerformanceUITests: XCTestCase {
         continueAfterFailure = false
         let environment = ProcessInfo.processInfo.environment
         try XCTSkipUnless(environment["BUDGIE_PERF"] == "1", "Set TEST_RUNNER_BUDGIE_PERF=1 (scripts/perf_run.sh).")
-        app.launchEnvironment["BUDGIE_SKIP_ONBOARDING"] = "1"
     }
 
     // MARK: - Helpers
@@ -52,13 +51,8 @@ final class PerformanceUITests: XCTestCase {
         return metrics
     }
 
-    private func element(_ identifier: String) -> XCUIElement {
-        app.descendants(matching: .any)[identifier]
-    }
-
     private func launchToHome() {
-        app.launch()
-        XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 60), "Home tab")
+        app.budgie(homeTimeout: 60)
     }
 
     private func tab(_ name: String) {
@@ -68,11 +62,11 @@ final class PerformanceUITests: XCTestCase {
     /// Flow > SEE ALL, and proof that the 10,000-row store is installed.
     private func openFlowSeeAll() {
         tab("Flow")
-        XCTAssertTrue(element("flow.netCashFlow").waitForExistence(timeout: 10))
+        XCTAssertTrue(app.element("flow.netCashFlow").waitForExistence(timeout: 10))
         let seeAll = app.buttons["See all transactions"].firstMatch
         for _ in 0..<4 where !seeAll.isHittable { app.swipeUp() }
         seeAll.tap()
-        let count = element("flow.all.count")
+        let count = app.element("flow.all.count")
         XCTAssertTrue(count.waitForExistence(timeout: 10))
         XCTAssertTrue(count.label.hasSuffix("of 10000"), "the perf store is installed: \(count.label)")
     }
@@ -89,8 +83,7 @@ final class PerformanceUITests: XCTestCase {
                 signpost("Ledger", "LedgerIndex.build"), signpost("Ledger", "insights.generate"),
             ], options: options
         ) {
-            app.launch()
-            XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 60), "Home tab")
+            app.budgie(homeTimeout: 60)
         }
     }
 
@@ -102,15 +95,15 @@ final class PerformanceUITests: XCTestCase {
             metrics: [XCTClockMetric(), signpost("UI", "tabSwitch"), XCTCPUMetric(application: app)], options: options
         ) {
             tab("Worth")
-            XCTAssertTrue(element("worth.hero").waitForExistence(timeout: 10))
+            XCTAssertTrue(app.element("worth.hero").waitForExistence(timeout: 10))
             tab("Goals")
-            XCTAssertTrue(element("goals.summary").waitForExistence(timeout: 10))
+            XCTAssertTrue(app.element("goals.summary").waitForExistence(timeout: 10))
             tab("Spend")
-            XCTAssertTrue(element("spend.donut").waitForExistence(timeout: 10))
+            XCTAssertTrue(app.element("spend.donut").waitForExistence(timeout: 10))
             tab("Flow")
-            XCTAssertTrue(element("flow.netCashFlow").waitForExistence(timeout: 10))
+            XCTAssertTrue(app.element("flow.netCashFlow").waitForExistence(timeout: 10))
             tab("Home")
-            XCTAssertTrue(element("home.settings").waitForExistence(timeout: 10))
+            XCTAssertTrue(app.element("home.settings").waitForExistence(timeout: 10))
         }
     }
 
@@ -124,7 +117,7 @@ final class PerformanceUITests: XCTestCase {
             launchToHome()
             startMeasuring()
             tab(name)
-            XCTAssertTrue(element(marker).waitForExistence(timeout: 20))
+            XCTAssertTrue(app.element(marker).waitForExistence(timeout: 20))
             stopMeasuring()
         }
     }
@@ -158,7 +151,7 @@ final class PerformanceUITests: XCTestCase {
         launchToHome()
         openFlowSeeAll()
         for _ in 0..<2 {
-            let more = element("flow.all.loadMore")
+            let more = app.element("flow.all.loadMore")
             for _ in 0..<4 where !more.isHittable { app.swipeUp() }
             if more.isHittable { more.tap() }
         }
@@ -206,7 +199,7 @@ final class PerformanceUITests: XCTestCase {
     func testSpendScroll() {
         launchToHome()
         tab("Spend")
-        XCTAssertTrue(element("spend.donut").waitForExistence(timeout: 10))
+        XCTAssertTrue(app.element("spend.donut").waitForExistence(timeout: 10))
         measure(metrics: scrollMetrics, options: options) {
             for _ in 0..<3 { app.swipeUp(velocity: .fast) }
             for _ in 0..<3 { app.swipeDown(velocity: .fast) }
@@ -231,7 +224,7 @@ final class PerformanceUITests: XCTestCase {
         let row = app.buttons["spend.row.0"]
         XCTAssertTrue(row.waitForExistence(timeout: 10))
         row.tap()
-        XCTAssertTrue(element("spend.drillIn.summary").waitForExistence(timeout: 10))
+        XCTAssertTrue(app.element("spend.drillIn.summary").waitForExistence(timeout: 10))
         measure(metrics: scrollMetrics, options: options) {
             for _ in 0..<3 { app.swipeUp(velocity: .fast) }
             for _ in 0..<3 { app.swipeDown(velocity: .fast) }
@@ -242,7 +235,7 @@ final class PerformanceUITests: XCTestCase {
 
     private func openPerfHistory() {
         tab("Worth")
-        let row = element("worth.account.Perf History")
+        let row = app.element("worth.account.Perf History")
         for _ in 0..<6 where !row.exists || !row.isHittable { app.swipeUp() }
         XCTAssertTrue(row.exists, "the Perf History account")
         row.press(forDuration: 1.0)
@@ -255,14 +248,14 @@ final class PerformanceUITests: XCTestCase {
         launchToHome()
         tab("Worth")
         measure(metrics: [XCTClockMetric(), XCTMemoryMetric(application: app)], options: manualOptions) {
-            let row = element("worth.account.Perf History")
+            let row = app.element("worth.account.Perf History")
             for _ in 0..<6 where !row.exists || !row.isHittable { app.swipeUp() }
             row.press(forDuration: 1.0)
             let view = app.buttons["View History"]
             XCTAssertTrue(view.waitForExistence(timeout: 5))
             startMeasuring()
             view.tap()
-            XCTAssertTrue(element("worth.history.hero").waitForExistence(timeout: 20))
+            XCTAssertTrue(app.element("worth.history.hero").waitForExistence(timeout: 20))
             stopMeasuring()
             app.navigationBars.buttons.element(boundBy: 0).tap()
             XCTAssertTrue(row.waitForExistence(timeout: 10))
@@ -272,7 +265,7 @@ final class PerformanceUITests: XCTestCase {
     func testWorthHistoryScroll() {
         launchToHome()
         openPerfHistory()
-        XCTAssertTrue(element("worth.history.hero").waitForExistence(timeout: 20))
+        XCTAssertTrue(app.element("worth.history.hero").waitForExistence(timeout: 20))
         measure(metrics: scrollMetrics, options: options) {
             for _ in 0..<3 { app.swipeUp(velocity: .fast) }
             for _ in 0..<3 { app.swipeDown(velocity: .fast) }

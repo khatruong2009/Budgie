@@ -9,22 +9,10 @@ import XCTest
 @MainActor
 final class RouteOverPresentationUITests: XCTestCase {
     let app = XCUIApplication()
-    let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
 
     override func setUp() async throws {
         continueAfterFailure = false
-        app.launchEnvironment["BUDGIE_SKIP_ONBOARDING"] = "1"
-        app.launch()
-        XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 20))
-    }
-
-    /// Opens `link` through the system, accepting its "Open in Budgie?"
-    /// prompt when one appears.
-    private func route(_ link: String) {
-        XCUIDevice.shared.system.open(URL(string: link)!)
-        let open = springboard.buttons["Open"]
-        if open.waitForExistence(timeout: 3) { open.tap() }
-        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 10), "app not in front after \(link)")
+        app.budgie()
     }
 
     private func title(_ text: String) -> XCUIElement {
@@ -42,7 +30,7 @@ final class RouteOverPresentationUITests: XCTestCase {
 
     func testRoutesOpenOverWhateverIsPresented() throws {
         // Nothing presented: the route opens the form and it saves.
-        route("budgetapp://add-income")
+        app.route("budgetapp://add-income")
         XCTAssertTrue(title("Add Income").waitForExistence(timeout: 10))
         let amount = app.textFields["Amount"]
         XCTAssertTrue(amount.waitForExistence(timeout: 5))
@@ -69,7 +57,7 @@ final class RouteOverPresentationUITests: XCTestCase {
         app.buttons["Date"].tap()
         XCTAssertTrue(pickerCancel.waitForExistence(timeout: 5))
 
-        route("budgetapp://add-expense")
+        app.route("budgetapp://add-expense")
         XCTAssertTrue(title("Add Expense").waitForExistence(timeout: 10))
         XCTAssertFalse(pickerCancel.exists, "VoiceOver reaches only the form, not the picker beneath it")
         expectAddFormThenCancel("Add Expense")
@@ -77,7 +65,7 @@ final class RouteOverPresentationUITests: XCTestCase {
         XCTAssertTrue(pickerCancel.isHittable, "the date picker is on top again")
 
         // A second route opens as well.
-        route("budgetapp://add-income")
+        app.route("budgetapp://add-income")
         expectAddFormThenCancel("Add Income")
         XCTAssertTrue(pickerCancel.isHittable)
         pickerCancel.tap()
@@ -88,7 +76,7 @@ final class RouteOverPresentationUITests: XCTestCase {
         app.buttons["Delete Transaction"].tap()
         let alert = app.alerts["Delete Transaction"]
         XCTAssertTrue(alert.waitForExistence(timeout: 5))
-        route("budgetapp://add-expense")
+        app.route("budgetapp://add-expense")
         expectAddFormThenCancel("Add Expense")
         XCTAssertTrue(alert.waitForExistence(timeout: 5), "the alert is still up")
         alert.buttons["Cancel"].tap()
@@ -103,11 +91,11 @@ final class RouteOverPresentationUITests: XCTestCase {
         let goalName = app.textFields["Goal name"]
         XCTAssertTrue(goalName.waitForExistence(timeout: 5))
         goalName.enterText("Kept")
-        route("budgetapp://add-income")
+        app.route("budgetapp://add-income")
         XCTAssertTrue(title("Add Income").waitForExistence(timeout: 10))
 
         // A route while a routed form is open stacks another form on it.
-        route("budgetapp://add-expense")
+        app.route("budgetapp://add-expense")
         expectAddFormThenCancel("Add Expense")
         expectAddFormThenCancel("Add Income")
         XCTAssertTrue(goalName.waitForExistence(timeout: 5), "the goal dialog is still open")

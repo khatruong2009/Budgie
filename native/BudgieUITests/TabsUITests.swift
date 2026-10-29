@@ -19,11 +19,6 @@ final class TabsUITests: XCTestCase {
         app.tabBars.buttons[name].tap()
     }
 
-    /// Any element with the identifier (bars and rows are custom elements).
-    private func element(_ identifier: String) -> XCUIElement {
-        app.descendants(matching: .any)[identifier]
-    }
-
     /// The current month as the app keys its bars ("2026-09").
     private var currentMonthKey: String {
         let formatter = DateFormatter()
@@ -48,19 +43,19 @@ final class TabsUITests: XCTestCase {
 
         // Spend: the donut and the one category row, its drill-in and back.
         tab("Spend")
-        XCTAssertTrue(element("spend.donut").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.element("spend.donut").waitForExistence(timeout: 5))
         let row = app.buttons["spend.row.0"]
         XCTAssertTrue(row.waitForExistence(timeout: 5))
         row.tap()
-        XCTAssertTrue(element("spend.drillIn.summary").waitForExistence(timeout: 5))
-        XCTAssertTrue(element("spend.drillIn.row").exists)
+        XCTAssertTrue(app.element("spend.drillIn.summary").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.element("spend.drillIn.row").exists)
         app.navigationBars.buttons.element(boundBy: 0).tap()
-        XCTAssertTrue(element("spend.donut").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.element("spend.donut").waitForExistence(timeout: 5))
 
         // Flow: the net cash flow card with this month's bar.
         tab("Flow")
-        XCTAssertTrue(element("flow.netCashFlow").waitForExistence(timeout: 5))
-        XCTAssertTrue(element("flow.bar.\(currentMonthKey)").exists, "bar for \(currentMonthKey)")
+        XCTAssertTrue(app.element("flow.netCashFlow").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.element("flow.bar.\(currentMonthKey)").exists, "bar for \(currentMonthKey)")
 
         // The range sheet: pick 12 months.
         let rangePill = app.buttons["flow.rangePill"]
@@ -80,7 +75,7 @@ final class TabsUITests: XCTestCase {
         let rows = app.buttons.matching(identifier: "flow.all.row")
         XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 5))
         search.enterText("zzz")
-        XCTAssertTrue(element("flow.all.empty").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.element("flow.all.empty").waitForExistence(timeout: 5))
         XCTAssertEqual(rows.count, 0)
         app.buttons["Clear search"].tapSettled()
         search.enterText("tabs coffee")
@@ -106,7 +101,7 @@ final class TabsUITests: XCTestCase {
         let alert = app.alerts["Delete Transaction"]
         XCTAssertTrue(alert.waitForExistence(timeout: 5))
         alert.buttons["Delete"].tap()
-        XCTAssertTrue(element("flow.all.empty").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.element("flow.all.empty").waitForExistence(timeout: 5))
         XCTAssertEqual(rows.count, 0)
     }
 }

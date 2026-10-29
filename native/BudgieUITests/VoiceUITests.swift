@@ -11,7 +11,6 @@ import XCTest
 @MainActor
 final class VoiceUITests: XCTestCase {
     let app = XCUIApplication()
-    let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
     private var audioURL: URL!
 
     static let transcript = "lunch at Chipotle twelve fifty"
@@ -53,12 +52,10 @@ final class VoiceUITests: XCTestCase {
     /// Launches past the onboarding tour with the audio hook on (unless
     /// `audio` is false) and the given stub and extra hooks.
     private func launch(stub: String? = nil, audio: Bool = true, hooks: [String: String] = [:]) {
-        app.launchEnvironment["BUDGIE_SKIP_ONBOARDING"] = "1"
         if audio { app.launchEnvironment["BUDGIE_VOICE_AUDIO_FILE"] = audioURL.path }
         if let stub { app.launchEnvironment["BUDGIE_VOICE_STUB"] = stub }
         for (key, value) in hooks { app.launchEnvironment[key] = value }
-        app.launch()
-        XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 20), "Home not shown")
+        app.budgie()
     }
 
     // MARK: Helpers
@@ -103,19 +100,6 @@ final class VoiceUITests: XCTestCase {
         start.press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)))
     }
 
-    /// Opens `link` through the system, accepting its "Open in Budgie?"
-    /// prompt when one appears.
-    private func route(_ link: String) {
-        XCUIDevice.shared.system.open(URL(string: link)!)
-        let open = springboard.buttons["Open"]
-        if open.waitForExistence(timeout: 3) { open.tap() }
-        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 10), "app not in front after \(link)")
-    }
-
-    private func labelled(_ text: String) -> XCUIElement {
-        app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
-    }
-
     // MARK: Happy path
 
     /// Home mic > LISTENING > Stop > THINKING > the prefilled Add Expense
@@ -143,7 +127,7 @@ final class VoiceUITests: XCTestCase {
 
         app.buttons["Add"].tapSettled()
         XCTAssertTrue(app.staticTexts["Add Expense"].waitForNonExistence(timeout: 10), "form did not close")
-        let row = labelled("Chipotle lunch")
+        let row = app.labelled(containing: "Chipotle lunch")
         XCTAssertTrue(row.waitForExistence(timeout: 10), "the saved row is in Recent activity")
         XCTAssertTrue((row.value as? String ?? "").contains("Eating Out"), "row value: \(String(describing: row.value))")
 
@@ -175,7 +159,7 @@ final class VoiceUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Add Expense"].waitForNonExistence(timeout: 5), "form did not close")
         XCTAssertTrue(app.buttons["home.voice"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["home.voice"].isHittable, "Home is back in front")
-        XCTAssertFalse(labelled("Chipotle lunch").exists, "Cancel saved nothing")
+        XCTAssertFalse(app.labelled(containing: "Chipotle lunch").exists, "Cancel saved nothing")
     }
 
     // MARK: Draft contents
@@ -336,9 +320,9 @@ final class VoiceUITests: XCTestCase {
     /// does not stack another one.
     func testDeepLinkOpensOneVoiceSheet() throws {
         launch(stub: plan())
-        route("budgetapp://voice-add")
+        app.route("budgetapp://voice-add")
         XCTAssertTrue(listening.waitForExistence(timeout: 15), "voice-add did not open the voice sheet")
-        route("budgetapp://voice_add")
+        app.route("budgetapp://voice_add")
         XCTAssertTrue(listening.waitForExistence(timeout: 5))
         XCTAssertEqual(app.staticTexts.matching(identifier: "LISTENING").count, 1)
         XCTAssertEqual(app.buttons.matching(identifier: "voice.stop").count, 1)
@@ -358,7 +342,7 @@ final class VoiceUITests: XCTestCase {
         launch(hooks: ["BUDGIE_VOICE_MIC_DENIED": "1"])
         app.buttons["Add transaction"].tapSettled()
         XCTAssertTrue(app.staticTexts["Add Expense"].waitForExistence(timeout: 10))
-        route("budgetapp://voice-add")
+        app.route("budgetapp://voice-add")
         expectError("Microphone access is off. Enable it in Settings > Budgie.")
         app.buttons["voice.cancel"].tapSettled()
         XCTAssertTrue(message.waitForNonExistence(timeout: 5), "the voice sheet did not close")

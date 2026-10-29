@@ -17,27 +17,6 @@ final class MVPFlowUITests: XCTestCase {
         app.tabBars.buttons[name].tap()
     }
 
-    /// Home's root page (popping anything pushed on the Home tab).
-    private func homeRoot() {
-        tab("Home")
-        var pops = 0
-        while !app.buttons["home.settings"].waitForExistence(timeout: 1) && pops < 4 {
-            app.navigationBars.buttons.element(boundBy: 0).tap()
-            pops += 1
-        }
-    }
-
-    /// Settings is pushed from the gear in the Home header.
-    private func openSettings() {
-        homeRoot()
-        app.buttons["home.settings"].tap()
-    }
-
-    /// Any element whose label contains `text`.
-    private func labelled(_ text: String) -> XCUIElement {
-        app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
-    }
-
     /// Empties a focused field one delete at a time. Not the edit menu's
     /// Select All: that needs a long press to raise a system menu within a
     /// short wait, and when the menu is late the old step skipped it and
@@ -86,7 +65,7 @@ final class MVPFlowUITests: XCTestCase {
         XCTAssertTrue(app.buttons.containing(NSPredicate(format: "label CONTAINS '20.00'")).firstMatch.waitForExistence(timeout: 5))
 
         // Add a recurring template and pause it (Settings > Recurring).
-        openSettings()
+        app.openSettings()
         app.buttons["Recurring transactions"].firstMatch.tap()
         app.buttons["Add recurring transaction"].tap()
         let recurringAmount = app.textFields["Amount"]
@@ -98,20 +77,20 @@ final class MVPFlowUITests: XCTestCase {
             .containing(NSPredicate(format: "label CONTAINS 'UI rent'")).firstMatch
         XCTAssertTrue(template.waitForExistence(timeout: 5))
         template.buttons["Pause"].tap()
-        XCTAssertTrue(labelled("paused").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.labelled(containing: "paused").waitForExistence(timeout: 5))
 
         // Net worth is empty on a fresh install.
         tab("Worth")
         XCTAssertTrue(app.staticTexts["No net worth accounts yet"].waitForExistence(timeout: 5))
 
         // Theme: the Light | Dark | Auto pills on the Theme row.
-        openSettings()
+        app.openSettings()
         let dark = app.buttons["Dark"].firstMatch
         dark.tap()
         XCTAssertTrue(dark.wait(for: \.isSelected, toEqual: true, timeout: 5), "Dark selected")
 
         // Add an income from the add button's form, then delete it from SEE ALL.
-        homeRoot()
+        app.goToHomeRoot()
         app.buttons["Add transaction"].tap()
         XCTAssertTrue(app.textFields["Amount"].waitForExistence(timeout: 5))
         app.buttons["Income"].firstMatch.tapSettled()
@@ -129,7 +108,7 @@ final class MVPFlowUITests: XCTestCase {
 
         // Settings last (they change how every amount above is formatted),
         // so ui_flow.sh's Dart check reads a non-default appSettings section.
-        openSettings()
+        app.openSettings()
         let currency = app.buttons["settings.currency"]
         XCTAssertTrue(currency.waitForExistence(timeout: 5))
         currency.tap()

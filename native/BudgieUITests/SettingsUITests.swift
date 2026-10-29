@@ -23,17 +23,14 @@ final class SettingsUITests: XCTestCase {
 
     override func setUp() async throws {
         continueAfterFailure = false
-        app.launchEnvironment["BUDGIE_SKIP_ONBOARDING"] = "1"
-        app.launch()
-        XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 20))
+        app.budgie()
     }
 
     override func tearDown() async throws {
         if restoreTheme != nil || restoreNumberFormat != nil || unmaskOnTearDown {
             // From a known state: a failure may have left a sheet open.
             app.terminate()
-            app.launch()
-            XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 20))
+            app.budgie()
             app.openSettings()
             if let theme = restoreTheme {
                 pickTheme(theme)

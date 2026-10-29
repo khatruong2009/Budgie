@@ -43,7 +43,7 @@ final class CSVImportUITests: XCTestCase {
         screen.element("csvimport.confirm.confirm").tapSettled()
         XCTAssertTrue(screen.labelled("Imported 2 transactions, 2 duplicates skipped").waitForExistence(timeout: 15))
         XCTAssertEqual(screen.transactionCount(), 5)
-        screen.homeRoot()
+        app.goToHomeRoot()
         for name in ["UITest Refund", "UITest Coffee"] {
             XCTAssertTrue(screen.containing(name).waitForExistence(timeout: 10), name)
         }

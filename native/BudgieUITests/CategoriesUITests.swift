@@ -18,8 +18,7 @@ final class CategoriesUITests: XCTestCase {
 
     override func setUp() async throws {
         continueAfterFailure = false
-        app.launchEnvironment["BUDGIE_SKIP_ONBOARDING"] = "1"
-        launch()
+        app.budgie()
     }
 
     override func tearDown() async throws {
@@ -28,26 +27,13 @@ final class CategoriesUITests: XCTestCase {
             // From a known state: the failure may have left a dialog, a
             // menu or the form open.
             app.terminate()
-            launch()
+            app.budgie()
             cleanUp()
         }
         try await super.tearDown()
     }
 
-    private func launch() {
-        app.launch()
-        XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 20))
-    }
-
     // MARK: - Helpers
-
-    private func element(_ identifier: String) -> XCUIElement {
-        app.descendants(matching: .any)[identifier]
-    }
-
-    private func labelled(_ text: String) -> XCUIElement {
-        app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", text)).firstMatch
-    }
 
     private func replaceText(in field: XCUIElement, with text: String) {
         field.tapSettled()
@@ -57,28 +43,18 @@ final class CategoriesUITests: XCTestCase {
         field.typeSettled(text)
     }
 
-    /// Home's root page (popping anything pushed on the Home tab).
-    private func homeRoot() {
-        app.tabBars.buttons["Home"].tap()
-        var pops = 0
-        while !app.buttons["home.settings"].waitForExistence(timeout: 1) && pops < 4 {
-            app.navigationBars.buttons.element(boundBy: 0).tap()
-            pops += 1
-        }
-    }
-
     private func openCategories() {
-        homeRoot()
+        app.goToHomeRoot()
         app.buttons["home.settings"].tapSettled()
         app.buttons["settings.categories"].tapSettled()
-        XCTAssertTrue(element("categories.list").waitForExistence(timeout: 10))
+        XCTAssertTrue(app.element("categories.list").waitForExistence(timeout: 10))
     }
 
     /// Scrolls the list until the row is on screen; `required` fails the
     /// test when it never shows up.
     @discardableResult
     private func reveal(_ row: XCUIElement, required: Bool = true) -> Bool {
-        let list = element("categories.list")
+        let list = app.element("categories.list")
         for _ in 0..<10 {
             if row.exists && row.isHittable { return true }
             list.swipeUp()
@@ -100,7 +76,7 @@ final class CategoriesUITests: XCTestCase {
     }
 
     private func menu(_ id: String) -> XCUIElement { app.buttons["categories.row.menu.\(id)"] }
-    private func row(_ id: String) -> XCUIElement { element("categories.row.\(id)") }
+    private func row(_ id: String) -> XCUIElement { app.element("categories.row.\(id)") }
 
     /// Opens the row's menu and picks `item`.
     private func choose(_ item: String, forRow id: String) {
@@ -119,7 +95,7 @@ final class CategoriesUITests: XCTestCase {
         let description = "UI latte \(suffix)"
         cleanUp = {
             // The expense, if it was added (SEE ALL's swipe to delete).
-            self.homeRoot()
+            self.app.goToHomeRoot()
             self.app.buttons["See all transactions"].firstMatch.tapSettled()
             let expense = self.app.buttons.containing(NSPredicate(format: "label CONTAINS %@", description)).firstMatch
             if expense.waitForExistence(timeout: 5) {
@@ -158,12 +134,12 @@ final class CategoriesUITests: XCTestCase {
         XCTAssertTrue(field.waitForExistence(timeout: 5))
         field.typeSettled(name.lowercased())
         app.buttons["categories.editor.submit"].tapSettled()
-        XCTAssertTrue(labelled("A category with this name already exists").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.labelled(exactly: "A category with this name already exists").waitForExistence(timeout: 5))
         XCTAssertTrue(field.exists, "editor still open")
         replaceText(in: field, with: "")
-        XCTAssertTrue(labelled("Enter a category name").waitForExistence(timeout: 5), "the error follows the text")
+        XCTAssertTrue(app.labelled(exactly: "Enter a category name").waitForExistence(timeout: 5), "the error follows the text")
         app.buttons["categories.editor.submit"].tapSettled()
-        XCTAssertTrue(labelled("Enter a category name").exists)
+        XCTAssertTrue(app.labelled(exactly: "Enter a category name").exists)
         app.buttons["categories.editor.cancel"].tapSettled()
         XCTAssertTrue(field.waitForNonExistence(timeout: 10))
 
@@ -193,7 +169,7 @@ final class CategoriesUITests: XCTestCase {
         showArchived.tapSettled()
 
         // The transaction form's category menu offers it; add an expense with it.
-        homeRoot()
+        app.goToHomeRoot()
         app.buttons["Add transaction"].tapSettled()
         let amount = app.textFields["Amount"]
         XCTAssertTrue(amount.waitForExistence(timeout: 5))
@@ -201,7 +177,7 @@ final class CategoriesUITests: XCTestCase {
         app.textFields["Description"].enterText(description)
         app.chooseCategory(name)
         app.buttons["Add"].tapSettled()
-        let transaction = labelled(description)
+        let transaction = app.labelled(exactly: description)
         XCTAssertTrue(transaction.waitForExistence(timeout: 10))
         XCTAssertTrue(value(of: transaction).contains(name), "row shows \(name)")
 
@@ -217,9 +193,9 @@ final class CategoriesUITests: XCTestCase {
         XCTAssertTrue(field.waitForNonExistence(timeout: 10))
         reveal(row(id))
         XCTAssertEqual(row(id).label, renamed)
-        homeRoot()
+        app.goToHomeRoot()
         XCTAssertTrue(transaction.waitForExistence(timeout: 10))
-        XCTAssertTrue(waitUntil(10) { self.value(of: transaction).contains(renamed) }, "the transaction shows the new name")
+        XCTAssertTrue(transaction.waitUntil("value CONTAINS %@", [renamed], timeout: 10), "the transaction shows the new name")
     }
 
     func testLastActiveCategoryCannotBeArchived() throws {
@@ -227,17 +203,17 @@ final class CategoriesUITests: XCTestCase {
         cleanUp = {
             // Every built-in income category the test archived.
             self.openCategories()
-            self.element("categories.type").buttons["Income"].tapSettled()
+            self.app.element("categories.type").buttons["Income"].tapSettled()
             self.app.switches["categories.showArchived"].tapSettled()
             for id in others where self.reveal(self.row(id), required: false) {
                 guard self.value(of: self.row(id)).contains("Archived") else { continue }
                 self.choose("Restore", forRow: id)
-                XCTAssertTrue(self.waitUntil { self.value(of: self.row(id)) == "Built in" }, "\(id) restored")
+                XCTAssertTrue(self.row(id).waitForValue("Built in"), "\(id) restored")
             }
         }
 
         openCategories()
-        let income = element("categories.type").buttons["Income"]
+        let income = app.element("categories.type").buttons["Income"]
         income.tapSettled()
         XCTAssertTrue(row("income-salary").waitForExistence(timeout: 5))
 
@@ -257,7 +233,7 @@ final class CategoriesUITests: XCTestCase {
         app.switches["categories.showArchived"].tapSettled()
         for id in others {
             choose("Restore", forRow: id)
-            XCTAssertTrue(waitUntil { self.value(of: self.row(id)) == "Built in" }, "\(id) restored")
+            XCTAssertTrue(row(id).waitForValue("Built in"), "\(id) restored")
         }
     }
 }

@@ -23,8 +23,7 @@ final class SpendFlowUITests: XCTestCase {
 
     override func setUp() async throws {
         continueAfterFailure = false
-        app.launchEnvironment["BUDGIE_SKIP_ONBOARDING"] = "1"
-        launch()
+        app.budgie()
         cleanUp = { self.app.deleteTransactions(containing: self.suffix) }
     }
 
@@ -33,15 +32,10 @@ final class SpendFlowUITests: XCTestCase {
             self.cleanUp = nil
             // From a known state: a failure may have left a sheet open.
             app.terminate()
-            launch()
+            app.budgie()
             cleanUp()
         }
         try await super.tearDown()
-    }
-
-    private func launch() {
-        app.launch()
-        XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 20))
     }
 
     // MARK: - Helpers

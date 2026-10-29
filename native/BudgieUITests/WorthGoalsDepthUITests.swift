@@ -22,8 +22,7 @@ final class WorthGoalsDepthUITests: XCTestCase {
 
     override func setUp() async throws {
         continueAfterFailure = false
-        app.launchEnvironment["BUDGIE_SKIP_ONBOARDING"] = "1"
-        launch()
+        app.budgie()
     }
 
     override func tearDown() async throws {
@@ -31,15 +30,10 @@ final class WorthGoalsDepthUITests: XCTestCase {
             self.cleanUp = nil
             // From a known state: a failure may have left a dialog open.
             app.terminate()
-            launch()
+            app.budgie()
             cleanUp()
         }
         try await super.tearDown()
-    }
-
-    private func launch() {
-        app.launch()
-        XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 20))
     }
 
     // MARK: - Worth helpers

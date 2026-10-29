@@ -77,7 +77,7 @@ final class BackupUITests: XCTestCase {
 
         screen.restoreFixtureBackup()
         XCTAssertEqual(screen.transactionCount(), 3)
-        screen.homeRoot()
+        app.goToHomeRoot()
         for name in ["UITest Groceries", "UITest Rent", "UITest Paycheck"] {
             XCTAssertTrue(screen.containing(name).waitForExistence(timeout: 10), name)
         }
@@ -131,14 +131,6 @@ struct SettingsDataScreen {
         XCTAssertTrue(home.exists, "Home", file: file, line: line)
     }
 
-    func element(_ identifier: String) -> XCUIElement {
-        app.descendants(matching: .any)[identifier]
-    }
-
-    func labelled(_ text: String) -> XCUIElement {
-        app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", text)).firstMatch
-    }
-
     func containing(_ text: String) -> XCUIElement {
         app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
     }
@@ -153,25 +145,15 @@ struct SettingsDataScreen {
         return false
     }
 
-    /// Home's root page (popping anything pushed on the Home tab).
-    func homeRoot() {
-        app.tabBars.buttons["Home"].tap()
-        var pops = 0
-        while !app.buttons["home.settings"].waitForExistence(timeout: 1) && pops < 4 {
-            app.navigationBars.buttons.element(boundBy: 0).tap()
-            pops += 1
-        }
-    }
-
     func openSettings() {
-        homeRoot()
+        app.goToHomeRoot()
         app.buttons["home.settings"].tap()
-        XCTAssertTrue(element("settings.recurring").waitForExistence(timeout: 10))
+        XCTAssertTrue(app.element("settings.recurring").waitForExistence(timeout: 10))
     }
 
     /// Scrolls the DATA row into view and taps it.
     func tapRow(_ identifier: String) {
-        let row = element(identifier)
+        let row = app.element(identifier)
         XCTAssertTrue(row.waitForExistence(timeout: 10), identifier)
         for _ in 0..<6 where !row.isHittable || row.frame.maxY > app.frame.maxY - 140 {
             app.swipeUp(velocity: .slow)
@@ -181,7 +163,7 @@ struct SettingsDataScreen {
 
     /// The N in the Export as CSV row's "All N transactions".
     func transactionCount() -> Int? {
-        let row = element("settings.exportCSV")
+        let row = app.element("settings.exportCSV")
         guard row.waitForExistence(timeout: 10), let value = row.value as? String else { return nil }
         return Int(value.replacingOccurrences(of: "All ", with: "").replacingOccurrences(of: " transactions", with: ""))
     }
@@ -206,7 +188,7 @@ struct SettingsDataScreen {
     /// has no close button, so it is dragged down by its header once it
     /// has settled.
     func closeShareSheet(file: StaticString = #filePath, line: UInt = #line) {
-        let header = element("LP.CaptionBar.TopCaption")
+        let header = app.element("LP.CaptionBar.TopCaption")
         XCTAssertTrue(header.waitForExistence(timeout: 10), "share sheet header", file: file, line: line)
         var last = CGRect.null
         _ = waitUntil(10) {
@@ -222,8 +204,8 @@ struct SettingsDataScreen {
     func restoreFixtureBackup() {
         tapRow("settings.importBackup")
         pick("Budgie UITest Backup")
-        element("backup.confirm.confirm").tapSettled()
-        XCTAssertTrue(labelled("Backup restored").waitForExistence(timeout: 15))
-        XCTAssertTrue(waitUntil(10) { !element("backup.confirm.title").exists })
+        app.element("backup.confirm.confirm").tapSettled()
+        XCTAssertTrue(app.labelled(exactly: "Backup restored").waitForExistence(timeout: 15))
+        XCTAssertTrue(waitUntil(10) { !app.element("backup.confirm.title").exists })
     }
 }

@@ -66,13 +66,27 @@ private func waitForKeyboardToSettle(timeout: TimeInterval = 5) {
     }
 }
 
-// MARK: - Shared screen helpers (additive)
-//
-// The per-class private copies in the older test files are left as they are;
-// these serve the classes written after them.
+// MARK: - Shared screen helpers
 
 @MainActor
 extension XCUIApplication {
+    /// Launches past the onboarding tour and waits for the Home tab. Launch
+    /// environment additions go before this call.
+    func budgie(homeTimeout: TimeInterval = 20, file: StaticString = #filePath, line: UInt = #line) {
+        launchEnvironment["BUDGIE_SKIP_ONBOARDING"] = "1"
+        launch()
+        XCTAssertTrue(tabBars.buttons["Home"].waitForExistence(timeout: homeTimeout), "Home tab", file: file, line: line)
+    }
+
+    /// Opens `link` through the system, accepting its "Open in Budgie?"
+    /// prompt when one appears.
+    func route(_ link: String, file: StaticString = #filePath, line: UInt = #line) {
+        XCUIDevice.shared.system.open(URL(string: link)!)
+        let open = XCUIApplication(bundleIdentifier: "com.apple.springboard").buttons["Open"]
+        if open.waitForExistence(timeout: 3) { open.tap() }
+        XCTAssertTrue(wait(for: .runningForeground, timeout: 10), "app not in front after \(link)", file: file, line: line)
+    }
+
     /// Any element with the identifier: cards, bars and rows are custom
     /// elements, not buttons.
     func element(_ identifier: String) -> XCUIElement {

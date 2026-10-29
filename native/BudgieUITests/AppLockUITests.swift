@@ -28,11 +28,9 @@ final class AppLockUITests: XCTestCase {
     }
 
     private func launch(timeout: Int, authSuccesses: Int = 1) {
-        app.launchEnvironment["BUDGIE_SKIP_ONBOARDING"] = "1"
         app.launchEnvironment["BUDGIE_UITEST_APP_LOCK"] = String(timeout)
         app.launchEnvironment["BUDGIE_UITEST_AUTH_SUCCESSES"] = String(authSuccesses)
-        app.launch()
-        XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 20), "the launch unlock did not open Home")
+        app.budgie()
     }
 
     private var cover: XCUIElement { app.staticTexts["App preview hidden"] }

@@ -21,20 +21,10 @@ final class RecurringUITests: XCTestCase {
 
     override func setUp() async throws {
         continueAfterFailure = false
-        app.launchEnvironment["BUDGIE_SKIP_ONBOARDING"] = "1"
-        app.launch()
-        XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 30))
+        app.budgie(homeTimeout: 30)
     }
 
     // MARK: - Helpers
-
-    private func element(_ identifier: String) -> XCUIElement {
-        app.descendants(matching: .any)[identifier]
-    }
-
-    private func labelled(_ text: String) -> XCUIElement {
-        app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
-    }
 
     private func replaceText(in field: XCUIElement, with text: String) {
         field.tapSettled()
@@ -44,17 +34,8 @@ final class RecurringUITests: XCTestCase {
         field.typeSettled(text)
     }
 
-    private func homeRoot() {
-        app.tabBars.buttons["Home"].tap()
-        var pops = 0
-        while !app.buttons["home.settings"].waitForExistence(timeout: 1) && pops < 4 {
-            app.navigationBars.buttons.element(boundBy: 0).tap()
-            pops += 1
-        }
-    }
-
     private func openRecurring() {
-        homeRoot()
+        app.goToHomeRoot()
         app.buttons["home.settings"].tapSettled()
         app.buttons["settings.recurring"].tapSettled()
         XCTAssertTrue(app.buttons["recurring.add"].waitForExistence(timeout: 10))
@@ -108,14 +89,14 @@ final class RecurringUITests: XCTestCase {
         openRecurring()
 
         // Empty state (a fresh install; a rerun may already have cards).
-        if element("recurring.empty").exists {
+        if app.element("recurring.empty").exists {
             XCTAssertTrue(app.staticTexts["No Recurring Transactions"].exists)
-            XCTAssertTrue(labelled("Create recurring transactions to automatically").exists)
+            XCTAssertTrue(app.labelled(containing: "Create recurring transactions to automatically").exists)
         }
 
         // Generate Due Transactions: Flutter's toast even with nothing due.
         app.buttons["recurring.generate"].tapSettled()
-        XCTAssertTrue(labelled("Due transactions generated and next occurrences updated").waitForExistence(timeout: 10))
+        XCTAssertTrue(app.labelled(containing: "Due transactions generated and next occurrences updated").waitForExistence(timeout: 10))
 
         // Add a monthly expense: validation first.
         app.buttons["recurring.add"].tapSettled()
@@ -131,8 +112,8 @@ final class RecurringUITests: XCTestCase {
         replaceText(in: amount, with: "900")
         replaceText(in: app.textFields["Description"], with: rent)
         XCTAssertFalse(app.staticTexts["Description is required"].exists, "typing clears the description error")
-        XCTAssertTrue(element("recurring.form.day").exists, "monthly shows the Day of Month wheel")
-        let preview = element("recurring.form.preview")
+        XCTAssertTrue(app.element("recurring.form.day").exists, "monthly shows the Day of Month wheel")
+        let preview = app.element("recurring.form.preview")
         XCTAssertTrue(preview.exists)
         for date in monthlyDates {
             let line = Self.format(date, "EEEE, MMM dd, yyyy")
@@ -154,7 +135,7 @@ final class RecurringUITests: XCTestCase {
         replaceText(in: app.textFields["Description"], with: salary)
         // The pattern wheel is the form's first (the category is a menu row).
         wheel("recurring.form.pattern", index: 0).adjust(toPickerWheelValue: "Weekly")
-        XCTAssertTrue(element("recurring.form.day").waitForNonExistence(timeout: 5), "no Day of Month for weekly")
+        XCTAssertTrue(app.element("recurring.form.day").waitForNonExistence(timeout: 5), "no Day of Month for weekly")
         for date in weeklyDates {
             let line = Self.format(date, "EEEE, MMM dd, yyyy")
             XCTAssertTrue(preview.label.contains(line), "weekly preview has \(line): \(preview.label)")
@@ -194,7 +175,7 @@ final class RecurringUITests: XCTestCase {
         // form for the form's type, in the same sheet: Cancel closes all of
         // it, also for a deep link's form (AddFormHost); Save adds the
         // template and closes it.
-        homeRoot()
+        app.goToHomeRoot()
         XCUIDevice.shared.system.open(URL(string: "budgetapp://add-income")!)
         let openPrompt = springboard.buttons["Open"]
         if openPrompt.waitForExistence(timeout: 3) { openPrompt.tap() }
@@ -221,7 +202,7 @@ final class RecurringUITests: XCTestCase {
         XCTAssertTrue(summary(madeRecurring).label.contains("Monthly"), summary(madeRecurring).label)
 
         // The generated rows carry the glyph: Home Recent activity and SEE ALL.
-        homeRoot()
+        app.goToHomeRoot()
         let recent = app.descendants(matching: .any).matching(
             NSPredicate(format: "label CONTAINS %@ AND value CONTAINS 'recurring'", salary)).firstMatch
         XCTAssertTrue(recent.waitForExistence(timeout: 10), "Home recent row marked recurring")
@@ -240,7 +221,7 @@ final class RecurringUITests: XCTestCase {
             // By predicate: an identifier query is limited to 128 characters.
             XCTAssertTrue(alert.staticTexts.matching(NSPredicate(format: "label == %@", message)).firstMatch.exists, "alert message")
             alert.buttons["Delete"].tap()
-            XCTAssertTrue(labelled("Recurring transaction deleted").waitForExistence(timeout: 10))
+            XCTAssertTrue(app.labelled(containing: "Recurring transaction deleted").waitForExistence(timeout: 10))
             XCTAssertTrue(summary(name).waitForNonExistence(timeout: 5))
         }
 
@@ -277,6 +258,6 @@ final class RecurringUITests: XCTestCase {
             alert.buttons["Delete"].tap()
             XCTAssertTrue(alert.waitForNonExistence(timeout: 5))
         }
-        XCTAssertTrue(element("flow.all.empty").waitForExistence(timeout: 10))
+        XCTAssertTrue(app.element("flow.all.empty").waitForExistence(timeout: 10))
     }
 }

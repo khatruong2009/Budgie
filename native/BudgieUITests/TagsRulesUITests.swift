@@ -21,8 +21,7 @@ final class TagsRulesUITests: XCTestCase {
 
     override func setUp() async throws {
         continueAfterFailure = false
-        app.launchEnvironment["BUDGIE_SKIP_ONBOARDING"] = "1"
-        launch()
+        app.budgie()
     }
 
     override func tearDown() async throws {
@@ -31,26 +30,13 @@ final class TagsRulesUITests: XCTestCase {
             // From a known state: the failure may have left a dialog, a
             // menu or the form open.
             app.terminate()
-            launch()
+            app.budgie()
             cleanUp()
         }
         try await super.tearDown()
     }
 
-    private func launch() {
-        app.launch()
-        XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 20))
-    }
-
     // MARK: - Helpers
-
-    private func element(_ identifier: String) -> XCUIElement {
-        app.descendants(matching: .any)[identifier]
-    }
-
-    private func labelled(_ text: String) -> XCUIElement {
-        app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", text)).firstMatch
-    }
 
     /// Polls `condition` until it holds or `timeout` passes.
     private func waitUntil(_ timeout: TimeInterval = 5, _ condition: () -> Bool) -> Bool {
@@ -62,26 +48,16 @@ final class TagsRulesUITests: XCTestCase {
         return false
     }
 
-    /// Home's root page (popping anything pushed on the Home tab).
-    private func homeRoot() {
-        app.tabBars.buttons["Home"].tap()
-        var pops = 0
-        while !app.buttons["home.settings"].waitForExistence(timeout: 1) && pops < 4 {
-            app.navigationBars.buttons.element(boundBy: 0).tap()
-            pops += 1
-        }
-    }
-
     private func openTagsAndRules() {
-        homeRoot()
+        app.goToHomeRoot()
         app.buttons["home.settings"].tapSettled()
         app.buttons["Tags & rules"].tapSettled()
-        XCTAssertTrue(element("tagsRules.list").waitForExistence(timeout: 10))
+        XCTAssertTrue(app.element("tagsRules.list").waitForExistence(timeout: 10))
     }
 
     /// Scrolls the page until the element is on screen.
     private func reveal(_ target: XCUIElement) {
-        let list = element("tagsRules.list")
+        let list = app.element("tagsRules.list")
         for _ in 0..<10 {
             if target.exists && target.isHittable { return }
             list.swipeUp()
@@ -92,7 +68,7 @@ final class TagsRulesUITests: XCTestCase {
     /// Opens the add form from Home (switched to Income for an income) and
     /// types an amount and a description.
     private func openExpenseForm(description: String, amount amountText: String = "12", income: Bool = false) {
-        homeRoot()
+        app.goToHomeRoot()
         app.buttons["Add transaction"].tapSettled()
         let amount = app.textFields["Amount"]
         XCTAssertTrue(amount.waitForExistence(timeout: 5))
@@ -129,7 +105,7 @@ final class TagsRulesUITests: XCTestCase {
     /// Deletes every SEE ALL row whose label contains `text` (swipe, then
     /// the Delete Transaction alert).
     private func deleteTransactions(containing text: String) {
-        homeRoot()
+        app.goToHomeRoot()
         app.buttons["See all transactions"].firstMatch.tapSettled()
         let row = app.buttons.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
         var deleted = 0
@@ -168,7 +144,7 @@ final class TagsRulesUITests: XCTestCase {
         }
 
         openTagsAndRules()
-        let startedEmpty = element("tags.empty").exists && element("rules.empty").exists
+        let startedEmpty = app.element("tags.empty").exists && app.element("rules.empty").exists
 
         // Add the tag: its row and delete button appear.
         app.buttons["tags.add"].tapSettled()
@@ -177,16 +153,16 @@ final class TagsRulesUITests: XCTestCase {
         name.typeSettled(tag)
         app.buttons["tags.editor.submit"].tapSettled()
         XCTAssertTrue(name.waitForNonExistence(timeout: 10), "tag dialog closed")
-        XCTAssertTrue(labelled(tag).waitForExistence(timeout: 5))
+        XCTAssertTrue(app.labelled(exactly: tag).waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Delete \(tag)"].exists)
-        XCTAssertFalse(element("tags.empty").exists)
+        XCTAssertFalse(app.element("tags.empty").exists)
 
         // A duplicate in another case is refused inline; the dialog stays.
         app.buttons["tags.add"].tapSettled()
         XCTAssertTrue(name.waitForExistence(timeout: 5))
         name.typeSettled(tag.uppercased())
         app.buttons["tags.editor.submit"].tapSettled()
-        XCTAssertTrue(labelled("A tag with this name already exists").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.labelled(exactly: "A tag with this name already exists").waitForExistence(timeout: 5))
         XCTAssertTrue(name.exists, "dialog still open")
         app.buttons["tags.editor.cancel"].tapSettled()
         XCTAssertTrue(name.waitForNonExistence(timeout: 10))
@@ -202,21 +178,21 @@ final class TagsRulesUITests: XCTestCase {
         // Done dismisses the keyboard.
         pattern.typeText("\n")
         XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5), "Done dismissed the keyboard")
-        XCTAssertEqual(element("rules.editor.type").value as? String, "Expense")
-        XCTAssertEqual(element("rules.editor.match").value as? String, "Contains")
+        XCTAssertEqual(app.element("rules.editor.type").value as? String, "Expense")
+        XCTAssertEqual(app.element("rules.editor.match").value as? String, "Contains")
         // Opening a dropdown with the keyboard up dismisses it first.
         pattern.tapSettled()
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
-        element("rules.editor.category").tapSettled()
+        app.element("rules.editor.category").tapSettled()
         XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5), "the dropdown dismissed the keyboard")
         app.buttons["Groceries"].firstMatch.tapSettled()
-        XCTAssertTrue(waitUntil { self.element("rules.editor.category").value as? String == "Groceries" })
+        XCTAssertTrue(app.element("rules.editor.category").waitForValue("Groceries"))
         let chip = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'rules.editor.tag.' AND label == %@", tag)).firstMatch
         chip.tapSettled()
-        XCTAssertTrue(waitUntil { chip.isSelected }, "tag selected")
+        XCTAssertTrue(chip.waitUntil("isSelected == true"), "tag selected")
         add.tapSettled()
         XCTAssertTrue(pattern.waitForNonExistence(timeout: 10), "rule dialog closed")
-        let rule = labelled(merchant)
+        let rule = app.labelled(exactly: merchant)
         reveal(rule)
         XCTAssertEqual(rule.value as? String, "contains \u{00B7} Groceries \u{00B7} 1 tags")
 
@@ -248,10 +224,10 @@ final class TagsRulesUITests: XCTestCase {
         XCTAssertTrue(app.buttons["tags.delete.confirm"].waitForExistence(timeout: 5))
         app.buttons["tags.delete.cancel"].tapSettled()
         XCTAssertTrue(app.buttons["tags.delete.confirm"].waitForNonExistence(timeout: 5))
-        XCTAssertTrue(labelled(tag).exists, "cancel kept the tag")
+        XCTAssertTrue(app.labelled(exactly: tag).exists, "cancel kept the tag")
         deleteTag.tapSettled()
         app.buttons["tags.delete.confirm"].tapSettled()
-        XCTAssertTrue(labelled(tag).waitForNonExistence(timeout: 10), "tag deleted")
+        XCTAssertTrue(app.labelled(exactly: tag).waitForNonExistence(timeout: 10), "tag deleted")
         reveal(rule)
         XCTAssertEqual(rule.value as? String, "contains \u{00B7} Groceries", "the rule lost the tag")
 
@@ -269,8 +245,8 @@ final class TagsRulesUITests: XCTestCase {
         deleteRule.tapSettled()
         XCTAssertTrue(rule.waitForNonExistence(timeout: 5), "rule deleted without a confirmation")
         if startedEmpty {
-            XCTAssertTrue(element("tags.empty").waitForExistence(timeout: 5))
-            XCTAssertTrue(element("rules.empty").exists)
+            XCTAssertTrue(app.element("tags.empty").waitForExistence(timeout: 5))
+            XCTAssertTrue(app.element("rules.empty").exists)
         }
         openExpenseForm(description: description + " again")
         Thread.sleep(forTimeInterval: 0.5)
@@ -294,9 +270,9 @@ final class TagsRulesUITests: XCTestCase {
 
     /// Picks `option` from one of the editor's dropdowns.
     private func pick(_ option: String, in identifier: String) {
-        element(identifier).tapSettled()
+        app.element(identifier).tapSettled()
         app.buttons[option].firstMatch.tapSettled()
-        XCTAssertTrue(waitUntil { self.element(identifier).value as? String == option }, "\(identifier) is \(option)")
+        XCTAssertTrue(app.element(identifier).waitForValue(option), "\(identifier) is \(option)")
     }
 
     /// Opens a form, checks the wheel, and cancels it.
@@ -347,12 +323,12 @@ final class TagsRulesUITests: XCTestCase {
         pattern.typeSettled(merchant)
         app.buttons["rules.editor.submit"].tapSettled()
         XCTAssertTrue(pattern.waitForNonExistence(timeout: 10), "rule dialog closed")
-        let row = labelled(merchant)
+        let row = app.labelled(exactly: merchant)
         reveal(row)
 
         // Edit it: prefilled, Save, in place under the new text.
         row.tapSettled()
-        XCTAssertTrue(labelled("Edit merchant rule").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.labelled(exactly: "Edit merchant rule").waitForExistence(timeout: 5))
         XCTAssertEqual(pattern.value as? String, merchant)
         XCTAssertEqual(app.buttons["rules.editor.submit"].label, "Save")
         XCTAssertFalse(app.keyboards.firstMatch.waitForExistence(timeout: 1), "an edit does not autofocus")
@@ -364,11 +340,11 @@ final class TagsRulesUITests: XCTestCase {
         maximum.typeSettled("20")
         app.buttons["rules.editor.submit"].tapSettled()
         XCTAssertTrue(pattern.waitForNonExistence(timeout: 10), "editor closed")
-        let editedRow = labelled(edited)
+        let editedRow = app.labelled(exactly: edited)
         reveal(editedRow)
         let subtitle = editedRow.value as? String ?? ""
         XCTAssertTrue(subtitle.hasPrefix("contains \u{00B7} Eating Out \u{00B7} up to "), subtitle)
-        XCTAssertFalse(labelled(merchant).exists, "edited in place, no second row")
+        XCTAssertFalse(app.labelled(exactly: merchant).exists, "edited in place, no second row")
 
         // Only amounts up to the maximum (inclusive) get the suggestion.
         expectSuggestion(false, category: "Eating Out", description: description, amount: "25")
@@ -380,29 +356,29 @@ final class TagsRulesUITests: XCTestCase {
         reveal(toggle)
         XCTAssertEqual(toggle.value as? String, "1")
         toggle.tapSettled()
-        XCTAssertTrue(waitUntil { toggle.value as? String == "0" }, "switched off")
-        XCTAssertTrue(waitUntil { (editedRow.value as? String ?? "").hasSuffix("\u{00B7} off") }, "subtitle says off")
+        XCTAssertTrue(toggle.waitForValue("0"), "switched off")
+        XCTAssertTrue(editedRow.waitUntil("value ENDSWITH %@", ["\u{00B7} off"]), "subtitle says off")
         expectSuggestion(false, category: "Eating Out", description: description, amount: "12")
 
         // On again, then Any type with Gift (both types have it).
         openTagsAndRules()
         reveal(toggle)
         toggle.tapSettled()
-        XCTAssertTrue(waitUntil { toggle.value as? String == "1" }, "switched on")
+        XCTAssertTrue(toggle.waitForValue("1"), "switched on")
         reveal(editedRow)
         editedRow.tapSettled()
-        XCTAssertTrue(labelled("Edit merchant rule").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.labelled(exactly: "Edit merchant rule").waitForExistence(timeout: 5))
         XCTAssertEqual(maximum.value as? String, "20.00", "the maximum prefilled")
         pick("Any type", in: "rules.editor.type")
-        XCTAssertEqual(element("rules.editor.category").value as? String, "Eating Out", "kept: the Any list has it")
-        XCTAssertTrue(element("rules.editor.anyTypeNote").exists, "Eating Out is expense-only")
+        XCTAssertEqual(app.element("rules.editor.category").value as? String, "Eating Out", "kept: the Any list has it")
+        XCTAssertTrue(app.element("rules.editor.anyTypeNote").exists, "Eating Out is expense-only")
         pick("Gift", in: "rules.editor.category")
-        XCTAssertFalse(element("rules.editor.anyTypeNote").exists, "Gift is in both lists")
+        XCTAssertFalse(app.element("rules.editor.anyTypeNote").exists, "Gift is in both lists")
         app.buttons["rules.editor.submit"].tapSettled()
         XCTAssertTrue(pattern.waitForNonExistence(timeout: 10), "editor closed")
         reveal(editedRow)
         XCTAssertTrue(
-            waitUntil { (editedRow.value as? String ?? "").hasPrefix("contains \u{00B7} Gift \u{00B7} any type \u{00B7} up to ") },
+            editedRow.waitUntil("value BEGINSWITH %@", ["contains \u{00B7} Gift \u{00B7} any type \u{00B7} up to "]),
             editedRow.value as? String ?? "")
         expectSuggestion(true, category: "Gift", description: description, amount: "12", income: true)
         expectSuggestion(true, category: "Gift", description: description, amount: "12")
