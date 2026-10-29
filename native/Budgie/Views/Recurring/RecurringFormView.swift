@@ -159,12 +159,8 @@ struct RecurringFormView: View {
     /// The field labels (`caption` w600 in Flutter), hidden from VoiceOver
     /// where the control below carries the same label.
     private func fieldLabel(_ text: String) -> some View {
-        Text(text)
-            .textStyle(.captionStrong)
-            .foregroundStyle(BudgieColor.textSecondary)
-            .padding(.leading, 4)
+        FieldCaption(text, hidden: true)
             .padding(.bottom, 6)
-            .accessibilityHidden(true)
     }
 
     // MARK: Wheels
@@ -249,12 +245,7 @@ struct RecurringFormView: View {
             .disabled(saving)
             .accessibilityIdentifier("recurring.form.start")
             if let startDateError {
-                HStack(spacing: 4) {
-                    Image(systemName: "exclamationmark.circle").font(.system(size: 13)).accessibilityHidden(true)
-                    Text(startDateError).textStyle(.caption)
-                }
-                .foregroundStyle(BudgieColor.danger)
-                .padding(.leading, 4)
+                FieldErrorLabel(startDateError)
             }
         }
     }

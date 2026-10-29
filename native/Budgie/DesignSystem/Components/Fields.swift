@@ -53,12 +53,7 @@ struct BudgieField: View {
             .contentShape(Rectangle())
             .onTapGesture { focused = true }
             if let error {
-                HStack(spacing: 4) {
-                    Image(systemName: "exclamationmark.circle").font(.system(size: 13)).accessibilityHidden(true)
-                    Text(error).textStyle(.caption)
-                }
-                .foregroundStyle(BudgieColor.danger)
-                .padding(.leading, 4)
+                FieldErrorLabel(error)
             }
         }
         .accessibilityElement(children: .contain)
@@ -347,5 +342,44 @@ struct EmptyStateView: View {
         case .noResults: "Try adjusting your search or filters"
         case .error: "We encountered an error. Please try again"
         }
+    }
+}
+
+/// The error line under a field: a danger exclamation and the message in
+/// `caption`, inset 4.
+struct FieldErrorLabel: View {
+    let text: String
+
+    init(_ text: String) { self.text = text }
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "exclamationmark.circle").font(.system(size: 13)).accessibilityHidden(true)
+            Text(text).textStyle(.caption)
+        }
+        .foregroundStyle(BudgieColor.danger)
+        .padding(.leading, 4)
+    }
+}
+
+/// A field's caption above it (`captionStrong`, secondary, inset 4).
+struct FieldCaption: View {
+    let text: String
+    var isHeader = false
+    var hidden = false
+
+    init(_ text: String, isHeader: Bool = false, hidden: Bool = false) {
+        self.text = text
+        self.isHeader = isHeader
+        self.hidden = hidden
+    }
+
+    var body: some View {
+        Text(text)
+            .textStyle(.captionStrong)
+            .foregroundStyle(BudgieColor.textSecondary)
+            .padding(.leading, 4)
+            .accessibilityAddTraits(isHeader ? .isHeader : [])
+            .accessibilityHidden(hidden)
     }
 }
