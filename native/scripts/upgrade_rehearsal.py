@@ -25,6 +25,9 @@ import tempfile
 import time
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
+from sim import runtime_for
+
 REPO = Path(subprocess.check_output(["git", "rev-parse", "--show-toplevel"], cwd=Path(__file__).parent, text=True).strip())
 NATIVE = REPO / "native"
 FIXTURES = NATIVE / "Fixtures"
@@ -56,10 +59,7 @@ class Simulator:
                 if d["name"] == SIM_NAME and d.get("isAvailable", True):
                     self.udid = d["udid"]
         if not self.udid:
-            runtimes = json.loads(run(["xcrun", "simctl", "list", "runtimes", "-j"]).stdout)["runtimes"]
-            ios = [r for r in runtimes if r["platform"] == "iOS" and r["isAvailable"]]
-            runtime = sorted(ios, key=lambda r: r["version"])[-1]["identifier"]
-            self.udid = run(["xcrun", "simctl", "create", SIM_NAME, "iPhone 17 Pro", runtime]).stdout.strip()
+            self.udid = run(["xcrun", "simctl", "create", SIM_NAME, "iPhone 17 Pro", runtime_for("iPhone 17 Pro")]).stdout.strip()
 
     def state(self):
         devices = json.loads(run(["xcrun", "simctl", "list", "devices", "-j"]).stdout)["devices"]
@@ -598,42 +598,45 @@ def main():
         swift_app = build_swift()
 
     rehearsal = Rehearsal(out, flutter_app, swift_app)
-    pulled = {}
-    runners = {"s1": rehearsal.s1_typical_roundtrip, "s3": rehearsal.s3_legacy_only,
-               "s4": rehearsal.s4_locked_launch, "s5": rehearsal.s5_corruption,
-               "s6": rehearsal.s6_malformed_legacy}
-    for key in args.scenarios:
-        try:
-            pulled.update(runners[key]())
-        except Exception as error:  # record and continue; the report says so
-            rehearsal.record(key, error=str(error)[-4000:])
+    # Whatever happens below, the simulator is shut down again.
+    try:
+        pulled = {}
+        runners = {"s1": rehearsal.s1_typical_roundtrip, "s3": rehearsal.s3_legacy_only,
+                   "s4": rehearsal.s4_locked_launch, "s5": rehearsal.s5_corruption,
+                   "s6": rehearsal.s6_malformed_legacy}
+        for key in args.scenarios:
+            try:
+                pulled.update(runners[key]())
+            except Exception as error:  # record and continue; the report says so
+                rehearsal.record(key, error=str(error)[-4000:])
 
-    readable_pulls = {k: v for k, v in pulled.items() if (v / "financial_store").exists()}
-    dart = dart_view(readable_pulls) if readable_pulls else {}
-    comparisons = {}
-    for case, pulled_dir in pulled.items():
-        swift_summary = pulled_dir / "swift-summary.json"
-        if swift_summary.exists() and case in dart:
-            comparisons[f"{case}: Swift vs Flutter models on the same files"] = compare(json.loads(swift_summary.read_text()), dart[case])
-    # What the user saw in Flutter before the upgrade vs what Swift shows after.
-    pairs = [("2-swift", "1-flutter"), ("3-swift-edited", "4-flutter-back"), ("s3-swift", "s3-flutter-back")]
-    for swift_case, flutter_case in pairs:
-        swift_summary = pulled.get(swift_case, Path("/nonexistent")) / "swift-summary.json"
-        if swift_summary.exists() and flutter_case in dart:
-            comparisons[f"{swift_case} (Swift) vs {flutter_case} (Flutter)"] = compare(json.loads(swift_summary.read_text()), dart[flutter_case])
-    report = {
-        "simulator": {"name": SIM_NAME, "udid": rehearsal.sim.udid},
-        "commit": run(["git", "rev-parse", "HEAD"], cwd=REPO).stdout.strip(),
-        "scenarios": rehearsal.results,
-        "dartProblems": {k: v["problems"] for k, v in dart.items()},
-        "swiftVsDart": comparisons,
-    }
-    (out / "report.json").write_text(json.dumps(report, indent=2, sort_keys=True, default=str))
-    rehearsal.sim.shutdown()
-    print(out / "report.json")
-    return 1 if any("error" in result for result in rehearsal.results.values()) or any(
-        result for result in comparisons.values()
-    ) or any(result["problems"] for result in dart.values()) else 0
+        readable_pulls = {k: v for k, v in pulled.items() if (v / "financial_store").exists()}
+        dart = dart_view(readable_pulls) if readable_pulls else {}
+        comparisons = {}
+        for case, pulled_dir in pulled.items():
+            swift_summary = pulled_dir / "swift-summary.json"
+            if swift_summary.exists() and case in dart:
+                comparisons[f"{case}: Swift vs Flutter models on the same files"] = compare(json.loads(swift_summary.read_text()), dart[case])
+        # What the user saw in Flutter before the upgrade vs what Swift shows after.
+        pairs = [("2-swift", "1-flutter"), ("3-swift-edited", "4-flutter-back"), ("s3-swift", "s3-flutter-back")]
+        for swift_case, flutter_case in pairs:
+            swift_summary = pulled.get(swift_case, Path("/nonexistent")) / "swift-summary.json"
+            if swift_summary.exists() and flutter_case in dart:
+                comparisons[f"{swift_case} (Swift) vs {flutter_case} (Flutter)"] = compare(json.loads(swift_summary.read_text()), dart[flutter_case])
+        report = {
+            "simulator": {"name": SIM_NAME, "udid": rehearsal.sim.udid},
+            "commit": run(["git", "rev-parse", "HEAD"], cwd=REPO).stdout.strip(),
+            "scenarios": rehearsal.results,
+            "dartProblems": {k: v["problems"] for k, v in dart.items()},
+            "swiftVsDart": comparisons,
+        }
+        (out / "report.json").write_text(json.dumps(report, indent=2, sort_keys=True, default=str))
+        print(out / "report.json")
+        return 1 if any("error" in result for result in rehearsal.results.values()) or any(
+            result for result in comparisons.values()
+        ) or any(result["problems"] for result in dart.values()) else 0
+    finally:
+        rehearsal.sim.shutdown()
 
 
 if __name__ == "__main__":

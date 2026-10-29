@@ -15,14 +15,18 @@
 # Build the Runner.app from the flutter-final tag (budget_app/ is no longer
 # in the tree); upgrade_rehearsal.py's build_flutter() does exactly that.
 set -euo pipefail
+. "$(dirname "$0")/lib/sim.sh"
 FLUTTER_APP="${1:?path to the Flutter Runner.app}"
 NATIVE="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)/native"
 WORK="${TMPDIR:-/tmp}/budgie-system-flow"
 for old in $(xcrun simctl list devices | grep "    Budgie-System (" | grep -oE '[0-9A-F-]{36}'); do
   xcrun simctl shutdown "$old" 2>/dev/null || true; xcrun simctl delete "$old"
 done
-RUNTIME=$(xcrun simctl list runtimes | grep -E '^iOS' | tail -1 | grep -oE 'com\.apple\.CoreSimulator\.SimRuntime\.[A-Za-z0-9-]+')
+RUNTIME=$(sim_runtime "iPhone 17 Pro")
 UDID=$(xcrun simctl create Budgie-System "iPhone 17 Pro" "$RUNTIME")
+# Shut the simulator down on exit, whether the run passed or failed (the
+# device and its xcresult stay for inspection).
+trap 'xcrun simctl shutdown "$UDID" 2>/dev/null || true' EXIT
 xcrun simctl boot "$UDID"
 xcrun simctl bootstatus "$UDID" -b >/dev/null
 xcrun simctl install "$UDID" "$FLUTTER_APP"

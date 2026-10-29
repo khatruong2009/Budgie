@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
 # Runs the XCUITest MVP flow on a fresh "Budgie-UITest" simulator (created
 # if missing; no other simulator is touched), then loads the store it wrote
-# through the real Flutter models (ParityHarness verify mode).
+# through the real Flutter models (ParityHarness verify mode). The simulator
+# is shut down on exit, whether the run passed or failed.
 set -euo pipefail
+. "$(dirname "$0")/lib/sim.sh"
 NATIVE="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)/native"
 WORK="${TMPDIR:-/tmp}/budgie-ui-flow"
 UDID=$(xcrun simctl list devices | grep "Budgie-UITest (" | grep -oE '[0-9A-F-]{36}' | head -1 || true)
 if [ -z "$UDID" ]; then
-  RUNTIME=$(xcrun simctl list runtimes | grep -E '^iOS' | tail -1 | grep -oE 'com\.apple\.CoreSimulator\.SimRuntime\.[A-Za-z0-9-]+')
+  RUNTIME=$(sim_runtime "iPhone 17 Pro")
   UDID=$(xcrun simctl create Budgie-UITest "iPhone 17 Pro" "$RUNTIME")
 fi
+trap 'xcrun simctl shutdown "$UDID" 2>/dev/null || true' EXIT
 xcrun simctl shutdown "$UDID" 2>/dev/null || true
 xcrun simctl erase "$UDID"
 cd "$NATIVE" && xcodegen generate >/dev/null

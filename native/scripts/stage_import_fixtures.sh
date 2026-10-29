@@ -16,6 +16,11 @@
 # "Budgie UITest Duplicates.csv" and "Budgie UITest Bad Header.csv".
 set -euo pipefail
 UDID="${1:?usage: stage_import_fixtures.sh <simulator UDID>}"
+# bootstatus -b boots a shut-down simulator; if that is what happens here,
+# shut it down again on exit (a simulator that was already booted stays so).
+if ! xcrun simctl list devices booted | grep -q "$UDID"; then
+  trap 'xcrun simctl shutdown "$UDID" 2>/dev/null || true' EXIT
+fi
 xcrun simctl bootstatus "$UDID" -b >/dev/null
 
 GROUPS_DIR="$HOME/Library/Developer/CoreSimulator/Devices/$UDID/data/Containers/Shared/AppGroup"
