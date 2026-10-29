@@ -294,6 +294,7 @@ public enum SavingsGoalText {
 
 extension FinancialData {
     /// The readable goal with this id (the first, if ids repeat).
+    // Test-only: checked against Fixtures/goals
     public func savingsGoal(id: String) -> SavingsGoalRecord? {
         goalRows.lazy.compactMap(\.record).first { DartString.equal($0.id, id) }
     }

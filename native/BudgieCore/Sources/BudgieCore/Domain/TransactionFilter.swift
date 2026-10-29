@@ -148,6 +148,7 @@ public struct TransactionFilter: Equatable, Sendable {
     /// "Infinity", "1e400") are nil here; Dart keeps them (PARITY_GAPS).
     /// Kept for the parity tests: the app's Min / Max fields parse with the
     /// money format's separators instead (D6).
+    // Test-only: checked against Fixtures/flow (amounts)
     public static func parseAmount(_ text: String) -> Double? {
         let normalized = DartString.trim(String(decoding: text.utf16.filter { $0 != 0x2C }, as: UTF16.self))
         if normalized.isEmpty { return nil }

@@ -493,8 +493,9 @@ struct IndentedJSONTests {
         let value = JSONValue.object(JSONObject(ordered: [
             ("a", .array([])), ("b", .object(JSONObject())), ("c", .array([.int(1), .array([])])),
         ]))
-        #expect(DartJSON.encodeIndentedString(value) == "{\n  \"a\": [],\n  \"b\": {},\n  \"c\": [\n    1,\n    []\n  ]\n}")
-        #expect(DartJSON.encodeIndentedString(.array([])) == "[]")
-        #expect(DartJSON.encodeIndentedString(.string("x")) == "\"x\"")
+        func text(_ value: JSONValue) -> String { String(decoding: DartJSON.encodeIndented(value), as: UTF8.self) }
+        #expect(text(value) == "{\n  \"a\": [],\n  \"b\": {},\n  \"c\": [\n    1,\n    []\n  ]\n}")
+        #expect(text(.array([])) == "[]")
+        #expect(text(.string("x")) == "\"x\"")
     }
 }

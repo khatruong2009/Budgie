@@ -48,10 +48,6 @@ public struct LocalInsight: Sendable, Hashable {
     public let suggestedAction: String
     /// Local midnight of `now` (`DateTime(now.year, now.month, now.day)`).
     public let generatedDate: DartDateTime
-
-    public func supportingValue(_ key: String) -> Double? {
-        supportingValues.first { $0.key == key }?.value
-    }
 }
 
 public enum InsightEngine {

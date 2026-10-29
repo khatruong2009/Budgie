@@ -55,7 +55,6 @@ struct InsightEngineDartTests {
         #expect(pace.count == 1)
         #expect(pace.first?.severity == .warning)
         #expect(pace.first?.explanation.contains("80%") == true)
-        #expect(pace.first?.supportingValue("usedRatio") == 0.8)
     }
 
     @Test("detects duplicate transactions with an explainable stable id", arguments: insightZones)

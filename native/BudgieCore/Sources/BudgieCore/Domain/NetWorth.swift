@@ -74,6 +74,7 @@ extension FinancialData {
         netWorthEntries.contains { $0.amount(forMonth: month, calendar: calendar) != nil }
     }
 
+    // Test-only: checked against Fixtures/worth
     public func trackedNetWorthEntryCount(forMonth month: DartDateTime) -> Int {
         netWorthEntries.filter { $0.amount(forMonth: month, calendar: calendar) != nil }.count
     }
@@ -82,6 +83,7 @@ extension FinancialData {
         netWorthEntries.filter { $0.snapshot(forMonth: month) != nil }.count
     }
 
+    // Test-only: checked against Fixtures/worth
     public func staleNetWorthEntryCount(forMonth month: DartDateTime) -> Int {
         let key = calendar.netWorthMonthKey(month)
         return netWorthEntries.filter { entry in

@@ -29,12 +29,14 @@ extension HomeSummary {
     }
 
     /// `_SpendGauge` (:1398-1401): the fill fraction (unclamped).
+    // Test-only: checked against Fixtures/home/tz (gauge value)
     public static func gaugeFraction(spent: Double, income: Double) -> Double {
         income <= 0 ? 0 : spent / income
     }
 
     /// `_SpendGauge` labels (:1400-1401), whole units. The view prefixes
     /// "SPENT  " and "INCOME  ".
+    // Test-only: checked against Fixtures/home/tz (gauge texts)
     public static func gaugeLabels(spent: Double, income: Double, formatter: MoneyFormatter) -> (spent: String, income: String) {
         (formatter.format(spent, decimalDigits: 0), formatter.format(income, decimalDigits: 0))
     }

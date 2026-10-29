@@ -261,9 +261,9 @@ struct SpendParityTests {
         let gap = 2 * Double.pi * 0.005
         #expect(arcs.map(\.startAngle) == [-Double.pi / 2, -Double.pi / 2 + Double.pi])
         #expect(arcs.map(\.sweepAngle) == [Double.pi - gap, Double.pi - gap])
-        #expect(arcs.map(\.innerRadius) == [90, 90] && arcs.map(\.outerRadius) == [120, 120])
+        #expect(arcs.map(\.outerRadius) == [120, 120])
         let selected = two.arcs(selectedIndex: 1)
-        #expect(selected[1].radius == 102 && selected[1].lineWidth == 36 && selected[1].innerRadius == 84)
+        #expect(selected[1].radius == 102 && selected[1].lineWidth == 36)
         #expect(two.arcs(sweep: 0, selectedIndex: nil).isEmpty)
         // Halfway through the sweep the second slice starts at 3 o'clock.
         #expect(two.arcs(sweep: 0.5, selectedIndex: nil).map(\.startAngle) == [-Double.pi / 2, 0])

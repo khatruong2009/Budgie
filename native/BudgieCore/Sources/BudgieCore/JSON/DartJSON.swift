@@ -35,10 +35,6 @@ public enum DartJSON {
         return out
     }
 
-    public static func encodeIndentedString(_ value: JSONValue, mode: Mode = .preserving) -> String {
-        String(decoding: encodeIndented(value, mode: mode), as: UTF8.self)
-    }
-
     /// `_JsonPrettyPrinter.writeList` / `writeMap`.
     static func writeIndented(_ value: JSONValue, depth: Int, into out: inout [UInt8], mode: Mode) {
         func newline(_ level: Int) {

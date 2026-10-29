@@ -41,7 +41,6 @@ public struct DonutGeometry: Sendable, Equatable {
         public let lineWidth: Double
 
         public var endAngle: Double { startAngle + sweepAngle }
-        public var innerRadius: Double { radius - lineWidth / 2 }
         public var outerRadius: Double { radius + lineWidth / 2 }
     }
 

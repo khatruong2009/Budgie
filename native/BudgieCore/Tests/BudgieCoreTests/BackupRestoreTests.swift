@@ -218,10 +218,6 @@ struct BackupRestoreTests {
         #expect(Array(data.categories.map(\.id).prefix(before.count)) == before)
         #expect(Array(data.categories.map(\.name).suffix(2)) == ["Brand New", "Keep"])
         #expect(result.preferenceWrites.isEmpty)
-        #expect(plan.keptSections == [
-            Section.selectedNetWorthMonth, Section.categories, Section.transactionTags, Section.categorizationRules,
-            Section.appSettings,
-        ])
         #expect(plan.replacedSections == [
             Section.transactions, Section.netWorthEntries, Section.categoryBudgetLimits, Section.savingsGoals,
             Section.recurringTransactions,

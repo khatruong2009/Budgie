@@ -219,14 +219,6 @@ extension RestorePlan {
         if !preferenceWrites.isEmpty { sections.append(Section.appSettings) }
         return sections
     }
-
-    /// Sections the restore keeps as they are (D10), `selectedNetWorthMonth`
-    /// always (Flutter keeps it too). The recurring generator and the
-    /// launch pass can still add to transactions and categories.
-    public var keptSections: [String] {
-        let replaced = Set(replacedSections)
-        return Section.all.filter { !replaced.contains($0) }
-    }
 }
 
 extension JSONValue {

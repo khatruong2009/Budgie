@@ -138,6 +138,7 @@ public actor FinancialStore {
     }
 
     /// Forgets the in-memory snapshot (as a relaunch would).
+    // Test-only: simulates a relaunch in the store-safety and backup-restore tests
     public func resetInMemoryState() {
         snapshot = nil
     }

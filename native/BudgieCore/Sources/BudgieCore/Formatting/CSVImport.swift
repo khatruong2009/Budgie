@@ -55,6 +55,7 @@ public enum CSVImport {
         }
 
         /// Dart's `e.toString()` for the failure Flutter has.
+        // Test-only: checked against Fixtures/csvimport
         public var flutterDescription: String? {
             switch self {
             case .notATransactionsCSV: "FormatException: Not a valid transactions CSV export"
