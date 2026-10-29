@@ -22,6 +22,7 @@ struct TransactionsView: View {
     @State private var pendingDelete: TransactionRecord?
     @State private var monthTaps = 0
     @State private var rowTaps = 0
+    @State private var dayGroupCache = DayGroupCache()
 
     var body: some View {
         let ledger = model.ledger
@@ -44,7 +45,7 @@ struct TransactionsView: View {
                         .padding(.horizontal, Metrics.pageHorizontal)
                         .frame(maxWidth: Metrics.maxContentWidth)
                         .frame(maxWidth: .infinity)
-                    monthContent(rows: ledger.newestFirst(inMonth: month), formatter: formatter)
+                    monthContent(rows: ledger.newestFirst(inMonth: month), month: month, formatter: formatter)
                         .padding(.top, Metrics.spacingM)
                 }
             } else {
@@ -86,14 +87,14 @@ struct TransactionsView: View {
     // MARK: - List
 
     @ViewBuilder
-    private func monthContent(rows: ArraySlice<LedgerRow>, formatter: MoneyFormatter) -> some View {
+    private func monthContent(rows: ArraySlice<LedgerRow>, month: DartDateTime, formatter: MoneyFormatter) -> some View {
         if rows.isEmpty {
             EmptyStateView(kind: .noData, symbol: "tray", title: MonthListCopy.emptyMonthTitle, message: MonthListCopy.emptyMonthMessage)
                 .frame(maxHeight: .infinity)
         } else {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0, pinnedViews: .sectionHeaders) {
-                    ForEach(MonthListCopy.dayGroups(from: rows)) { group in
+                    ForEach(dayGroupCache.groups(for: rows, month: month, revision: model.ledgerRevision)) { group in
                         Section {
                             dayCard(group, formatter: formatter)
                                 .padding(.horizontal, Metrics.pageHorizontal)
@@ -137,6 +138,31 @@ struct TransactionsView: View {
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
+    }
+}
+
+// MARK: - Day groups
+
+/// The month's day groups, rebuilt only when the month or the ledger changes
+/// (the rows are a function of both, and the ledger is replaced together with
+/// a `ledgerRevision` bump). A plain reference held in `@State`, so reading it
+/// in `body` is not an observed change.
+private final class DayGroupCache {
+    private var key: Key?
+    private var cached: [MonthListCopy.DayGroup] = []
+
+    private struct Key: Equatable {
+        let month: DartDateTime
+        let revision: Int
+    }
+
+    func groups(for rows: ArraySlice<LedgerRow>, month: DartDateTime, revision: Int) -> [MonthListCopy.DayGroup] {
+        let wanted = Key(month: month, revision: revision)
+        if key != wanted {
+            cached = MonthListCopy.dayGroups(from: rows)
+            key = wanted
+        }
+        return cached
     }
 }
 

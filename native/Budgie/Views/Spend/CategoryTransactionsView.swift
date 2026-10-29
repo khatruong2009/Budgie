@@ -19,6 +19,7 @@ struct CategoryTransactionsView: View {
     @State private var editing: TransactionRecord?
     @State private var pendingDelete: TransactionRecord?
     @State private var rowTaps = 0
+    @State private var styleCache = StyleCache()
 
     var body: some View {
         let category = drillIn.category
@@ -90,6 +91,12 @@ struct CategoryTransactionsView: View {
     /// The category's colour and icon as its Spend row shows them now, or
     /// the pushed ones when it is no longer in the month's breakdown.
     private func currentStyle() -> (Color, String) {
+        styleCache.style(for: drillIn, ledgerRevision: model.ledgerRevision, dataRevision: model.dataRevision) {
+            computeStyle()
+        }
+    }
+
+    private func computeStyle() -> (Color, String) {
         guard let data = model.data else { return (drillIn.palette.color, drillIn.symbol) }
         let picker = data.categoryPicker(for: .expense)
         let breakdown = CategoryBreakdown.build(
@@ -99,6 +106,33 @@ struct CategoryTransactionsView: View {
             return (drillIn.palette.color, drillIn.symbol)
         }
         return (record.palette.color, SpendDrillIn.symbol(for: record, in: SpendDrillIn.activeSymbols(picker)))
+    }
+}
+
+/// The category's style, recomputed only when the ledger or the data changed
+/// (`dataRevision` is bumped by every change of `model.data`, which holds the
+/// categories and budget limits the breakdown reads) or the route is another.
+/// A plain reference held in `@State`, so reading it in `body` is not an
+/// observed change.
+private final class StyleCache {
+    private var key: Key?
+    private var cached: (Color, String)?
+
+    private struct Key: Equatable {
+        let drillIn: SpendDrillIn
+        let ledgerRevision: Int
+        let dataRevision: Int
+    }
+
+    func style(
+        for drillIn: SpendDrillIn, ledgerRevision: Int, dataRevision: Int, compute: () -> (Color, String)
+    ) -> (Color, String) {
+        let wanted = Key(drillIn: drillIn, ledgerRevision: ledgerRevision, dataRevision: dataRevision)
+        if let cached, key == wanted { return cached }
+        let style = compute()
+        cached = style
+        key = wanted
+        return style
     }
 }
 
