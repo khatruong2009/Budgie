@@ -40,7 +40,7 @@ final class BackupUITests: XCTestCase {
         XCTAssertEqual(title.label, "Budgie Backup")
         screen.closeShareSheet()
         XCTAssertTrue(screen.waitUntil(10) { !title.exists }, "share sheet closed")
-        XCTAssertFalse(screen.labelled("Backup exported").waitForExistence(timeout: 3), "no message after a cancel")
+        XCTAssertFalse(app.labelled(exactly: "Backup exported").waitForExistence(timeout: 3), "no message after a cancel")
         XCTAssertTrue(screen.waitUntil(5) { app.buttons["settings.exportBackup"].exists }, "the row is enabled again")
     }
 
@@ -51,8 +51,8 @@ final class BackupUITests: XCTestCase {
         screen.tapRow("settings.importBackup")
         screen.pick("Budgie UITest Corrupt")
         XCTAssertTrue(
-            screen.labelled("Could not import backup: This is not a valid Budgie backup file").waitForExistence(timeout: 15))
-        XCTAssertFalse(screen.element("backup.confirm.title").exists)
+            app.labelled(exactly: "Could not import backup: This is not a valid Budgie backup file").waitForExistence(timeout: 15))
+        XCTAssertFalse(app.element("backup.confirm.title").exists)
         XCTAssertEqual(screen.transactionCount(), before)
     }
 
@@ -63,16 +63,16 @@ final class BackupUITests: XCTestCase {
         let before = screen.transactionCount()
         screen.tapRow("settings.importBackup")
         screen.pick("Budgie UITest Backup")
-        let title = screen.element("backup.confirm.title")
+        let title = app.element("backup.confirm.title")
         XCTAssertTrue(title.waitForExistence(timeout: 15))
         XCTAssertEqual(title.label, "Replace all data?")
         XCTAssertEqual(
-            screen.element("backup.confirm.message").label,
+            app.element("backup.confirm.message").label,
             "This will import 3 transactions, 0 net worth entries, 1 budgets, 0 goals and 0 recurring templates, "
                 + "replacing everything currently in Budgie. This cannot be undone.")
-        screen.element("backup.confirm.cancel").tapSettled()
+        app.element("backup.confirm.cancel").tapSettled()
         XCTAssertTrue(screen.waitUntil(5) { !title.exists })
-        XCTAssertFalse(screen.labelled("Backup restored").waitForExistence(timeout: 2))
+        XCTAssertFalse(app.labelled(exactly: "Backup restored").waitForExistence(timeout: 2))
         XCTAssertEqual(screen.transactionCount(), before, "Cancel changes nothing")
 
         screen.restoreFixtureBackup()
@@ -94,8 +94,8 @@ final class BackupUITests: XCTestCase {
         screen.openSettings()
         screen.tapRow("settings.importBackup")
         screen.pick("Budgie UITest Locked Backup")
-        screen.element("backup.confirm.confirm").tapSettled()
-        let lock = screen.element("applock.lock")
+        app.element("backup.confirm.confirm").tapSettled()
+        let lock = app.element("applock.lock")
         XCTAssertTrue(lock.waitForExistence(timeout: 15), "the lock screen after the restore")
         XCTAssertFalse(screen.waitUntil(3) { !lock.exists }, "nothing unlocks it without authenticating")
 

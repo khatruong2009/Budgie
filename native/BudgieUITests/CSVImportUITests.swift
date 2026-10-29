@@ -30,18 +30,18 @@ final class CSVImportUITests: XCTestCase {
     func testImportSkipsDuplicates() {
         screen.tapRow("settings.importCSV")
         screen.pick("Budgie UITest Import")
-        let title = screen.element("csvimport.confirm.title")
+        let title = app.element("csvimport.confirm.title")
         XCTAssertTrue(title.waitForExistence(timeout: 15))
         XCTAssertEqual(title.label, "Import 2 transactions?")
-        XCTAssertEqual(screen.element("csvimport.confirm.message").label, "2 duplicates will be skipped\n1 row could not be read")
-        screen.element("csvimport.confirm.cancel").tapSettled()
+        XCTAssertEqual(app.element("csvimport.confirm.message").label, "2 duplicates will be skipped\n1 row could not be read")
+        app.element("csvimport.confirm.cancel").tapSettled()
         XCTAssertTrue(screen.waitUntil(5) { !title.exists })
         XCTAssertEqual(screen.transactionCount(), 3, "Cancel imports nothing")
 
         screen.tapRow("settings.importCSV")
         screen.pick("Budgie UITest Import")
-        screen.element("csvimport.confirm.confirm").tapSettled()
-        XCTAssertTrue(screen.labelled("Imported 2 transactions, 2 duplicates skipped").waitForExistence(timeout: 15))
+        app.element("csvimport.confirm.confirm").tapSettled()
+        XCTAssertTrue(app.labelled(exactly: "Imported 2 transactions, 2 duplicates skipped").waitForExistence(timeout: 15))
         XCTAssertEqual(screen.transactionCount(), 5)
         app.goToHomeRoot()
         for name in ["UITest Refund", "UITest Coffee"] {
@@ -54,12 +54,12 @@ final class CSVImportUITests: XCTestCase {
     func testDuplicatesOnlyAndBadHeader() {
         screen.tapRow("settings.importCSV")
         screen.pick("Budgie UITest Duplicates")
-        XCTAssertTrue(screen.labelled("All transactions in this file already exist").waitForExistence(timeout: 15))
-        XCTAssertFalse(screen.element("csvimport.confirm.title").exists)
+        XCTAssertTrue(app.labelled(exactly: "All transactions in this file already exist").waitForExistence(timeout: 15))
+        XCTAssertFalse(app.element("csvimport.confirm.title").exists)
 
         screen.tapRow("settings.importCSV")
         screen.pick("Budgie UITest Bad Header")
-        XCTAssertTrue(screen.labelled("Could not import: Not a valid transactions CSV export").waitForExistence(timeout: 15))
+        XCTAssertTrue(app.labelled(exactly: "Could not import: Not a valid transactions CSV export").waitForExistence(timeout: 15))
         XCTAssertEqual(screen.transactionCount(), 3)
     }
 }
