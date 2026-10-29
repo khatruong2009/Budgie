@@ -16,7 +16,7 @@ private struct UnreadableStore: StoreFileSystem {
 @Suite("Pre-restore safety copy")
 struct PreRestoreBackupTests {
     func support() -> URL {
-        FileManager.default.temporaryDirectory.appendingPathComponent("budgie-restore-\(UUID().uuidString)")
+        TestDirectory.make("budgie-restore")
     }
 
     func backup(_ support: URL, store: StoreFileSystem, at micros: Int64 = 1_790_000_000_000_000) -> PreRestoreBackup {

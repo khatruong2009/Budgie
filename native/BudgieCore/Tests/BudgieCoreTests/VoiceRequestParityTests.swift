@@ -118,7 +118,7 @@ struct VoiceRequestParityTests {
             let name = c["fileName"].string!
             let label = "\(zone) \(name)"
             #expect(c["error"].isNull, "\(label) Flutter error \(c["error"].string ?? "")")
-            let directory = FileManager.default.temporaryDirectory.appendingPathComponent("voice-request-\(UUID().uuidString)")
+            let directory = TestDirectory.make("voice-request")
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             defer { try? FileManager.default.removeItem(at: directory) }
             let file = directory.appendingPathComponent(name)

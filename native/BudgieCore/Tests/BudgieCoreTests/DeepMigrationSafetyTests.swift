@@ -100,7 +100,7 @@ struct DeepMigrationSafetyTests {
 
     @Test("a regular file in place of the store directory is never an empty install")
     func invalidParentDirectory() async throws {
-        let parent = FileManager.default.temporaryDirectory.appendingPathComponent("budgie-deep-\(UUID().uuidString)")
+        let parent = TestDirectory.make("budgie-deep")
         defer { try? FileManager.default.removeItem(at: parent) }
         try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
         let dir = parent.appendingPathComponent(StoreFile.directoryName)
@@ -150,7 +150,7 @@ struct DeepMigrationSafetyTests {
 
     @Test("large on-disk ledger retains every record, original lexeme and unknown section")
     func largeRealDiskRoundTrip() async throws {
-        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("budgie-large-\(UUID().uuidString)")
+        let dir = TestDirectory.make("budgie-large")
         defer { try? FileManager.default.removeItem(at: dir) }
         var snapshot = try #require(StoreFile.decode(typicalFiles()[StoreFile.primaryName]!))
         let exemplar = try #require(snapshot.sections[Section.transactions]?.arrayValue?.first?.objectValue)

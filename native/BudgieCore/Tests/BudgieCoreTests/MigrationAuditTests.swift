@@ -55,7 +55,7 @@ struct MigrationAuditTests {
 
     @Test("a legacy-only Flutter update receives a new safety copy even without a primary")
     func legacyBackupRefresh() throws {
-        let support = FileManager.default.temporaryDirectory.appendingPathComponent("budgie-audit-\(UUID().uuidString)")
+        let support = TestDirectory.make("budgie-audit")
         defer { try? FileManager.default.removeItem(at: support) }
         let store = support.appendingPathComponent(StoreFile.directoryName)
         func backup(_ ledger: String) -> PreNativeMigrationBackup {

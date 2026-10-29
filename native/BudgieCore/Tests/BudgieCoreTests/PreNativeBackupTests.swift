@@ -6,7 +6,7 @@ import Testing
 @Suite("Pre-native migration backup (rule 1)")
 struct PreNativeBackupTests {
     func makeEnvironment() throws -> (support: URL, store: URL) {
-        let support = FileManager.default.temporaryDirectory.appendingPathComponent("budgie-support-\(UUID().uuidString)")
+        let support = TestDirectory.make("budgie-support")
         let store = support.appendingPathComponent(StoreFile.directoryName)
         try FileManager.default.createDirectory(at: store, withIntermediateDirectories: true)
         for (name, bytes) in try typicalFiles() {

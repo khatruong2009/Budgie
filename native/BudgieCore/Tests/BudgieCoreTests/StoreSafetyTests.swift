@@ -229,7 +229,7 @@ struct StoreSafetyTests {
 
     @Test("the real directory backend: commit, reload, and a directory in place of the primary")
     func directoryBackend() async throws {
-        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("budgie-store-\(UUID().uuidString)/financial_store")
+        let dir = TestDirectory.make("budgie-store").appendingPathComponent("financial_store")
         defer { try? FileManager.default.removeItem(at: dir.deletingLastPathComponent()) }
         let fs = DirectoryFileSystem(directory: dir)
         let store = FinancialStore(fileSystem: fs, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow)
@@ -242,7 +242,7 @@ struct StoreSafetyTests {
         #expect(reloaded.sections["a"]?.numberValue?.lexeme == "1200.0")
         #expect(try fs.list() == [StoreFile.backupName, StoreFile.primaryName])
 
-        let broken = FileManager.default.temporaryDirectory.appendingPathComponent("budgie-store-\(UUID().uuidString)")
+        let broken = TestDirectory.make("budgie-store")
         defer { try? FileManager.default.removeItem(at: broken) }
         try FileManager.default.createDirectory(at: broken.appendingPathComponent(StoreFile.primaryName), withIntermediateDirectories: true)
         let failing = FinancialStore(fileSystem: DirectoryFileSystem(directory: broken), preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow)

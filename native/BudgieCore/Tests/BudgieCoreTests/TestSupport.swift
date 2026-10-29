@@ -74,3 +74,11 @@ func same(_ actual: String, _ expected: String, _ label: String) {
 func same(_ actual: [String], _ expected: [String], _ label: String) {
     #expect(actual.map { Array($0.utf16) } == expected.map { Array($0.utf16) }, "\(label): \(actual) | \(expected)")
 }
+
+enum TestDirectory {
+    /// A fresh, not yet created path `<tmp>/<prefix>-<UUID>`. Callers create it
+    /// and remove it in a `defer`, as before.
+    static func make(_ prefix: String) -> URL {
+        FileManager.default.temporaryDirectory.appendingPathComponent("\(prefix)-\(UUID().uuidString)")
+    }
+}
