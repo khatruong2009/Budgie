@@ -184,7 +184,7 @@ struct FlowTransactionsView: View {
                     .accessibilityIdentifier("flow.all.count")
             }
             .padding(.horizontal, Metrics.spacingXS)
-            ChipWrap(spacing: Metrics.spacingS) {
+            FlowLayout(spacing: Metrics.spacingS) {
                 PillChip(label: summary.incomeText(formatter), color: BudgieColor.income)
                 PillChip(label: summary.expensesText(formatter), color: BudgieColor.danger)
                 PillChip(label: summary.netText(formatter), color: summary.netIsPositive ? BudgieColor.income : BudgieColor.danger)
@@ -376,7 +376,7 @@ private struct FiltersCard: View {
     /// 'All tags' then one chip per tag in provider order; a selected tag's
     /// chip clears the filter when tapped again. No haptic (Flutter).
     private var tagChips: some View {
-        ChipWrap(spacing: Metrics.spacingS) {
+        FlowLayout(spacing: Metrics.spacingS) {
             tagChip("All tags", selected: filter.tagId == nil) { filter.tagId = nil }
             ForEach(tags) { tag in
                 let selected = filter.tagId.map { $0.utf16.elementsEqual(tag.id.utf16) } ?? false
@@ -767,44 +767,5 @@ private struct PickerSheet: View {
         let rows = listHeight > 0 ? listHeight : CGFloat(options.count) * 49 - 1 + 4
         let natural = BudgetSheetLayout.handleHeight + header + min(rows, maxListHeight ?? .infinity) + 2 + Metrics.spacingM
         return .height(min(natural, hostHeight * 9 / 16))
-    }
-}
-
-// MARK: - Wrap layout
-
-/// Flutter `Wrap(spacing:, runSpacing:)` with equal spacings: children left
-/// to right, a new run when the next one does not fit, runs top-aligned.
-private struct ChipWrap: Layout {
-    var spacing: CGFloat
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        arrange(width: proposal.width ?? .infinity, subviews).size
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let layout = arrange(width: bounds.width, subviews)
-        for (index, frame) in layout.frames.enumerated() {
-            subviews[index].place(
-                at: CGPoint(x: bounds.minX + frame.minX, y: bounds.minY + frame.minY),
-                proposal: ProposedViewSize(frame.size))
-        }
-    }
-
-    private func arrange(width: CGFloat, _ subviews: Subviews) -> (frames: [CGRect], size: CGSize) {
-        var frames: [CGRect] = []
-        var x: CGFloat = 0, y: CGFloat = 0, runHeight: CGFloat = 0, widest: CGFloat = 0
-        for subview in subviews {
-            let size = subview.sizeThatFits(ProposedViewSize(width: width.isFinite ? width : nil, height: nil))
-            if x > 0 && x + size.width > width {
-                x = 0
-                y += runHeight + spacing
-                runHeight = 0
-            }
-            frames.append(CGRect(origin: CGPoint(x: x, y: y), size: size))
-            x += size.width + spacing
-            runHeight = max(runHeight, size.height)
-            widest = max(widest, x - spacing)
-        }
-        return (frames, CGSize(width: widest, height: y + runHeight))
     }
 }
