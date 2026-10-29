@@ -34,11 +34,11 @@ struct Scenario {
         // the primary file belongs; recreate it.
         let directories: Set<String> = name == "primary_is_directory" ? [StoreFile.primaryName] : []
         fileSystem = InMemoryFileSystem(files: files, directories: directories)
-        preferences = InMemoryPreferences(try Scenario.loadPrefs(url.appendingPathComponent("prefs.json")))
+        preferences = InMemoryPreferences(try Scenario.loadPrefs(Data(contentsOf: url.appendingPathComponent("prefs.json"))))
     }
 
-    static func loadPrefs(_ url: URL) throws -> [String: PreferenceValue] {
-        let typed = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as! [String: [String: Any]]
+    static func loadPrefs(_ data: Data) throws -> [String: PreferenceValue] {
+        let typed = try JSONSerialization.jsonObject(with: data) as! [String: [String: Any]]
         var result: [String: PreferenceValue] = [:]
         for (key, entry) in typed {
             let raw = entry["value"]!

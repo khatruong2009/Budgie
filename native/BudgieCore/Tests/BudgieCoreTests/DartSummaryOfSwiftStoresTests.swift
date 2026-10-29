@@ -42,7 +42,7 @@ struct DartSummaryOfSwiftStores {
                 files[file] = [UInt8](try Data(contentsOf: storeDir.appendingPathComponent(file)))
             }
             let prefsURL = dir.appendingPathComponent("prefs.json")
-            let prefs = FileManager.default.fileExists(atPath: prefsURL.path) ? try Scenario.loadPrefs(prefsURL) : [:]
+            let prefs = FileManager.default.fileExists(atPath: prefsURL.path) ? try Scenario.loadPrefs(Data(contentsOf: prefsURL)) : [:]
             let preferences = InMemoryPreferences(prefs)
             let store = FinancialStore(
                 fileSystem: InMemoryFileSystem(files: files, directories: []), preferences: preferences,

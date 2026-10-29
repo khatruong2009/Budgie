@@ -113,10 +113,6 @@ struct StoreParityTests {
 
 extension Scenario {
     static func loadPrefsJSON(_ json: Any?) throws -> [String: PreferenceValue] {
-        let data = try JSONSerialization.data(withJSONObject: json ?? [String: Any]())
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".json")
-        try data.write(to: url)
-        defer { try? FileManager.default.removeItem(at: url) }
-        return try loadPrefs(url)
+        try loadPrefs(JSONSerialization.data(withJSONObject: json ?? [String: Any]()))
     }
 }
