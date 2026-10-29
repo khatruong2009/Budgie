@@ -456,18 +456,48 @@ final class AppModel {
         WidgetCenter.shared.reloadAllTimelines()
     }
 
+    // MARK: - Mutations
+
+    /// Applies `body` to the loaded data in place, then runs `after` (side
+    /// effects that must precede the write). False, nothing run, without
+    /// loaded data or when `body` returns false (a refused edit).
+    private func applyMutation(_ body: (inout FinancialData) -> Bool, after: () -> Void = {}) -> Bool {
+        guard data != nil, body(&data!) else { return false }
+        after()
+        return true
+    }
+
+    /// `applyMutation`, then the awaited write of `sections`. False for a
+    /// refused edit (nothing written) and for a failed write alike.
+    private func mutate(
+        _ sections: [String], _ body: (inout FinancialData) -> Bool, after: () -> Void = {}
+    ) async -> Bool {
+        guard applyMutation(body, after: after) else { return false }
+        return await persist(sections)
+    }
+
+    /// `mutate` for the accounts and the selected Worth month: bumps
+    /// `netWorthRevision` (the `worthCache` key) before the write.
+    private func mutateNetWorth(_ sections: [String], _ body: (inout FinancialData) -> Bool) async -> Bool {
+        await mutate(sections, body, after: { netWorthRevision &+= 1 })
+    }
+
     // MARK: - Transactions
 
     @discardableResult
     func addTransaction(
         type: TransactionType, description: String, amount: Double, category: String, date: DartDateTime, tagIds: [String] = []
     ) async -> Bool {
-        guard data != nil, amount.isFinite else { return false }
-        _ = data!.addTransaction(
-            type: type, description: description, amount: amount, category: category, date: date, tagIds: tagIds, id: newID(),
-            now: now)
-        transactionsChanged()
-        return await persist([Section.transactions])
+        guard amount.isFinite else { return false }
+        return await mutate(
+            [Section.transactions],
+            { data in
+                _ = data.addTransaction(
+                    type: type, description: description, amount: amount, category: category, date: date, tagIds: tagIds,
+                    id: newID(), now: now)
+                return true
+            },
+            after: transactionsChanged)
     }
 
     /// Whether a readable transaction with this id is in memory (a false
@@ -478,16 +508,14 @@ final class AppModel {
 
     @discardableResult
     func updateTransaction(id: String, _ edit: TransactionRecord.Edit) async -> Bool {
-        guard data != nil, edit.amount.isFinite, data!.updateTransaction(id: id, edit, now: now) else { return false }
-        transactionsChanged()
-        return await persist([Section.transactions])
+        guard edit.amount.isFinite else { return false }
+        return await mutate(
+            [Section.transactions], { $0.updateTransaction(id: id, edit, now: now) }, after: transactionsChanged)
     }
 
     @discardableResult
     func deleteTransaction(id: String) async -> Bool {
-        guard data != nil, data!.deleteTransaction(id: id) else { return false }
-        transactionsChanged()
-        return await persist([Section.transactions])
+        await mutate([Section.transactions], { $0.deleteTransaction(id: id) }, after: transactionsChanged)
     }
 
     // MARK: - Recurring
@@ -495,32 +523,35 @@ final class AppModel {
     /// Dart generates due occurrences right after a template is added.
     @discardableResult
     func addTemplate(_ edit: RecurringTemplate.Edit) async -> Bool {
-        guard data != nil, edit.amount.isFinite else { return false }
-        data!.addTemplate(.make(
-            id: newID(), type: edit.type, description: edit.description, amount: edit.amount, category: edit.category,
-            pattern: edit.pattern, startDate: edit.startDate, dayOfMonth: edit.dayOfMonth, dayOfWeek: edit.dayOfWeek))
-        if RecurringGenerator.generateDue(in: &data!, now: now, clock: { [calendar] in calendar.now() }, newID: newID).changed {
-            transactionsChanged()
-        }
-        return await persist([Section.recurringTransactions, Section.transactions])
+        guard edit.amount.isFinite else { return false }
+        var generated = false
+        return await mutate(
+            [Section.recurringTransactions, Section.transactions],
+            { data in
+                data.addTemplate(.make(
+                    id: newID(), type: edit.type, description: edit.description, amount: edit.amount, category: edit.category,
+                    pattern: edit.pattern, startDate: edit.startDate, dayOfMonth: edit.dayOfMonth, dayOfWeek: edit.dayOfWeek))
+                generated = RecurringGenerator.generateDue(
+                    in: &data, now: now, clock: { [calendar] in calendar.now() }, newID: newID).changed
+                return true
+            },
+            after: { if generated { transactionsChanged() } })
     }
 
     @discardableResult
     func updateTemplate(id: String, _ edit: RecurringTemplate.Edit) async -> Bool {
-        guard data != nil, edit.amount.isFinite, data!.updateTemplate(id: id, edit) else { return false }
-        return await persist([Section.recurringTransactions])
+        guard edit.amount.isFinite else { return false }
+        return await mutate([Section.recurringTransactions], { $0.updateTemplate(id: id, edit) })
     }
 
     @discardableResult
     func setTemplateActive(id: String, _ active: Bool) async -> Bool {
-        guard data != nil, data!.setTemplateActive(id: id, active, now: now) else { return false }
-        return await persist([Section.recurringTransactions])
+        await mutate([Section.recurringTransactions], { $0.setTemplateActive(id: id, active, now: now) })
     }
 
     @discardableResult
     func deleteTemplate(id: String) async -> Bool {
-        guard data != nil, data!.deleteTemplate(id: id) else { return false }
-        return await persist([Section.recurringTransactions])
+        await mutate([Section.recurringTransactions], { $0.deleteTemplate(id: id) })
     }
 
     /// What the Recurring page's "Generate Due Transactions" did.
@@ -582,15 +613,13 @@ final class AppModel {
     /// Dart `setCategoryBudgetLimit` (trimmed; `limit <= 0` removes).
     @discardableResult
     func setBudgetLimit(category: String, limit: Double) async -> Bool {
-        guard data != nil, data!.setBudgetLimit(category: category, limit: limit) else { return false }
-        return await persist([Section.categoryBudgetLimits])
+        await mutate([Section.categoryBudgetLimits], { $0.setBudgetLimit(category: category, limit: limit) })
     }
 
     /// Dart `removeCategoryBudgetLimit`.
     @discardableResult
     func removeBudgetLimit(category: String) async -> Bool {
-        guard data != nil, data!.removeBudgetLimit(category: category) else { return false }
-        return await persist([Section.categoryBudgetLimits])
+        await mutate([Section.categoryBudgetLimits], { $0.removeBudgetLimit(category: category) })
     }
 
     /// Home's budget rows and the Edit/Add picker lists for `month`, in
@@ -672,10 +701,10 @@ final class AppModel {
     /// even when it is already selected (as Flutter).
     @discardableResult
     func selectNetWorthMonth(_ month: DartDateTime) async -> Bool {
-        guard data != nil else { return false }
-        data!.selectNetWorthMonth(month)
-        netWorthRevision &+= 1
-        return await persist([Section.selectedNetWorthMonth])
+        await mutateNetWorth([Section.selectedNetWorthMonth]) {
+            $0.selectNetWorthMonth(month)
+            return true
+        }
     }
 
     /// Dart `addNetWorthEntry`: the snapshot lands on `recordedAt`, else
@@ -685,12 +714,11 @@ final class AppModel {
     func addNetWorthEntry(
         name: String, type: NetWorthEntryType, amount: Double, month: DartDateTime? = nil, recordedAt: DartDateTime? = nil
     ) async -> Bool {
-        guard data != nil, amount.isFinite,
-            data!.addNetWorthEntry(name: name, type: type, amount: amount, month: month, recordedAt: recordedAt, id: newID(), now: now)
-                != nil
-        else { return false }
-        netWorthRevision &+= 1
-        return await persist([Section.netWorthEntries])
+        guard amount.isFinite else { return false }
+        return await mutateNetWorth([Section.netWorthEntries]) {
+            $0.addNetWorthEntry(
+                name: name, type: type, amount: amount, month: month, recordedAt: recordedAt, id: newID(), now: now) != nil
+        }
     }
 
     /// Dart `updateNetWorthEntry` (also "update balance" for a month): name
@@ -700,28 +728,25 @@ final class AppModel {
         id: String, name: String, type: NetWorthEntryType, amount: Double, month: DartDateTime? = nil,
         recordedAt: DartDateTime? = nil
     ) async -> Bool {
-        guard data != nil, amount.isFinite,
-            data!.updateNetWorthEntry(id: id, name: name, type: type, amount: amount, month: month, recordedAt: recordedAt, now: now)
-        else { return false }
-        netWorthRevision &+= 1
-        return await persist([Section.netWorthEntries])
+        guard amount.isFinite else { return false }
+        return await mutateNetWorth([Section.netWorthEntries]) {
+            $0.updateNetWorthEntry(
+                id: id, name: name, type: type, amount: amount, month: month, recordedAt: recordedAt, now: now)
+        }
     }
 
     /// Dart `deleteNetWorthEntry`: the account and all its snapshots.
     @discardableResult
     func deleteNetWorthEntry(id: String) async -> Bool {
-        guard data != nil, data!.deleteNetWorthEntry(id: id) else { return false }
-        netWorthRevision &+= 1
-        return await persist([Section.netWorthEntries])
+        await mutateNetWorth([Section.netWorthEntries], { $0.deleteNetWorthEntry(id: id) })
     }
 
     /// Dart `deleteNetWorthSnapshot`: the snapshot recorded at exactly
     /// `recordedAt`; false without a write when there is none.
     @discardableResult
     func deleteNetWorthSnapshot(entryID: String, recordedAt: DartDateTime) async -> Bool {
-        guard data != nil, data!.deleteNetWorthSnapshot(entryID: entryID, recordedAt: recordedAt) else { return false }
-        netWorthRevision &+= 1
-        return await persist([Section.netWorthEntries])
+        await mutateNetWorth(
+            [Section.netWorthEntries], { $0.deleteNetWorthSnapshot(entryID: entryID, recordedAt: recordedAt) })
     }
 
     // MARK: - Savings goals
@@ -754,12 +779,15 @@ final class AppModel {
     @discardableResult
     func addSavingsGoal(name: String, targetAmount: Double, targetDate: DartDateTime) async -> SaveOutcome {
         let now = self.now
-        guard data != nil, targetAmount.isFinite,
-            data!.addSavingsGoal(
-                name: name, targetAmount: targetAmount, targetDate: targetDate,
-                id: SavingsGoalRecord.makeID(now: now, counter: savingsGoalIDCounter), now: now) != nil
+        guard targetAmount.isFinite,
+            applyMutation(
+                {
+                    $0.addSavingsGoal(
+                        name: name, targetAmount: targetAmount, targetDate: targetDate,
+                        id: SavingsGoalRecord.makeID(now: now, counter: savingsGoalIDCounter), now: now) != nil
+                },
+                after: { savingsGoalIDCounter += 1 })
         else { return .rejected }
-        savingsGoalIDCounter += 1
         return await persistGoals()
     }
 
@@ -767,8 +795,8 @@ final class AppModel {
     /// and target date (not normalised); `completedAt` follows the amount.
     @discardableResult
     func updateSavingsGoal(id: String, _ edit: SavingsGoalRecord.Edit) async -> SaveOutcome {
-        guard data != nil, edit.targetAmount.isFinite, edit.currentAmount.isFinite,
-            data!.updateSavingsGoal(id: id, edit, now: now)
+        guard edit.targetAmount.isFinite, edit.currentAmount.isFinite,
+            applyMutation({ $0.updateSavingsGoal(id: id, edit, now: now) })
         else { return .rejected }
         return await persistGoals()
     }
@@ -776,7 +804,7 @@ final class AppModel {
     /// Dart `deleteSavingsGoal`: every goal with this id.
     @discardableResult
     func deleteSavingsGoal(id: String) async -> SaveOutcome {
-        guard data != nil, data!.deleteSavingsGoal(id: id) else { return .rejected }
+        guard applyMutation({ $0.deleteSavingsGoal(id: id) }) else { return .rejected }
         return await persistGoals()
     }
 
@@ -785,7 +813,7 @@ final class AppModel {
     /// goal as shown before the dialog, as in Flutter.
     @discardableResult
     func allocateToSavingsGoal(id: String, amount: Double) async -> SaveOutcome {
-        guard data != nil, amount.isFinite, data!.allocateToSavingsGoal(id: id, amount: amount, now: now) else {
+        guard amount.isFinite, applyMutation({ $0.allocateToSavingsGoal(id: id, amount: amount, now: now) }) else {
             return .rejected
         }
         return await persistGoals()
