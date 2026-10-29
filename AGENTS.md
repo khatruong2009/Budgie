@@ -68,7 +68,15 @@ cd native && xcodegen generate   # then build for a simulator with zero warnings
 
 plus the UI tests for what changed (`native/scripts/ui_flow.sh`, and
 `native/scripts/system_flow.sh <Flutter Runner.app>` when quick actions,
-deep links, the widget or the scene delegate change). The Dart tooling
+deep links, the widget or the scene delegate change). `ui_flow.sh` does not
+run `BackupUITests` or `CSVImportUITests`: they pick files from the
+simulator's "On My iPhone", so on an erased, booted simulator run
+`native/scripts/stage_import_fixtures.sh <UDID>` first, then those classes
+with `xcodebuild test -only-testing:BudgieUITests/BackupUITests` (or
+`CSVImportUITests`). They replace the app's data and skip themselves on a
+store UI tests did not make. Build the Flutter `Runner.app` for
+`system_flow.sh` with `native/scripts/upgrade_rehearsal.py --build-only`.
+The Dart tooling
 (`ParityHarness/run.sh`, `verify-swift-output-in-dart.sh`, `ui_flow.sh`'s
 store check, `upgrade_rehearsal.py`) needs the Flutter SDK and builds from
 the `flutter-final` tag.
