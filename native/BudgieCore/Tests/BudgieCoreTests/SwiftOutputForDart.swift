@@ -1,3 +1,12 @@
+// Fixture generator, not a regular test. It runs the Swift store, migration and
+// mutation code over the committed scenarios and writes the resulting store
+// files and preferences to a directory so the Dart side (ParityHarness) can
+// check that the real Flutter code loads what Swift wrote. It is gated by the
+// BUDGIE_SWIFT_OUT environment variable (the output directory; BUDGIE_SWIFT_ZONE
+// picks the time zone) and does nothing when that is unset.
+// native/scripts/verify-swift-output-in-dart.sh drives it, once per zone, via
+// `swift test --filter SwiftOutputForDartTests`.
+
 import Foundation
 import Testing
 
