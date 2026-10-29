@@ -192,7 +192,10 @@ def main():
         # A leftover pre-native snapshot would hide the first-launch copy
         # (and its cost) from the launch measurements.
         subprocess.run(["rm", "-rf", str(container / "Library/Application Support/pre-native-migration")], check=True)
-        sh("xcrun", "simctl", "spawn", udid, "defaults", "write", BUNDLE, "flutter.onboarding_completed", "-bool", "true")
+        # No onboarding flag is written here: `simctl spawn defaults write`
+        # lands in the simulator's own preferences, not the app container's
+        # plist, so the app never sees it (checked on iOS 27.0). The tests
+        # start past the tour with the BUDGIE_SKIP_ONBOARDING launch hook.
     store.mkdir(parents=True, exist_ok=True)
     (store / "financial_store_v2.json").write_bytes(data)
     (store / "financial_store_v2.backup.json").write_bytes(data)
