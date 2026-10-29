@@ -365,15 +365,3 @@ private struct BudgetCategoryTile: View {
         .accessibilityIdentifier("budgets.picker.\(info.name)")
     }
 }
-
-// MARK: - Sheet sizing
-
-/// Sizes the budget sheets to their content the way Flutter's
-/// `MediaQuery` does: against the full window height (`sheetHostHeight`,
-/// measured at the app root). A `.height` detent is the grab handle plus the
-/// content: the system accounts for the bottom safe area (Flutter's
-/// `SafeArea`) and the keyboard itself.
-enum BudgetSheetLayout {
-    /// `budgieSheetChrome`'s grab-handle inset: 10 + 4 + 6.
-    static let handleHeight: CGFloat = 20
-}

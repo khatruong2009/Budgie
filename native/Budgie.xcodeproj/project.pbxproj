@@ -115,6 +115,7 @@
 		C35E109FAF11D13E350D06D0 /* CategoryTransactionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B0B5D6C0E064C559ED1CF2 /* CategoryTransactionsView.swift */; };
 		C446DD4190BB726505C1EB15 /* RecurringFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D56928DBFB23A84635CC482B /* RecurringFormView.swift */; };
 		C48EF4A9709A77D68B583102 /* DataImportDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46A622BC18E15CB82AA11A76 /* DataImportDialog.swift */; };
+		C5B85BE1ACAABE42546C4677 /* RollingAmount.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C6171CCFF8AF21F010ADD0 /* RollingAmount.swift */; };
 		C89FCB098684DB0A51BD750B /* FlowTransactionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6A7F9FE5703AC6B03F66BC2 /* FlowTransactionsView.swift */; };
 		CA27DE81D7E9B9C458654CDC /* WorthGoalsDepthUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7012DAED39CC82AC2D5F4927 /* WorthGoalsDepthUITests.swift */; };
 		CBA2719C7FCA371933164D04 /* AddFormPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E914AC86A596DC97136FF9E /* AddFormPresenter.swift */; };
@@ -349,6 +350,7 @@
 		E614E98AA4679E53569F42A4 /* YearOverYearCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YearOverYearCard.swift; sourceTree = "<group>"; };
 		E69FAA56FB03F2975E37E1D4 /* SplineSansMono-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SplineSansMono-Medium.ttf"; sourceTree = "<group>"; };
 		E732E2D9D8661DE2A3D35729 /* AmountInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmountInput.swift; sourceTree = "<group>"; };
+		E9C6171CCFF8AF21F010ADD0 /* RollingAmount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollingAmount.swift; sourceTree = "<group>"; };
 		EAFA90BE0220F078585F963B /* TagsRulesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsRulesView.swift; sourceTree = "<group>"; };
 		EB6AFCF97303B1CC30CF62C5 /* SpringBoardProbe.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SpringBoardProbe.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDDA82B10D34CBA6ED21C4CA /* AccountEditorInputTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountEditorInputTests.swift; sourceTree = "<group>"; };
@@ -562,6 +564,7 @@
 				E3C39A24DE28EC428B953C06 /* MonthStrip.swift */,
 				706B0B604B43DD43AB07DA98 /* Pills.swift */,
 				350D625134954C5DEC15E069 /* Progress.swift */,
+				E9C6171CCFF8AF21F010ADD0 /* RollingAmount.swift */,
 				DB963B463EA9B6FA04CB9A46 /* ToastHost.swift */,
 			);
 			path = Components;
@@ -1054,6 +1057,7 @@
 				C446DD4190BB726505C1EB15 /* RecurringFormView.swift in Sources */,
 				6203B90952180BFA29B28B58 /* RecurringView.swift in Sources */,
 				A20040AA4462073164A2FAA5 /* RehearsalSummary.swift in Sources */,
+				C5B85BE1ACAABE42546C4677 /* RollingAmount.swift in Sources */,
 				A40BFB68E6EE2FF18619167F /* RootView.swift in Sources */,
 				3670039B1B91546C7355A767 /* RuleEditorDialog.swift in Sources */,
 				F87B54CFDC9BC885E883C3FD /* SafeToSpendSheet.swift in Sources */,
