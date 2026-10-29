@@ -66,33 +66,14 @@ struct SpendMonthSheet: View {
         12 + 29 + 16 + min(estimatedListHeight, Self.maxListHeight) + 2 + 16
     }
 
-    /// A row: the month (15 w600) and the accent check on the selected one,
-    /// at least 48 tall.
+    /// A row: the month and the accent check on the selected one.
     private func row(_ month: DartDateTime) -> some View {
-        let isSelected = selected.map { DartCalendar.isSameMonth($0, month) } ?? false
-        return Button {
+        OptionRow(
+            title: DartDateFormat.yMMMM(month), selected: selected.map { DartCalendar.isSameMonth($0, month) } ?? false,
+            identifier: "spend.month.\(DartDateFormat.yyyyMM(month))"
+        ) {
             onPick(month)
             dismiss()
-        } label: {
-            HStack(spacing: 14) {
-                Text(DartDateFormat.yMMMM(month))
-                    .textStyle(.rowTitle)
-                    .foregroundStyle(BudgieColor.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                if isSelected {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(BudgieColor.accent)
-                        .frame(width: 24, height: 24)
-                        .accessibilityHidden(true)
-                }
-            }
-            .padding(.vertical, 12)
-            .frame(minHeight: Metrics.formRowHeight)
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
-        .accessibilityIdentifier("spend.month.\(DartDateFormat.yyyyMM(month))")
     }
 }

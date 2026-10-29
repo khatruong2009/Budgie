@@ -727,9 +727,6 @@ private struct PickerSheet: View {
     @State private var headerHeight: CGFloat = 0
     @State private var listHeight: CGFloat = 0
 
-    /// `rowTitle` at w700 for the selected row.
-    private static let selectedText = TextSpec(face: .gabaritoBold, size: 15, height: 1.25, relativeTo: .body)
-
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(title)
@@ -745,7 +742,11 @@ private struct PickerSheet: View {
                     VStack(spacing: 0) {
                         ForEach(options.indices, id: \.self) { index in
                             if index > 0 { Hairline() }
-                            optionRow(options[index]) {
+                            OptionRow(
+                                title: options[index].title, selected: options[index].selected, boldWhenSelected: true,
+                                hidesCheckFromVoiceOver: false, fillsWidth: true, explicitLabel: true,
+                                identifier: "flow.all.option"
+                            ) {
                                 onPick(index)
                                 dismiss()
                             }
@@ -774,32 +775,6 @@ private struct PickerSheet: View {
         let rows = listHeight > 0 ? listHeight : CGFloat(options.count) * 49 - 1 + 4
         let natural = BudgetSheetLayout.handleHeight + header + min(rows, maxListHeight ?? .infinity) + 2 + Metrics.spacingM
         return .height(min(natural, hostHeight * 9 / 16))
-    }
-
-    /// A row: the option (15 w600; w700 when selected) and the accent check,
-    /// at least 48 tall.
-    private func optionRow(_ option: PickerOption, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 14) {
-                Text(option.title)
-                    .textStyle(option.selected ? Self.selectedText : .rowTitle)
-                    .foregroundStyle(BudgieColor.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                if option.selected {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(BudgieColor.accent)
-                        .frame(width: 24, height: 24)
-                }
-            }
-            .padding(.vertical, 12)
-            .frame(maxWidth: .infinity, minHeight: Metrics.formRowHeight)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(option.title)
-        .accessibilityAddTraits(option.selected ? .isSelected : [])
-        .accessibilityIdentifier("flow.all.option")
     }
 }
 

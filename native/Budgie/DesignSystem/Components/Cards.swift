@@ -261,11 +261,15 @@ struct OptionListCard<Row: View>: View {
 
 /// A picker row: the option (15 w600, w700 when `boldWhenSelected` and
 /// selected) and an accent check on the selected one, at least 48 tall.
+/// `fillsWidth` gives the row `maxWidth: .infinity`; `explicitLabel` labels
+/// it with the title alone (so the check is not read).
 struct OptionRow: View {
     let title: String
     let selected: Bool
     var boldWhenSelected = false
     var hidesCheckFromVoiceOver = true
+    var fillsWidth = false
+    var explicitLabel = false
     var identifier: String? = nil
     let action: () -> Void
 
@@ -273,7 +277,16 @@ struct OptionRow: View {
     private static let selectedStyle = TextSpec(face: .gabaritoBold, size: 15, height: 1.25, relativeTo: .body)
 
     var body: some View {
-        let button = Button(action: action) {
+        let base = button.accessibilityAddTraits(selected ? .isSelected : [])
+        if let identifier {
+            base.accessibilityIdentifier(identifier)
+        } else {
+            base
+        }
+    }
+
+    @ViewBuilder private var button: some View {
+        let plain = Button(action: action) {
             HStack(spacing: 14) {
                 Text(title)
                     .textStyle(boldWhenSelected && selected ? Self.selectedStyle : .rowTitle)
@@ -288,15 +301,14 @@ struct OptionRow: View {
                 }
             }
             .padding(.vertical, 12)
-            .frame(minHeight: Metrics.formRowHeight)
+            .frame(maxWidth: fillsWidth ? .infinity : nil, minHeight: Metrics.formRowHeight)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityAddTraits(selected ? .isSelected : [])
-        if let identifier {
-            button.accessibilityIdentifier(identifier)
+        if explicitLabel {
+            plain.accessibilityLabel(title)
         } else {
-            button
+            plain
         }
     }
 }

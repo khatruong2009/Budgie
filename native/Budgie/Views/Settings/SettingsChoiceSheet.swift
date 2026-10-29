@@ -32,15 +32,8 @@ struct SettingsChoiceSheet<Value: Hashable & Sendable>: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .onGeometryChangeCompat { headerHeight = $0.height }
             ScrollView {
-                GlowCard(padding: 0) {
-                    VStack(spacing: 0) {
-                        ForEach(choices.indices, id: \.self) { index in
-                            if index > 0 { Hairline() }
-                            row(choices[index])
-                        }
-                    }
-                    .padding(.horizontal, Metrics.spacingM)
-                    .padding(.vertical, Metrics.spacingXXS)
+                OptionListCard(count: choices.count) { index in
+                    row(choices[index])
                 }
                 .padding(EdgeInsets(top: 0, leading: Metrics.pageHorizontal, bottom: Metrics.spacingM, trailing: Metrics.pageHorizontal))
                 .onGeometryChangeCompat { listHeight = $0.height }
@@ -62,35 +55,15 @@ struct SettingsChoiceSheet<Value: Hashable & Sendable>: View {
         return .height(min(BudgetSheetLayout.handleHeight + header + list, hostHeight * 0.75))
     }
 
-    /// A row: the label (15 w600) and the 24pt check box, at least 48 tall.
+    /// A row: the label and the 24pt check box, at least 48 tall.
     private func row(_ choice: SettingsChoice<Value>) -> some View {
-        let isCurrent = choice.value == current
-        return Button {
+        OptionRow(title: choice.label, selected: choice.value == current) {
             guard !picking else { return }
             picking = true
             Task {
                 await onPick(choice.value)
                 dismiss()
             }
-        } label: {
-            HStack(spacing: 14) {
-                Text(choice.label)
-                    .textStyle(.rowTitle)
-                    .foregroundStyle(BudgieColor.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                if isCurrent {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(BudgieColor.accent)
-                        .frame(width: 24, height: 24)
-                        .accessibilityHidden(true)
-                }
-            }
-            .padding(.vertical, 12)
-            .frame(minHeight: Metrics.formRowHeight)
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(isCurrent ? .isSelected : [])
     }
 }
