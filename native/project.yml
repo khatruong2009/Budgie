@@ -22,10 +22,22 @@ settings:
 packages:
   BudgieCore:
     path: BudgieCore
+targetTemplates:
+  iOSTarget:
+    platform: iOS
+  # Test bundles have no Info.plist file; Xcode generates one.
+  iOSTestBundle:
+    templates: [iOSTarget]
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+  iOSUITestBundle:
+    templates: [iOSTestBundle]
+    type: bundle.ui-testing
 targets:
   Budgie:
+    templates: [iOSTarget]
     type: application
-    platform: iOS
     sources:
       - path: Budgie
       - path: Shared
@@ -118,8 +130,8 @@ targets:
         SUPPORTS_MACCATALYST: NO
         SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
   BudgetWidgetsExtension:
+    templates: [iOSTarget]
     type: app-extension
-    platform: iOS
     sources:
       - path: BudgetWidgets
       - path: Shared
@@ -143,8 +155,8 @@ targets:
         TARGETED_DEVICE_FAMILY: "1,2"
         SKIP_INSTALL: YES
   BudgieAppTests:
+    templates: [iOSTestBundle]
     type: bundle.unit-test
-    platform: iOS
     sources:
       - path: BudgieAppTests
     dependencies:
@@ -152,12 +164,10 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.khatruong.budgetbuddy.tests
-        GENERATE_INFOPLIST_FILE: YES
         TEST_HOST: $(BUILT_PRODUCTS_DIR)/Budgie.app/Budgie
         BUNDLE_LOADER: $(TEST_HOST)
   BudgieUITests:
-    type: bundle.ui-testing
-    platform: iOS
+    templates: [iOSUITestBundle]
     sources:
       - path: BudgieUITests
     dependencies:
@@ -165,17 +175,14 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.khatruong.budgetbuddy.uitests
-        GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: Budgie
   SpringBoardProbe:
-    type: bundle.ui-testing
-    platform: iOS
+    templates: [iOSUITestBundle]
     sources:
       - path: SpringBoardProbe
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.khatruong.budgetbuddy.springboardprobe
-        GENERATE_INFOPLIST_FILE: YES
 schemes:
   SpringBoardProbe:
     build:
