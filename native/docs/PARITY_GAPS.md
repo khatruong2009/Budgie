@@ -793,13 +793,17 @@ available; the status column records how it matches Flutter.
 - Worth editor: a failed write closes the dialog and shows the save-failed
   toast (Flutter only shows the banner); Save, Cancel, close and the scrim
   are disabled while saving (a Flutter double tap adds the account twice).
+- Worth editor: the balance comes first, in the add form's big amount
+  field with the currency symbol (Flutter: last, a plain field with
+  `attach_money`), then the name, then Asset / Liability as an icon-only
+  arrow toggle beside the month (Flutter: full-width labelled pills above
+  the month and name), so the figure stays in view above the number pad.
 - Worth editor: the balance month is an inline month grid with a year
   stepper (January 1970 to this month) instead of Material's calendar
   picker, so a persisted future month cannot hit the picker's assert.
 - Worth editor: an untouched balance saves the stored value exactly
   (Flutter re-parses its 2-decimal prefill); a comma-decimal keyboard's ","
-  typed at the end reads as "." (Flutter's formatter drops it, D6); the
-  field glyph follows the base currency (Flutter: `attach_money`).
+  typed at the end reads as "." (Flutter's formatter drops it, D6).
 - Worth editor: the banner and Cancel / Save stay in place and only the
   fields scroll when the keyboard or a large text size leaves too little
   room (Flutter scrolls the whole dialog, buttons included). The account

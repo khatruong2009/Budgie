@@ -58,8 +58,8 @@ enum AmountInput {
     }
 
     /// The SF Symbol for an amount field's prefix glyph in the base
-    /// currency (Flutter always shows `$`): the transaction form and the
-    /// Worth editor.
+    /// currency (Flutter always shows `$`): the goal, allocation and rule
+    /// forms.
     nonisolated static func currencySymbolName(_ formatter: MoneyFormatter) -> String {
         switch formatter.currencyCode {
         case "USD", "CAD", "AUD", "MXN": "dollarsign"

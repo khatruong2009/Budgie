@@ -6,10 +6,12 @@ import SwiftUI
 /// the border. Banner: the type colour (green for an asset, rose for a
 /// liability) at 8% behind the type's arrow tile, "Add account" / "Edit
 /// account" in the sheet title style, the balance month and a close
-/// button. Body: the Asset / Liability pills, the balance month (an inline
-/// month grid, 1970 to this month, instead of Material's date picker), the
-/// account name and the balance, then the outlined Cancel and the Add /
-/// Save pill filled in the type colour.
+/// button. Body, balance first so the figure stays in view above the
+/// number pad: the balance in the big amount field, the account name, then
+/// one row with the Asset / Liability arrow toggle and the balance month
+/// (an inline month grid, 1970 to this month, instead of Material's date
+/// picker); then the outlined Cancel and the Add / Save pill filled in the
+/// type colour.
 ///
 /// The balance field formats as Flutter's `_CurrencyInputFormatter`
 /// (`NetWorthAmountInput.sanitize`: digits, one ".", two decimals, commas
@@ -36,6 +38,7 @@ struct AccountEditorDialog: View {
     /// The prefilled balance text and the stored value it rounds.
     @State private var prefill: (text: String, amount: Double?)
     @State private var typeTaps = 0
+    @State private var monthTaps = 0
 
     init(request: AccountEditorRequest, dismiss: @escaping () -> Void) {
         self.request = request
@@ -62,21 +65,23 @@ struct AccountEditorDialog: View {
             // insets are inside the scroll view so the focused field's 2pt
             // ring is not clipped by it.
             DialogScroll {
-                VStack(spacing: 16) {
-                    TypePills(type: $type) { typeTaps += 1 }
-                    monthField
+                VStack(spacing: 12) {
+                    // "Balance" keeps the label short enough for a long
+                    // figure on a small phone; the type is in the label
+                    // VoiceOver reads.
                     BudgieField(
-                        title: "Account name", text: $name, symbol: Self.walletSymbol, capitalization: .words,
-                        error: nameError)
+                        title: "Balance", text: $amountText, prompt: "0.00", keyboard: .decimalPad,
+                        error: amountError, style: .amount, prefix: AmountInput.currencySymbol(model.moneyFormatter),
+                        accessibilityTitle: type == .asset ? "Asset balance" : "Liability balance")
                     BudgieField(
-                        title: type == .asset ? "Asset balance" : "Liability balance", text: $amountText,
-                        symbol: AmountInput.currencySymbolName(model.moneyFormatter), keyboard: .decimalPad,
-                        error: amountError)
+                        title: "Account name", text: $name, prompt: "Account name", symbol: Self.walletSymbol,
+                        capitalization: .words, error: nameError, style: .inline)
+                    typeAndMonth
                 }
-                .padding(EdgeInsets(top: 24, leading: 24, bottom: 0, trailing: 24))
+                .padding(EdgeInsets(top: 20, leading: 20, bottom: 0, trailing: 20))
             }
             buttons
-                .padding(EdgeInsets(top: 24, leading: 24, bottom: 20, trailing: 24))
+                .padding(EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20))
         }
         .onChange(of: amountText) { old, new in
             if let replacement = Self.sanitizedAmount(old: old, new: new, prefill: prefill.text) { amountText = replacement }
@@ -107,7 +112,7 @@ struct AccountEditorDialog: View {
 
     private var banner: some View {
         HStack(spacing: 0) {
-            IconTile(symbol: type == .asset ? "arrow.up.right" : "arrow.down.left", color: accent, size: 48, iconSize: 24)
+            IconTile(symbol: type == .asset ? "arrow.up.right" : "arrow.down.left", color: accent, size: 44, iconSize: 22)
             VStack(alignment: .leading, spacing: 2) {
                 Text(isEditing ? "Edit account" : "Add account")
                     .textStyle(.sheetTitle)
@@ -118,7 +123,7 @@ struct AccountEditorDialog: View {
                     .foregroundStyle(BudgieColor.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.leading, 16)
+            .padding(.leading, 14)
             Button(action: dismiss) {
                 Image(systemName: "xmark")
                     .font(.system(size: 13, weight: .semibold))
@@ -133,7 +138,7 @@ struct AccountEditorDialog: View {
             .accessibilityLabel("Close")
             .accessibilityIdentifier("worth.editor.close")
         }
-        .padding(EdgeInsets(top: 24, leading: 24, bottom: 16, trailing: 24))
+        .padding(EdgeInsets(top: 20, leading: 20, bottom: 14, trailing: 20))
         // A flat tint of the type colour (Flutter: a green or red gradient).
         .background(accent.opacity(0.08))
         // Inside the dialog card's 1pt border.
@@ -145,18 +150,57 @@ struct AccountEditorDialog: View {
         .motion(Motion.easeInOut(0.26), value: type)
     }
 
-    // MARK: - Balance month
+    // MARK: - Type and balance month
 
-    private var monthField: some View {
+    /// The type toggle beside the balance month, the month grid below them
+    /// while picking.
+    private var typeAndMonth: some View {
         VStack(spacing: 8) {
-            DateTile(label: "Balance month", value: DartDateFormat.yMMMM(entryMonth), trailingSymbol: "chevron.down") {
-                pickingMonth.toggle()
+            HStack(spacing: 8) {
+                TypeToggle(type: $type) { typeTaps += 1 }
+                monthButton
             }
-            .accessibilityIdentifier("worth.editor.month")
             if pickingMonth {
                 BalanceMonthGrid(selected: entryMonth, now: model.now, calendar: request.calendar, pick: pickMonth)
             }
         }
+    }
+
+    /// The balance month on the field fill: a calendar glyph, `yMMMM` and a
+    /// chevron, at least 44pt tall (the text wraps at large sizes). Opening
+    /// the grid ends editing: the balance keeps its focus otherwise, and the
+    /// number pad leaves room for only the grid's first rows.
+    private var monthButton: some View {
+        let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
+        return Button {
+            monthTaps += 1
+            if !pickingMonth { RuleEditorDialog.dismissKeyboard() }
+            pickingMonth.toggle()
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "calendar")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(BudgieColor.textSecondary)
+                Text(DartDateFormat.yMMMM(entryMonth))
+                    .textStyle(.rowTitle)
+                    .foregroundStyle(BudgieColor.textPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(BudgieColor.textSecondary)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 6)
+            .frame(minHeight: Metrics.touchTarget)
+            .background(BudgieColor.fieldFill, in: shape)
+            .overlay(shape.strokeBorder(BudgieColor.cardBorder, lineWidth: Metrics.borderThin))
+            .contentShape(shape)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Balance month")
+        .accessibilityValue(DartDateFormat.yMMMM(entryMonth))
+        .accessibilityIdentifier("worth.editor.month")
+        .sensoryFeedback(.impact(weight: .light), trigger: monthTaps)
     }
 
     /// `_pickEntryMonth`: editing refills the balance with the new month's
@@ -241,43 +285,47 @@ struct AccountEditorDialog: View {
     }
 }
 
-// MARK: - Type pills
+// MARK: - Type toggle
 
-/// `_TypeToggle`: two 48pt pills (radius 14), "Asset" (green, north-east
-/// arrow) and "Liability" (rose, south-west arrow). The selected one fills
-/// with its colour, content on-accent; the other sits on the field fill
-/// with a card border. Every tap ticks, as Flutter.
-private struct TypePills: View {
+/// `_TypeToggle` as a compact segmented control: Asset (green, north-east
+/// arrow) and Liability (rose, south-west arrow), 44pt wide segments on the
+/// field fill with a card border. The selected one fills with its colour,
+/// arrow on-accent; the names are VoiceOver labels (the banner, the arrow
+/// tile and the Save pill also follow the type). Every tap ticks, as
+/// Flutter.
+private struct TypeToggle: View {
     @Binding var type: NetWorthEntryType
     let onTap: () -> Void
 
     var body: some View {
-        HStack(spacing: 8) {
-            pill(.asset, "Asset", symbol: "arrow.up.right", color: BudgieColor.income)
-            pill(.liability, "Liability", symbol: "arrow.down.left", color: BudgieColor.danger)
+        let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
+        HStack(spacing: 2) {
+            segment(.asset, "Asset", symbol: "arrow.up.right", color: BudgieColor.income)
+            segment(.liability, "Liability", symbol: "arrow.down.left", color: BudgieColor.danger)
         }
+        .padding(3)
+        .background(BudgieColor.fieldFill, in: shape)
+        .overlay(shape.strokeBorder(BudgieColor.cardBorder, lineWidth: Metrics.borderThin))
     }
 
-    private func pill(_ value: NetWorthEntryType, _ title: String, symbol: String, color: Color) -> some View {
+    private func segment(_ value: NetWorthEntryType, _ title: String, symbol: String, color: Color) -> some View {
         let selected = type == value
-        let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: 11, style: .continuous)
         return Button {
             onTap()
             type = value
         } label: {
-            HStack(spacing: 6) {
-                Image(systemName: symbol).font(.system(size: 15, weight: .semibold)).accessibilityHidden(true)
-                Text(title).textStyle(WorthStyle.chipBold)
-            }
-            .foregroundStyle(selected ? BudgieColor.onAccent : BudgieColor.textSecondary)
-            .frame(maxWidth: .infinity)
-            .frame(height: 48)
-            .background(selected ? color : BudgieColor.fieldFill, in: shape)
-            .overlay { if !selected { shape.strokeBorder(BudgieColor.cardBorder, lineWidth: Metrics.borderThin) } }
-            .contentShape(shape)
+            Image(systemName: symbol)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(selected ? BudgieColor.onAccent : BudgieColor.textSecondary)
+                .frame(width: Metrics.touchTarget, height: 38)
+                .background(selected ? color : Color.clear, in: shape)
+                // 38pt tall inside the 3pt inset; the tap area is 44.
+                .tapArea(vertical: 3)
         }
         .buttonStyle(.plain)
         .motion(Motion.easeInOut(0.22), value: selected)
+        .accessibilityLabel(title)
         .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityIdentifier(value == .asset ? "worth.editor.asset" : "worth.editor.liability")
     }
