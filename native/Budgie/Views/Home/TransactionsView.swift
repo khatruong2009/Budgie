@@ -60,19 +60,7 @@ struct TransactionsView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(BudgieColor.background)
-        .navigationTitle("Transactions")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.visible, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarBackground(BudgieColor.background, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("Transactions")
-                    .textStyle(.sectionHeader)
-                    .foregroundStyle(BudgieColor.textPrimary)
-                    .accessibilityAddTraits(.isHeader)
-            }
-        }
+        .budgiePushedTitle("Transactions", style: .sectionHeader)
         .onChange(of: model.ledgerRevision) { _, _ in
             // The chosen month lost its last row: leave it for good rather
             // than snapping back to it if a row is added there later.
