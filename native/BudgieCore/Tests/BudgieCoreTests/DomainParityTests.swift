@@ -176,61 +176,8 @@ struct DomainParityTests {
     }
 }
 
-@Suite("Domain: generator and safe-to-spend against Dart in four time zones")
+@Suite("Domain: ordering and the safe-to-spend asOf inputs (the zone tests are in LogicDSTParityTests)")
 struct LogicParityTests {
-    @Test("recurring generator cases", arguments: fixtureZones)
-    func generator(zone: String) throws {
-        let tz = TimeZone(identifier: zone)!
-        let calendar = DartCalendar(timeZone: tz)
-        let fixture = try Fixtures.json(zoneDirectory(zone) + "/generator.json")
-        for c in fixture["cases"].array {
-            let template = RecurringTemplate.parse(c["template"].value!, calendar: calendar, newID: { "x" })!
-            var data = FinancialData.load(
-                FinancialSnapshot(revision: 0, sections: JSONObject(ordered: [(Section.recurringTransactions, .array([.object(template.raw)]))])),
-                preferences: InMemoryPreferences(), calendar: calendar, now: { calendar.date(2026, 1, 1, 12) }, newID: { "id" }
-            ).data
-            let now = try calendar.parse(c["now"]["iso"].string!)
-            _ = RecurringGenerator.generateDue(in: &data, now: now, clock: { now }, newID: { UUID().uuidString })
-            let label = "\(zone) \(c["label"].string!) @ \(c["now"]["iso"].string!)"
-            #expect(data.transactions.map { $0.date.toIso8601String() } == c["generated"].array.compactMap { $0["date"].string }, "\(label) dates")
-            #expect(data.transactions.allSatisfy { $0.recurringTemplateId == template.id && $0.amount == 10.0 }, "\(label) rows")
-            #expect(data.templates[0].nextOccurrence.toIso8601String() == c["nextOccurrence"].string, "\(label) cursor")
-        }
-    }
-
-    @Test("safe-to-spend cases", arguments: fixtureZones)
-    func safeToSpend(zone: String) throws {
-        let tz = TimeZone(identifier: zone)!
-        let calendar = DartCalendar(timeZone: tz)
-        let fixture = try Fixtures.json(zoneDirectory(zone) + "/safe_to_spend.json")
-        let transactions = fixture["transactions"].array.map { TransactionRecord.parse($0.value!, calendar: calendar, newID: { "x" })! }
-        let templates = fixture["recurring"].array.map { RecurringTemplate.parse($0.value!, calendar: calendar, newID: { "x" })! }
-        let limits = fixture["limits"].keys.map { ($0, fixture["limits"][$0].double!) }
-        for (index, result) in fixture["results"].array.enumerated() {
-            let asOfText = result["asOf"].string!
-            // The harness pinned the wall clock to asOf before building goals
-            // and calculating; asOf itself is the unclamped value it passed.
-            let month = try calendar.parse(result["month"].string!)
-            let original = LogicParityTests.asOfInputs[index]
-            let asOf = try calendar.parse(original)
-            let goals = fixture["goals"].array.map { SavingsGoalRecord.parse($0.value!, calendar: calendar, now: asOf, newID: { "g" })! }
-            let b = SafeToSpend.calculate(
-                transactions: transactions, templates: templates, budgetLimits: limits, savingsGoals: goals,
-                month: month, asOf: asOf, wallClock: asOf, calendar: calendar)
-            let label = "\(zone) \(original)"
-            #expect(b.asOf.toIso8601String() == asOfText, "\(label) asOf")
-            #expect(b.actualIncome == result["actualIncome"].double, "\(label) actualIncome")
-            #expect(b.expectedIncome == result["expectedIncome"].double, "\(label) expectedIncome")
-            #expect(b.actualExpenses == result["actualExpenses"].double, "\(label) actualExpenses")
-            #expect(b.upcomingRecurringExpenses == result["upcomingRecurringExpenses"].double, "\(label) upcoming")
-            #expect(b.flexibleBudgetReserve == result["flexibleBudgetReserve"].double, "\(label) reserve")
-            #expect(b.plannedGoalContributions == result["plannedGoalContributions"].double, "\(label) goals")
-            #expect(b.daysRemaining == result["daysRemaining"].int, "\(label) days")
-            #expect(b.safeToSpend == result["safeToSpend"].double, "\(label) result")
-            #expect(b.dailyAllowance == result["dailyAllowance"].double, "\(label) daily")
-        }
-    }
-
     /// The `asOf` values the harness passed (logic_fixtures_test.dart), in order.
     static let asOfInputs = [
         "2026-03-08T10:30:00.000", "2026-03-01T00:00:00.000", "2026-03-31T23:59:00.000",
@@ -284,47 +231,5 @@ struct CategoryTests {
         ]
         let picker = CategoryCatalog.pickerList(defined, type: .expense, usedNames: used)
         #expect(picker.map { Array($0.name.utf16) } == ["Caf\u{E9}", "Cafe\u{301}", " Legacy ", "Legacy"].map { Array($0.utf16) })
-    }
-}
-
-@Suite("Safe-to-spend: randomized differential corpus against the Dart calculator")
-struct SafeToSpendRandomTests {
-    @Test("400 random scenarios per zone", arguments: fixtureZones)
-    func random(zone: String) throws {
-        let calendar = DartCalendar(timeZone: TimeZone(identifier: zone)!)
-        let fixture = try Fixtures.json(zoneDirectory(zone) + "/safe_to_spend_random.json")
-        let cases = fixture["cases"].array
-        #expect(cases.count == 400)
-        var failures: [String] = []
-        for (index, c) in cases.enumerated() {
-            let asOf = try calendar.parse(c["asOf"].string!)
-            let month = try calendar.parse(c["month"].string!)
-            let transactions = c["transactions"].array.map { TransactionRecord.parse($0.value!, calendar: calendar, newID: { "x" })! }
-            let templates = c["recurring"].array.map { RecurringTemplate.parse($0.value!, calendar: calendar, newID: { "x" })! }
-            let limits = c["limits"].keys.map { ($0, c["limits"][$0].double!) }
-            let goals = c["goals"].array.map { SavingsGoalRecord.parse($0.value!, calendar: calendar, now: asOf, newID: { "g" })! }
-            let b = SafeToSpend.calculate(
-                transactions: transactions, templates: templates, budgetLimits: limits, savingsGoals: goals,
-                month: month, asOf: asOf, wallClock: asOf, calendar: calendar)
-            let w = c["result"]
-            let pairs: [(String, Double?, Double?)] = [
-                ("actualIncome", b.actualIncome, w["actualIncome"].double),
-                ("expectedIncome", b.expectedIncome, w["expectedIncome"].double),
-                ("actualExpenses", b.actualExpenses, w["actualExpenses"].double),
-                ("upcoming", b.upcomingRecurringExpenses, w["upcomingRecurringExpenses"].double),
-                ("reserve", b.flexibleBudgetReserve, w["flexibleBudgetReserve"].double),
-                ("goals", b.plannedGoalContributions, w["plannedGoalContributions"].double),
-                ("safeToSpend", b.safeToSpend, w["safeToSpend"].double),
-                ("daily", b.dailyAllowance, w["dailyAllowance"].double),
-                ("days", Double(b.daysRemaining), w["daysRemaining"].double),
-            ]
-            for (name, swift, dart) in pairs where swift != dart {
-                failures.append("#\(index) \(name): swift \(String(describing: swift)) dart \(String(describing: dart))")
-            }
-            if b.asOf.toIso8601String() != w["asOf"].string || b.month.toIso8601String() != w["month"].string {
-                failures.append("#\(index) dates: swift \(b.asOf.toIso8601String()) dart \(w["asOf"].string ?? "")")
-            }
-        }
-        #expect(failures.isEmpty, "\(zone): \(failures.count) mismatches, first: \(failures.prefix(10))")
     }
 }

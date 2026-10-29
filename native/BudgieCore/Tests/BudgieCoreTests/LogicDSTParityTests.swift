@@ -4,10 +4,9 @@ import Testing
 @testable import BudgieCore
 
 /// The logic fixtures (logic_fixtures_test.dart) in the zones whose DST
-/// change happens at midnight. America/Santiago is in `fixtureZones`, so
-/// DomainParityTests runs the generator, safe-to-spend and random files in
-/// it; Asia/Beirut is not, so the same three files are checked here with the
-/// same assertions. Fixtures/logic/tz/<zone>/generator_dst.json and
+/// change happens at midnight, and, for generator.json, safe_to_spend.json and
+/// safe_to_spend_random.json, in every logic zone (`logicZones`).
+/// Fixtures/logic/tz/<zone>/generator_dst.json and
 /// safe_to_spend_dst.json (templates, rows and clocks on, just before and
 /// just after each gap and fold, carrying epoch microseconds because a
 /// fold-hour wall time names two instants) are checked in every logic zone.
@@ -77,13 +76,13 @@ private func checkBreakdown(_ b: SafeToSpendBreakdown, _ w: J, _ label: String, 
 
 @Suite("Logic in zones with a midnight DST change (Fixtures/logic)")
 struct LogicDSTParityTests {
-    @Test("Beirut: recurring generator cases", arguments: beirutZones)
-    func beirutGenerator(zone: String) throws {
+    @Test("recurring generator cases", arguments: logicZones)
+    func generator(zone: String) throws {
         try checkGeneratorCases(zone: zone, file: "generator.json")
     }
 
-    @Test("Beirut: safe-to-spend cases", arguments: beirutZones)
-    func beirutSafeToSpend(zone: String) throws {
+    @Test("safe-to-spend cases", arguments: logicZones)
+    func safeToSpend(zone: String) throws {
         let tz = TimeZone(identifier: zone)!
         let calendar = DartCalendar(timeZone: tz)
         let fixture = try logicFixture(zone, "safe_to_spend.json")
@@ -106,8 +105,8 @@ struct LogicDSTParityTests {
         #expect(failures.isEmpty, "\(failures.prefix(10))")
     }
 
-    @Test("Beirut: 400 random safe-to-spend scenarios", arguments: beirutZones)
-    func beirutRandom(zone: String) throws {
+    @Test("400 random safe-to-spend scenarios", arguments: logicZones)
+    func random(zone: String) throws {
         let calendar = DartCalendar(timeZone: TimeZone(identifier: zone)!)
         let fixture = try logicFixture(zone, "safe_to_spend_random.json")
         let cases = fixture["cases"].array
