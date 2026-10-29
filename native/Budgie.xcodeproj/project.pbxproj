@@ -94,6 +94,7 @@
 		9C36A3158406EA3338A36968 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D39DC37012306B07E6140E /* Colors.swift */; };
 		9C6AEF96E6D5E17D4C028A17 /* OFL-Gabarito.txt in Resources */ = {isa = PBXBuildFile; fileRef = 91CC962E50A36F957F4DD544 /* OFL-Gabarito.txt */; };
 		9D1EF823D7C304C67FA2BFC3 /* Chrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = F311E0C1EEAE984A312B2AFD /* Chrome.swift */; };
+		9DE0EAA60E2685539AF2ADC7 /* SettingsView+Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3371558F6213DAE3080727B2 /* SettingsView+Data.swift */; };
 		A20040AA4462073164A2FAA5 /* RehearsalSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26060D2DC9FBC934F4E5A81 /* RehearsalSummary.swift */; };
 		A33249F54E8B2B0DE95E1C20 /* AmountInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = E732E2D9D8661DE2A3D35729 /* AmountInput.swift */; };
 		A40BFB68E6EE2FF18619167F /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBBE5D912C19A6258BE48F99 /* RootView.swift */; };
@@ -238,6 +239,7 @@
 		3140229293B68DC80B29695D /* AccountHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountHistoryView.swift; sourceTree = "<group>"; };
 		31BFEBF0FCFDE676131B233F /* BudgetWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BudgetWidgets.entitlements; sourceTree = "<group>"; };
 		31D535FCA57003E013F50CD1 /* ToastTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastTests.swift; sourceTree = "<group>"; };
+		3371558F6213DAE3080727B2 /* SettingsView+Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SettingsView+Data.swift"; sourceTree = "<group>"; };
 		34255F0F90CB1FC435B72B63 /* TransactionsPreviewCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsPreviewCard.swift; sourceTree = "<group>"; };
 		345A926E74D4C24BFC4677CE /* DonutChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonutChart.swift; sourceTree = "<group>"; };
 		350D625134954C5DEC15E069 /* Progress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Progress.swift; sourceTree = "<group>"; };
@@ -740,6 +742,7 @@
 				BC9A6C45595FA738A4CA3C83 /* RuleEditorDialog.swift */,
 				A181F647811D2BC5C22C6D1C /* SettingsChoiceSheet.swift */,
 				B90721EC861BCA0309EBE86D /* SettingsRows.swift */,
+				3371558F6213DAE3080727B2 /* SettingsView+Data.swift */,
 				F8576F10D7E1C1D7C72E312B /* ShareSheet.swift */,
 				3F4B278CBFA76447B29AB89E /* TagDialogs.swift */,
 				EAFA90BE0220F078585F963B /* TagsRulesView.swift */,
@@ -1075,6 +1078,7 @@
 				F87B54CFDC9BC885E883C3FD /* SafeToSpendSheet.swift in Sources */,
 				FBAD6964C736FAAB4EADE1C3 /* SettingsChoiceSheet.swift in Sources */,
 				7BB7CCEDB7106CD947FF5022 /* SettingsRows.swift in Sources */,
+				9DE0EAA60E2685539AF2ADC7 /* SettingsView+Data.swift in Sources */,
 				C02683C5A3EEAFEFAA011A50 /* SettingsView.swift in Sources */,
 				9594C1D2AE4C9E17DDBC5992 /* ShareSheet.swift in Sources */,
 				3918938C1D4101C0BF07C5AB /* Signposts.swift in Sources */,
