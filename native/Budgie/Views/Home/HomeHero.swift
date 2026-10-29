@@ -121,7 +121,7 @@ private struct CashFlowRing: View {
         .motion(Motion.ring, value: appeared)
         .onAppear {
             guard !appeared else { return }
-            if reduceMotion { appeared = true } else { withAnimation(Motion.ring) { appeared = true } }
+            Motion.animate(Motion.ring, reduceMotion: reduceMotion) { appeared = true }
         }
         .accessibilityHidden(true)
     }

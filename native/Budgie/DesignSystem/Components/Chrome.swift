@@ -340,7 +340,7 @@ private struct DialogHost<Dialog: View>: View {
         }
         .onAppear {
             let animation = placement == .bottom ? Motion.fastOutSlowIn(0.25) : Motion.easeOut(0.15)
-            if reduceMotion { visible = true } else { withAnimation(animation) { visible = true } }
+            Motion.animate(animation, reduceMotion: reduceMotion) { visible = true }
         }
     }
 

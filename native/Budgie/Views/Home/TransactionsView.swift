@@ -13,7 +13,6 @@ import SwiftUI
 /// the transactions.
 struct TransactionsView: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// The month the user tapped. `nil` (or a month that no longer has
     /// transactions) means the newest available month.

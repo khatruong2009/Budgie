@@ -13,7 +13,6 @@ import SwiftUI
 /// centred `budgieDialog` like Flutter's `showDialog`.
 struct WorthView: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isAssetsTab = true
     @State private var range: NetWorthGrowthRange = .oneYear
     @State private var editor: AccountEditorRequest?

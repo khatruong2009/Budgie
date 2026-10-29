@@ -41,7 +41,7 @@ struct GlowFab: View {
             }
             .onAppear {
                 guard !entered else { return }
-                if reduceMotion { entered = true } else { withAnimation(Motion.easeOutBack(0.3)) { entered = true } }
+                Motion.animate(Motion.easeOutBack(0.3), reduceMotion: reduceMotion) { entered = true }
             }
             .contentShape(Circle())
             .onTapGesture {
