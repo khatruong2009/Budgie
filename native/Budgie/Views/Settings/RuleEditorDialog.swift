@@ -91,7 +91,7 @@ struct RuleEditorDialog: View {
         let selectedCategory = Self.resolvedCategory(category, in: categories)
         let canSubmit = !DartString.trim(pattern).isEmpty
         VStack(spacing: 0) {
-            TagsRulesDialogTitle(text: rule == nil ? "New merchant rule" : "Edit merchant rule")
+            DialogTitle(text: rule == nil ? "New merchant rule" : "Edit merchant rule")
             DialogScroll { fields(categories: categories, selectedCategory: selectedCategory) }
                 .scrollIndicatorsFlash(trigger: scrollFlash)
                 .modifier(MoreBelowFade())

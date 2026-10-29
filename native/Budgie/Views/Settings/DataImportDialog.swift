@@ -30,7 +30,7 @@ struct DataImportDialog: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            TagsRulesDialogTitle(text: title)
+            DialogTitle(text: title)
                 .accessibilityIdentifier("\(identifier).title")
             if let message {
                 DialogScroll {

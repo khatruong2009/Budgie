@@ -24,7 +24,7 @@ struct NewTagDialog: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            TagsRulesDialogTitle(text: "New tag")
+            DialogTitle(text: "New tag")
             BudgieField(
                 title: "Tag name", text: $name, prompt: "Travel planning", capitalization: .words, error: error,
                 autofocus: true
@@ -33,13 +33,9 @@ struct NewTagDialog: View {
             .onSubmit(submit)
             .accessibilityIdentifier("tags.editor.name")
             .padding(.top, 20)
-            HStack(spacing: 12) {
-                PillButton(title: "Cancel", color: BudgieColor.textPrimary, height: 44, action: onClose)
-                    .accessibilityIdentifier("tags.editor.cancel")
-                PillButton(title: "Add", filled: true, height: 44, action: submit)
-                    .accessibilityIdentifier("tags.editor.submit")
-            }
-            .padding(.top, 24)
+            DialogButtons(
+                cancelId: "tags.editor.cancel", submitTitle: "Add", submitId: "tags.editor.submit", cancel: onClose,
+                submit: submit)
         }
         .disabled(busy)
         .budgieDialogDismissDisabled(busy)
@@ -101,7 +97,7 @@ struct DeleteTagDialog: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            TagsRulesDialogTitle(text: "Delete tag?")
+            DialogTitle(text: "Delete tag?")
             DialogScroll {
                 Text("This removes \"\(tag.name)\" from your tags and from any merchant rule that uses it.")
                     .textStyle(.bodyMedium)
@@ -132,19 +128,5 @@ struct DeleteTagDialog: View {
             onClose()
             if outcome == .failed { model.showToast(.saveFailed) }
         }
-    }
-}
-
-/// A dialog's centred title (`sheetTitle`, as the category editor).
-struct TagsRulesDialogTitle: View {
-    let text: String
-
-    var body: some View {
-        Text(text)
-            .textStyle(.sheetTitle)
-            .foregroundStyle(BudgieColor.textPrimary)
-            .multilineTextAlignment(.center)
-            .frame(maxWidth: .infinity)
-            .accessibilityAddTraits(.isHeader)
     }
 }

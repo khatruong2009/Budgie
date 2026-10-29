@@ -346,6 +346,42 @@ private struct Placed: ViewModifier {
     }
 }
 
+/// A dialog's centred title (`sheetTitle`, as the category editor).
+struct DialogTitle: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .textStyle(.sheetTitle)
+            .foregroundStyle(BudgieColor.textPrimary)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity)
+            .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// A dialog's button pair: outlined Cancel, and the filled submit in
+/// `color`, both 44 tall, 24 below the content above.
+struct DialogButtons: View {
+    let cancelId: String
+    let submitTitle: String
+    let submitId: String
+    var color: Color = BudgieColor.accent
+    var symbol: String? = nil
+    let cancel: () -> Void
+    let submit: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            PillButton(title: "Cancel", color: BudgieColor.textPrimary, height: 44, action: cancel)
+                .accessibilityIdentifier(cancelId)
+            PillButton(title: submitTitle, symbol: symbol, color: color, filled: true, height: 44, action: submit)
+                .accessibilityIdentifier(submitId)
+        }
+        .padding(.top, 24)
+    }
+}
+
 /// A dialog's scrolling section (Flutter's `Flexible(SingleChildScrollView)`):
 /// as tall as its content while that fits, and only as tall as the room the
 /// title, buttons and keyboard leave otherwise, scrolling. Sized by layout
