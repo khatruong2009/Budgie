@@ -18,7 +18,6 @@
 
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:budget_app/common.dart';
 import 'package:budget_app/transaction.dart';
@@ -26,12 +25,6 @@ import 'package:budget_app/voice_expense_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'harness_support.dart';
-
-String bitsHex(double d) {
-  final data = ByteData(8)..setFloat64(0, d);
-  return data.getUint32(0).toRadixString(16).padLeft(8, '0') +
-      data.getUint32(4).toRadixString(16).padLeft(8, '0');
-}
 
 String two(int v) => v.toString().padLeft(2, '0');
 String ymd(DateTime d) =>

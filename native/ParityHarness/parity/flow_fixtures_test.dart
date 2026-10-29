@@ -15,7 +15,6 @@
 // (`resultsTexts`) are emitted too, from the same helpers those checks use.
 
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -42,22 +41,9 @@ import 'harness_support.dart';
 final bool writeZoneIndependent = parityTz == 'UTC';
 String get zoneDir => 'flow/tz/${parityTz.replaceAll('/', '_')}';
 
-String bitsHex(double d) {
-  final data = ByteData(8)..setFloat64(0, d);
-  return data.getUint32(0).toRadixString(16).padLeft(8, '0') +
-      data.getUint32(4).toRadixString(16).padLeft(8, '0');
-}
-
 Object? numberJson(double? d) => d == null ? null : bitsHex(d);
 
 String fnvText(String text) => fnv(utf8.encode(text));
-
-/// These fixtures are large; one line keeps them small.
-void writeCompactJson(String path, Object? value) {
-  File(path)
-    ..parent.createSync(recursive: true)
-    ..writeAsStringSync('${jsonEncode(value)}\n');
-}
 
 // --- Copied verbatim from history_page.dart (private members) -------------
 

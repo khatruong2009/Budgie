@@ -29,14 +29,6 @@ import 'model_summary.dart';
 final bool writeZoneIndependent = parityTz == 'UTC';
 String get zoneDir => 'logic/tz/${parityTz.replaceAll('/', '_')}';
 
-/// IEEE-754 bits as 16 lowercase hex digits (two unsigned 32-bit halves;
-/// Dart's getUint64 returns a signed int).
-String bitsHex(double d) {
-  final data = ByteData(8)..setFloat64(0, d);
-  return data.getUint32(0).toRadixString(16).padLeft(8, '0') +
-      data.getUint32(4).toRadixString(16).padLeft(8, '0');
-}
-
 Map<String, Object?> dt(DateTime d) => {
       'iso': d.toIso8601String(),
       'us': d.microsecondsSinceEpoch,

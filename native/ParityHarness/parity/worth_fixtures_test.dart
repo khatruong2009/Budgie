@@ -21,7 +21,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:budget_app/money_formatter.dart';
 import 'package:budget_app/net_worth_entry.dart';
@@ -38,12 +37,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'harness_support.dart';
 
 String get zoneDir => 'worth/tz/${parityTz.replaceAll('/', '_')}';
-
-String bitsHex(double d) {
-  final data = ByteData(8)..setFloat64(0, d);
-  return data.getUint32(0).toRadixString(16).padLeft(8, '0') +
-      data.getUint32(4).toRadixString(16).padLeft(8, '0');
-}
 
 Object? bitsOrNull(double? d) => d == null ? null : bitsHex(d);
 
@@ -369,18 +362,6 @@ String deltaPillText(double change, double previousNetWorth) {
 }
 
 // ---------------------------------------------------------------------------
-
-/// A local date from components [y, m, d, h, min, s, ms, us].
-DateTime local(List c) => DateTime(
-      c[0] as int,
-      c.length > 1 ? c[1] as int : 1,
-      c.length > 2 ? c[2] as int : 1,
-      c.length > 3 ? c[3] as int : 0,
-      c.length > 4 ? c[4] as int : 0,
-      c.length > 5 ? c[5] as int : 0,
-      c.length > 6 ? c[6] as int : 0,
-      c.length > 7 ? c[7] as int : 0,
-    );
 
 NetWorthEntryType typeOf(String name) => name == 'liability'
     ? NetWorthEntryType.liability

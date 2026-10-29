@@ -18,9 +18,7 @@
 // {"throws": <type>}.
 
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:budget_app/insights/insight_engine.dart';
 import 'package:budget_app/savings_goal.dart';
@@ -38,12 +36,6 @@ final bool writeZoneIndependent = parityTz == 'UTC';
 String get zoneDir => 'insights/tz/${parityTz.replaceAll('/', '_')}';
 
 const engine = InsightEngine();
-
-String bitsHex(double d) {
-  final data = ByteData(8)..setFloat64(0, d);
-  return data.getUint32(0).toRadixString(16).padLeft(8, '0') +
-      data.getUint32(4).toRadixString(16).padLeft(8, '0');
-}
 
 String two(int v) => v.toString().padLeft(2, '0');
 String three(int v) => v.toString().padLeft(3, '0');
@@ -143,13 +135,6 @@ InsightCase kase(
       excluded,
       limit,
     );
-
-/// These fixtures are large; one line keeps them small.
-void writeCompactJson(String path, Object? value) {
-  File(path)
-    ..parent.createSync(recursive: true)
-    ..writeAsStringSync('${jsonEncode(value)}\n');
-}
 
 Map<String, Object?> insightJson(LocalInsight i) => {
       'id': i.id,

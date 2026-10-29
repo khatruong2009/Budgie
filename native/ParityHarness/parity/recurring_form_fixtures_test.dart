@@ -20,7 +20,6 @@
 
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:budget_app/recurring_transaction.dart';
 import 'package:budget_app/recurring_transaction_form.dart';
@@ -38,12 +37,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'harness_support.dart';
 
 String get zoneDir => 'recurring_form/tz/${parityTz.replaceAll('/', '_')}';
-
-String bitsHex(double d) {
-  final data = ByteData(8)..setFloat64(0, d);
-  return data.getUint32(0).toRadixString(16).padLeft(8, '0') +
-      data.getUint32(4).toRadixString(16).padLeft(8, '0');
-}
 
 Map<String, Object?> dt(DateTime d) => {
   'iso': d.toIso8601String(),

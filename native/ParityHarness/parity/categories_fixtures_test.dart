@@ -130,18 +130,6 @@ const cascadeSections = [
   'categorizationRules',
 ];
 
-/// A local date from components [y, m, d, h, min, s, ms, us].
-DateTime local(List c) => DateTime(
-      c[0] as int,
-      c.length > 1 ? c[1] as int : 1,
-      c.length > 2 ? c[2] as int : 1,
-      c.length > 3 ? c[3] as int : 0,
-      c.length > 4 ? c[4] as int : 0,
-      c.length > 5 ? c[5] as int : 0,
-      c.length > 6 ? c[6] as int : 0,
-      c.length > 7 ? c[7] as int : 0,
-    );
-
 BudgetCategoryType categoryType(String name) =>
     name == 'income' ? BudgetCategoryType.income : BudgetCategoryType.expense;
 

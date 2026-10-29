@@ -21,7 +21,6 @@
 
 import 'dart:convert';
 import 'dart:math' as math;
-import 'dart:typed_data';
 
 import 'package:budget_app/category_page.dart';
 import 'package:budget_app/common.dart';
@@ -39,13 +38,6 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'harness_support.dart';
-
-/// IEEE-754 bits as 16 lowercase hex digits (as home_fixtures_test.dart).
-String bitsHex(double d) {
-  final data = ByteData(8)..setFloat64(0, d);
-  return data.getUint32(0).toRadixString(16).padLeft(8, '0') +
-      data.getUint32(4).toRadixString(16).padLeft(8, '0');
-}
 
 String? maybeBits(double? d) => d == null ? null : bitsHex(d);
 

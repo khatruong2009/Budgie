@@ -10,7 +10,6 @@
 
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:budget_app/categorization_provider.dart';
 import 'package:budget_app/categorization_rule.dart';
@@ -23,13 +22,6 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'harness_support.dart';
-
-/// IEEE-754 bits as 16 lowercase hex digits (as logic_fixtures_test.dart).
-String bitsHex(double d) {
-  final data = ByteData(8)..setFloat64(0, d);
-  return data.getUint32(0).toRadixString(16).padLeft(8, '0') +
-      data.getUint32(4).toRadixString(16).padLeft(8, '0');
-}
 
 Object? numberJson(double? d) =>
     d == null ? null : {'bits': bitsHex(d), 'isNaN': d.isNaN};
