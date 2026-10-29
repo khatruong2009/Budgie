@@ -280,7 +280,7 @@ public struct FinancialData: Sendable {
 
     @discardableResult
     public mutating func updateTransaction(id: String, _ edit: TransactionRecord.Edit, now: DartDateTime) -> Bool {
-        guard let index = transactionRows.firstIndex(where: { $0.record?.id == id }), let record = transactionRows[index].record else {
+        guard let index = transactionRows.firstIndex(where: { $0.record.map { DartString.equal($0.id, id) } ?? false }), let record = transactionRows[index].record else {
             return false
         }
         transactionRows[index] = .record(record.applying(edit, now: now))
@@ -290,7 +290,7 @@ public struct FinancialData: Sendable {
     @discardableResult
     public mutating func deleteTransaction(id: String) -> Bool {
         let before = transactionRows.count
-        transactionRows.removeAll { $0.record?.id == id }
+        transactionRows.removeAll { $0.record.map { DartString.equal($0.id, id) } ?? false }
         return transactionRows.count != before
     }
 
@@ -320,7 +320,7 @@ public struct FinancialData: Sendable {
     /// last occurrence already generated for this template.
     @discardableResult
     public mutating func updateTemplate(id: String, _ edit: RecurringTemplate.Edit) -> Bool {
-        guard let index = templateRows.firstIndex(where: { $0.record?.id == id }), let template = templateRows[index].record else {
+        guard let index = templateRows.firstIndex(where: { $0.record.map { DartString.equal($0.id, id) } ?? false }), let template = templateRows[index].record else {
             return false
         }
         var next = template.applying(edit)
@@ -335,7 +335,7 @@ public struct FinancialData: Sendable {
     /// The latest date among readable transactions generated from this
     /// template (`recurringTemplateId`), or nil when there are none.
     public func lastGeneratedDate(forTemplate id: String) -> DartDateTime? {
-        transactions.filter { $0.recurringTemplateId == id }.map(\.date).max()
+        transactions.filter { $0.recurringTemplateId.map { DartString.equal($0, id) } ?? false }.map(\.date).max()
     }
 
     /// Pause or resume (Swift only; Flutter has no pause). Resuming a paused
@@ -346,7 +346,7 @@ public struct FinancialData: Sendable {
     /// cursor.
     @discardableResult
     public mutating func setTemplateActive(id: String, _ active: Bool, now: DartDateTime) -> Bool {
-        guard let index = templateRows.firstIndex(where: { $0.record?.id == id }), let template = templateRows[index].record else {
+        guard let index = templateRows.firstIndex(where: { $0.record.map { DartString.equal($0.id, id) } ?? false }), let template = templateRows[index].record else {
             return false
         }
         var next = template.with(isActive: active)
@@ -361,12 +361,12 @@ public struct FinancialData: Sendable {
     @discardableResult
     public mutating func deleteTemplate(id: String) -> Bool {
         let before = templateRows.count
-        templateRows.removeAll { $0.record?.id == id }
+        templateRows.removeAll { $0.record.map { DartString.equal($0.id, id) } ?? false }
         return templateRows.count != before
     }
 
     mutating func replaceTemplate(_ template: RecurringTemplate) {
-        if let index = templateRows.firstIndex(where: { $0.record?.id == template.id }) {
+        if let index = templateRows.firstIndex(where: { $0.record.map { DartString.equal($0.id, template.id) } ?? false }) {
             templateRows[index] = .record(template)
         }
     }

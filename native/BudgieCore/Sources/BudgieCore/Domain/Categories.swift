@@ -275,7 +275,7 @@ extension FinancialData {
         while slug.hasPrefix("-") { slug.removeFirst() }
         while slug.hasSuffix("-") { slug.removeLast() }
         let candidate = "\(type.rawValue)-\(slug.isEmpty ? "category" : slug)"
-        if categoryRows.contains(where: { $0.record?.id == candidate }) { return "\(type.rawValue)-\(newID())" }
+        if categoryRows.contains(where: { $0.record.map { DartString.equal($0.id, candidate) } ?? false }) { return "\(type.rawValue)-\(newID())" }
         return candidate
     }
 
