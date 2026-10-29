@@ -131,7 +131,6 @@
 		EBEA70BE1580B123E8739B8A /* ProtectedDataMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 423B124988FC6629658BB700 /* ProtectedDataMonitor.swift */; };
 		EBF368A32DC5E1465C2F623E /* TransactionsPreviewCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34255F0F90CB1FC435B72B63 /* TransactionsPreviewCard.swift */; };
 		ED1408D66E67AD68EB5668C3 /* BackupUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9CF826AA81D428AADF1FB75 /* BackupUITests.swift */; };
-		ED27F6279C64E595283CCDB5 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55D5F50F2340127241F06169 /* Theme.swift */; };
 		EEA3E162B9DA087682C4F671 /* DesignGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C7FD591C40F5FE192B6FDF /* DesignGalleryView.swift */; };
 		EF5E1F3E91CC67F943140122 /* SettingsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC2FD8BBF267696FD345C9A9 /* SettingsUITests.swift */; };
 		EF6689C3C15DA5A2F51B5FB6 /* Fields.swift in Sources */ = {isa = PBXBuildFile; fileRef = F03EDCD39307BAAD3D94A78F /* Fields.swift */; };
@@ -242,7 +241,6 @@
 		4E914AC86A596DC97136FF9E /* AddFormPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddFormPresenter.swift; sourceTree = "<group>"; };
 		5177241A386AE7A9E235D4AD /* AppLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLock.swift; sourceTree = "<group>"; };
 		51ADA0B74BB5F802C9C663C8 /* HomeMonthPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeMonthPanel.swift; sourceTree = "<group>"; };
-		55D5F50F2340127241F06169 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		56CC2E13F2374B8367D6EB80 /* RecurringUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurringUITests.swift; sourceTree = "<group>"; };
 		57856BC03CA1E8608F52F3D0 /* InsightCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightCard.swift; sourceTree = "<group>"; };
 		57A8EBB3AF2B4CB200A4B44C /* TransactionFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionFormView.swift; sourceTree = "<group>"; };
@@ -621,7 +619,6 @@
 				1C1C12C3082F408F35ED722A /* OpeningView.swift */,
 				DBBE5D912C19A6258BE48F99 /* RootView.swift */,
 				9E758855687C3C7914C62089 /* SettingsView.swift */,
-				55D5F50F2340127241F06169 /* Theme.swift */,
 				57A8EBB3AF2B4CB200A4B44C /* TransactionFormView.swift */,
 				BCA3A59C8AB277DAF58C62C8 /* Flow */,
 				6282738460DC7C39E945DA80 /* Goals */,
@@ -1035,7 +1032,6 @@
 				065D5B98B0AA3462267A0E61 /* TagDialogs.swift in Sources */,
 				57C1710C00FB36BCF8B60059 /* TagsRulesView.swift in Sources */,
 				F174FC9D4CF16A0B6E067ABC /* TextStyles.swift in Sources */,
-				ED27F6279C64E595283CCDB5 /* Theme.swift in Sources */,
 				019973BB81938BA8AA3F5CC2 /* Toast.swift in Sources */,
 				CFDDCE5E5079FBD2F0A2DB72 /* ToastHost.swift in Sources */,
 				F08842C77D36FF5B33731EB9 /* TransactionFormView.swift in Sources */,
