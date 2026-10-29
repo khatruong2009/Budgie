@@ -216,12 +216,9 @@ private struct MetricChip: View {
 struct FlowEmptyMessage: View {
     let text: String
 
-    /// `rowSubtitle` at 13.
-    private static let style = TextSpec(face: .gabaritoRegular, size: 13, height: 1.25, relativeTo: .footnote)
-
     var body: some View {
         Text(text)
-            .textStyle(Self.style)
+            .textStyle(.note)
             .foregroundStyle(BudgieColor.textSecondary)
             .padding(12)
     }

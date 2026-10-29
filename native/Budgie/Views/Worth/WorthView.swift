@@ -155,8 +155,6 @@ struct WorthView: View {
 
 /// Private text styles of the Worth views, built from the bundled faces.
 enum WorthStyle {
-    /// `rowSubtitle` at 13 (notes and empty messages).
-    static let note = TextSpec(face: .gabaritoRegular, size: 13, height: 1.25, relativeTo: .footnote)
     /// `rowSubtitle` w600 (labels).
     static let label = TextSpec(face: .gabaritoSemiBold, size: 12, height: 1.25, relativeTo: .caption)
     /// `rowTitle` at 14, w700 or w600 (toggles and dialog buttons).

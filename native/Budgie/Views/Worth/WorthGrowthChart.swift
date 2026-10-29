@@ -28,7 +28,7 @@ struct WorthGrowthCard: View {
                 .padding(.horizontal, Metrics.spacingXS)
                 if points.isEmpty {
                     Text("Add balance updates to build your growth chart.")
-                        .textStyle(WorthStyle.note)
+                        .textStyle(.note)
                         .foregroundStyle(BudgieColor.textSecondary)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity, minHeight: 180)

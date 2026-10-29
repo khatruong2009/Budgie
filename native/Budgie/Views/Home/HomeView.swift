@@ -197,9 +197,6 @@ private struct FlowChip: View {
     let previousMonthName: String
     let formatter: MoneyFormatter
 
-    /// `rowSubtitle` at 13, w600.
-    private static let labelStyle = TextSpec(face: .gabaritoSemiBold, size: 13, height: 1.25, relativeTo: .footnote)
-
     private var deltaColor: Color {
         guard let delta else { return BudgieColor.textTertiary }
         if delta == 0 { return BudgieColor.textSecondary }
@@ -210,7 +207,7 @@ private struct FlowChip: View {
         GlowCard(padding: 16, radius: Metrics.statCardRadius) {
             VStack(alignment: .leading, spacing: 0) {
                 Text(label)
-                    .textStyle(Self.labelStyle)
+                    .textStyle(.noteStrong)
                     .foregroundStyle(BudgieColor.textSecondary)
                     .singleLine()
                 Text(HomeSummary.chipAmount(amount, formatter: formatter))
@@ -269,9 +266,7 @@ private struct SafeToSpendCard: View {
     let formatter: MoneyFormatter
     let onTap: () -> Void
 
-    private static let titleText = TextSpec(face: .gabaritoSemiBold, size: 13, height: 1.25, relativeTo: .footnote)
     static let amountText = TextSpec(face: .gabaritoExtraBold, size: 32, tracking: -1, height: 1.05, tabular: true, relativeTo: .title)
-    private static let subtitleText = TextSpec(face: .gabaritoRegular, size: 13, height: 1.25, relativeTo: .footnote)
 
     var body: some View {
         let card = HomeSummary.safeToSpendCard(breakdown, formatter: formatter)
@@ -279,7 +274,7 @@ private struct SafeToSpendCard: View {
             HStack(spacing: 14) {
                 VStack(alignment: .leading, spacing: Metrics.spacingXS) {
                     Text(card.title)
-                        .textStyle(Self.titleText)
+                        .textStyle(.noteStrong)
                         .foregroundStyle(BudgieColor.featureSecondary)
                         .singleLine()
                     Text(card.amount)
@@ -288,7 +283,7 @@ private struct SafeToSpendCard: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.5)
                     Text(card.subtitle)
-                        .textStyle(Self.subtitleText)
+                        .textStyle(.note)
                         .foregroundStyle(BudgieColor.featureSecondary)
                         .wrapsWords()
                 }

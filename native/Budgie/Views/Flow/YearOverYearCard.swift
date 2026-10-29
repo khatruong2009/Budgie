@@ -52,8 +52,6 @@ private struct YearOverYearRow: View {
     let row: CashFlowMath.YearOverYearRow
     let deltaColor: Color
 
-    /// `rowSubtitle` at 13, w600.
-    private static let labelStyle = TextSpec(face: .gabaritoSemiBold, size: 13, height: 1.25, relativeTo: .footnote)
     /// `badge` at 13.
     private static let deltaStyle = TextSpec(face: .gabaritoBold, size: 13, relativeTo: .footnote)
 
@@ -61,7 +59,7 @@ private struct YearOverYearRow: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: Metrics.spacingS) {
                 Text(label)
-                    .textStyle(Self.labelStyle)
+                    .textStyle(.noteStrong)
                     .foregroundStyle(BudgieColor.textSecondary)
                 Spacer(minLength: 0)
                 Text(row.deltaLabel)

@@ -32,8 +32,6 @@ struct FlowTransactionsView: View {
     @State private var rowTaps = 0
     @State private var selections = 0
 
-    /// `rowSubtitle` at 13 ("Showing ... matches").
-    private static let smallText = TextSpec(face: .gabaritoRegular, size: 13, height: 1.25, relativeTo: .footnote)
     /// Material `TextButton` label (14/w500).
     private static let loadMoreText = TextSpec(face: .gabaritoMedium, size: 14, relativeTo: .subheadline)
 
@@ -235,7 +233,7 @@ struct FlowTransactionsView: View {
             if pagination.hasMore(count) {
                 VStack(spacing: Metrics.spacingS) {
                     Text(TransactionFilter.showingText(visible: visible.count, matches: count))
-                        .textStyle(Self.smallText)
+                        .textStyle(.note)
                         .foregroundStyle(BudgieColor.textSecondary)
                         .accessibilityIdentifier("flow.all.showing")
                     Button("Load more transactions") { pagination.loadMore() }

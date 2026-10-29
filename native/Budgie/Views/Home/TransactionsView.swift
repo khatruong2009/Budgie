@@ -149,8 +149,6 @@ private struct SummaryCard: View {
 
     /// Flutter `AppTypography.amount` at 20.
     private static let amountText = TextSpec(face: .gabaritoBold, size: 20, tabular: true, relativeTo: .title3)
-    /// `rowSubtitle` at 13, w600 (the Income / Expenses labels).
-    private static let labelText = TextSpec(face: .gabaritoSemiBold, size: 13, height: 1.25, relativeTo: .footnote)
     /// `rowTitle` at 16, w700.
     private static let netLabel = TextSpec(face: .gabaritoBold, size: 16, height: 1.25, relativeTo: .body)
 
@@ -185,7 +183,7 @@ private struct SummaryCard: View {
 
     private func figure(_ title: String, _ amount: String, _ color: Color) -> some View {
         VStack(alignment: .leading, spacing: Metrics.spacingXS) {
-            Text(title).textStyle(Self.labelText).foregroundStyle(BudgieColor.textSecondary)
+            Text(title).textStyle(.noteStrong).foregroundStyle(BudgieColor.textSecondary)
             Text(amount)
                 .textStyle(Self.amountText)
                 .foregroundStyle(color)

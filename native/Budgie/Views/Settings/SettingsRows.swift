@@ -7,7 +7,6 @@ import SwiftUI
 /// Not interactive.
 struct SettingsBrandCard: View {
     private static let titleText = TextSpec(face: .gabaritoExtraBold, size: 20, tracking: -0.3, height: 1.25, relativeTo: .title3)
-    private static let taglineText = TextSpec(face: .gabaritoRegular, size: 13, height: 1.25, relativeTo: .footnote)
 
     var body: some View {
         HStack(spacing: Metrics.spacingM) {
@@ -20,7 +19,7 @@ struct SettingsBrandCard: View {
                     .textStyle(Self.titleText)
                     .foregroundStyle(BudgieColor.featureText)
                 Text("Make every dollar count")
-                    .textStyle(Self.taglineText)
+                    .textStyle(.note)
                     .foregroundStyle(BudgieColor.featureSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

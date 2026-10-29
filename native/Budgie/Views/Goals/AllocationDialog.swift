@@ -22,14 +22,11 @@ struct AllocationDialog: View {
     @State private var error: String?
     @State private var chipTaps = 0
 
-    /// `rowSubtitle` at 13 / w600 (the chips).
-    private static let chipText = TextSpec(face: .gabaritoSemiBold, size: 13, height: 1.25, relativeTo: .footnote)
-
     var body: some View {
         VStack(spacing: 0) {
             DialogTitle(text: "Add money", centersLines: false)
             Text(goal.name)
-                .textStyle(GoalText.caption)
+                .textStyle(.note)
                 .foregroundStyle(BudgieColor.textSecondary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
@@ -65,7 +62,7 @@ struct AllocationDialog: View {
             text = formatter.formatNumber(fill, decimalDigits: 2)
         } label: {
             Text(label)
-                .textStyle(Self.chipText)
+                .textStyle(.noteStrong)
                 .foregroundStyle(BudgieColor.textPrimary)
                 .padding(.horizontal, 14 + Metrics.borderThin)
                 .padding(.vertical, 9 + Metrics.borderThin)

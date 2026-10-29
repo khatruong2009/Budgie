@@ -58,7 +58,7 @@ struct WorthAccountsList: View {
         if entries.isEmpty {
             GlowCard {
                 Text(NetWorthText.emptyList(isAssetsTab: isAssetsTab, month: month))
-                    .textStyle(WorthStyle.note)
+                    .textStyle(.note)
                     .foregroundStyle(BudgieColor.textSecondary)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)

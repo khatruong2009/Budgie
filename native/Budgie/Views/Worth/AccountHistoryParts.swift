@@ -4,8 +4,6 @@ import SwiftUI
 /// The pieces of the account history page (net_worth_page.dart:1577-2136).
 
 enum AccountHistoryText {
-    /// `rowSubtitle` at 13 (the empty timeline and chart notes).
-    static let note = TextSpec(face: .gabaritoRegular, size: 13, height: 1.25, relativeTo: .footnote)
     /// `amount` at 17 (the stat card values).
     static let statValue = TextSpec(face: .gabaritoBold, size: 17, tabular: true, relativeTo: .body)
     /// `rowSubtitle` at 11, w600 (the chart tooltip's date).
@@ -195,7 +193,7 @@ struct AccountTrendChart: View {
         } else {
             GlowCard(padding: 24) {
                 Text("No chart data yet for \(name).")
-                    .textStyle(AccountHistoryText.note)
+                    .textStyle(.note)
                     .foregroundStyle(BudgieColor.textSecondary)
                     .frame(maxWidth: .infinity, minHeight: 200)
             }

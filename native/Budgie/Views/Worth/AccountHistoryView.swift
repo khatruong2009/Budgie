@@ -154,7 +154,7 @@ struct AccountHistoryView: View {
         if history.timeline.isEmpty {
             GlowCard {
                 Text("Add updates to this account to build a balance timeline.")
-                    .textStyle(AccountHistoryText.note)
+                    .textStyle(.note)
                     .foregroundStyle(BudgieColor.textSecondary)
             }
             .accessibilityIdentifier("worth.history.timeline.empty")

@@ -234,8 +234,6 @@ private struct Celebration: Identifiable {
 enum GoalText {
     /// `rowSubtitle` at 13, height 1.45 (empty state, delete body).
     static let body = TextSpec(face: .gabaritoRegular, size: 13, height: 1.45, relativeTo: .footnote)
-    /// `rowSubtitle` at 13 (summary caption, dialog subtitles).
-    static let caption = TextSpec(face: .gabaritoRegular, size: 13, height: 1.25, relativeTo: .footnote)
 }
 
 // MARK: - Summary
@@ -278,7 +276,7 @@ struct GoalsSummaryCard: View {
                     .minimumScaleFactor(0.5)
                     .padding(.top, 6)
                 Text(SavingsGoalText.summaryCaption(summary, formatter: formatter))
-                    .textStyle(GoalText.caption)
+                    .textStyle(.note)
                     .foregroundStyle(BudgieColor.featureSecondary)
                     .padding(.top, Metrics.spacingXXS)
             }

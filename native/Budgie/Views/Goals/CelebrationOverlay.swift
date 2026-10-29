@@ -73,7 +73,7 @@ struct CelebrationOverlay: View {
                     .multilineTextAlignment(.center)
                     .padding(.top, Metrics.spacingM)
                 Text(name)
-                    .textStyle(GoalText.caption)
+                    .textStyle(.note)
                     .foregroundStyle(BudgieColor.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.top, 6)
