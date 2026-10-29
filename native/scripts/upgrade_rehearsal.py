@@ -26,7 +26,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
-from sim import runtime_for
+from sim import copy_store, runtime_for
 
 REPO = Path(subprocess.check_output(["git", "rev-parse", "--show-toplevel"], cwd=Path(__file__).parent, text=True).strip())
 NATIVE = REPO / "native"
@@ -133,12 +133,10 @@ class Simulator:
 def build_flutter():
     """The Flutter app at the `flutter-final` tag (budget_app/ was removed
     from the tree after 4.0.0 shipped), built from an exported copy that gets
-    a stub .env."""
+    a stub .env (ParityHarness/run.sh export)."""
     work = SCRATCH / "flutter"
     shutil.rmtree(work, ignore_errors=True)
-    work.mkdir(parents=True)
-    subprocess.run(f"git -C '{REPO}' archive --format=tar flutter-final budget_app | tar -x -C '{work}'", shell=True, check=True)
-    (work / "budget_app" / ".env").write_text("OPENAI_API_KEY=rehearsal-dummy-key\n")
+    run([str(NATIVE / "ParityHarness" / "run.sh"), "export", str(work)])
     app_dir = work / "budget_app"
     # `flutter build ios --simulator` also targets x86_64, which this Flutter
     # engine no longer ships for the simulator; build arm64 only.
@@ -185,12 +183,7 @@ def inject_prefs(sim, typed):
 
 
 def inject_store(sim, source_dir):
-    store = sim.data_container() / "Library" / "Application Support" / "financial_store"
-    shutil.rmtree(store, ignore_errors=True)
-    store.mkdir(parents=True)
-    for item in Path(source_dir).iterdir():
-        if item.is_file():
-            shutil.copy2(item, store / item.name)
+    copy_store(sim.data_container(), source_dir)
 
 
 def read_prefs(sim):

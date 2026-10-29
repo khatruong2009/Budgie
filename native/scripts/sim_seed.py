@@ -9,11 +9,11 @@ Usage: sim_seed.py <simulator-name> <path/to/Budgie.app> [fixture-input-dir]
 Example: sim_seed.py Budgie-UI-A build/Budgie.app native/Fixtures/store/typical/input
 Prints the simulator UDID.
 """
-import json, shutil, subprocess, sys, time
+import json, subprocess, sys, time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
-from sim import runtime_for
+from sim import copy_store, runtime_for
 
 name, app = sys.argv[1], sys.argv[2]
 fixture = Path(sys.argv[3]) if len(sys.argv) > 3 else None
@@ -34,12 +34,7 @@ try:
     sh("xcrun", "simctl", "install", udid, app)
     if fixture:
         subprocess.run(["xcrun", "simctl", "terminate", udid, BUNDLE], capture_output=True)
-        store = Path(sh("xcrun", "simctl", "get_app_container", udid, BUNDLE, "data")) / "Library/Application Support/financial_store"
-        shutil.rmtree(store, ignore_errors=True)
-        store.mkdir(parents=True)
-        for item in fixture.iterdir():
-            if item.is_file():
-                shutil.copy2(item, store / item.name)
+        copy_store(sh("xcrun", "simctl", "get_app_container", udid, BUNDLE, "data"), fixture)
     sh("xcrun", "simctl", "launch", udid, BUNDLE)
     time.sleep(4)
     print(udid)

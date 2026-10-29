@@ -28,6 +28,9 @@ Nothing here reads or writes any other simulator or any real data.
 import datetime, json, random, subprocess, sys, uuid
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
+from sim import reset_store
+
 BUNDLE = "com.khatruong.budgetbuddy"
 ROOT = Path(__file__).resolve().parent.parent
 BASE = ROOT / "Fixtures/store/large_10k/input/financial_store_v2.json"
@@ -185,8 +188,7 @@ def main():
         udid = args[0]
         sh("xcrun", "simctl", "terminate", udid, BUNDLE, check=False)
         container = Path(sh("xcrun", "simctl", "get_app_container", udid, BUNDLE, "data"))
-        store = container / "Library/Application Support/financial_store"
-        subprocess.run(["rm", "-rf", str(store)], check=True)
+        store = reset_store(container)
         # A leftover pre-native snapshot would hide the first-launch copy
         # (and its cost) from the launch measurements.
         subprocess.run(["rm", "-rf", str(container / "Library/Application Support/pre-native-migration")], check=True)

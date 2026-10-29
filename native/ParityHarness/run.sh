@@ -15,6 +15,10 @@
 #   - the harness tests are copied to test/parity/.
 #
 # Usage: native/ParityHarness/run.sh <mode> [flutter test args...]
+#   mode = export <dir> -> only the export step: <dir>/budget_app is the
+#                       `flutter-final` copy with the stub .env (no seam
+#                       rewrite, no harness tests); upgrade_rehearsal.py
+#                       builds the Flutter app from it
 #   mode = generate  -> writes native/Fixtures/
 #   mode = verify    -> loads Swift-written files from $SWIFT_OUT (default
 #                       native/Fixtures/swift-written) through the Dart store
@@ -30,7 +34,12 @@ shift || true
 REPO_ROOT="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
 HARNESS="$REPO_ROOT/native/ParityHarness"
 FIXTURES="$REPO_ROOT/native/Fixtures"
-WORK="${PARITY_WORK_DIR:-$(mktemp -d "${TMPDIR:-/tmp}/budgie-parity.XXXXXX")}"
+if [ "$MODE" = export ]; then
+  WORK="${1:?usage: run.sh export <dir>}"
+  shift
+else
+  WORK="${PARITY_WORK_DIR:-$(mktemp -d "${TMPDIR:-/tmp}/budgie-parity.XXXXXX")}"
+fi
 COPY="$WORK/budget_app"
 FLUTTER_REF="flutter-final"
 COMMIT="$(git -C "$REPO_ROOT" rev-parse "$FLUTTER_REF^{commit}")"
@@ -40,6 +49,10 @@ mkdir -p "$WORK"
 git -C "$REPO_ROOT" archive --format=tar "$FLUTTER_REF" budget_app | tar -x -C "$WORK"
 
 printf 'OPENAI_API_KEY=parity-harness-dummy-key\n' > "$COPY/.env"
+if [ "$MODE" = export ]; then
+  echo "exported $FLUTTER_REF ($COMMIT) to $COPY"
+  exit 0
+fi
 
 cp "$HARNESS/parity_clock.dart" "$COPY/lib/parity_clock.dart"
 count=0
