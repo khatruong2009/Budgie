@@ -19,6 +19,12 @@ enum Motion {
     static let progress = easeInOutCubic(0.8)
     static let ring = easeInOutCubic(0.9)
     static let segment = easeOut(0.2)
+
+    /// `withAnimation(animation) { body() }`, or `body()` at once under
+    /// Reduce Motion.
+    static func animate(_ animation: Animation, reduceMotion: Bool, _ body: () -> Void) {
+        if reduceMotion { body() } else { withAnimation(animation, body) }
+    }
 }
 
 extension View {

@@ -107,7 +107,7 @@ struct WorthView: View {
         return ScrollView {
             VStack(spacing: 0) {
                 BudgieHeader(title: "Net worth")
-                MonthStrip(months: model.netWorthAvailableMonths, selected: month, reduceMotion: reduceMotion) { picked in
+                MonthStrip(months: model.netWorthAvailableMonths, selected: month) { picked in
                     monthTaps += 1
                     Task { await select(picked) }
                 }

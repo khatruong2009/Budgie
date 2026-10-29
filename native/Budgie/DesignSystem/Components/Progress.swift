@@ -63,7 +63,7 @@ struct GlowProgressBar: View {
         .motion(Motion.progress, value: shown)
         .onAppear {
             guard !appeared else { return }
-            if reduceMotion { appeared = true } else { withAnimation(Motion.progress) { appeared = true } }
+            Motion.animate(Motion.progress, reduceMotion: reduceMotion) { appeared = true }
         }
         .accessibilityElement()
         .accessibilityValue(Text("\(Int((target * 100).rounded())) percent"))
@@ -138,7 +138,7 @@ struct ProgressRing<Center: View>: View {
         .motion(Motion.ring, value: t)
         .onAppear {
             guard !appeared else { return }
-            if reduceMotion { appeared = true } else { withAnimation(Motion.ring) { appeared = true } }
+            Motion.animate(Motion.ring, reduceMotion: reduceMotion) { appeared = true }
         }
     }
 }

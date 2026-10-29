@@ -12,9 +12,9 @@ import SwiftUI
 struct MonthStrip: View {
     let months: [DartDateTime]
     let selected: DartDateTime
-    let reduceMotion: Bool
     let onSelect: (DartDateTime) -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var width: CGFloat?
 
     var body: some View {
@@ -35,13 +35,13 @@ struct MonthStrip: View {
                 let previous = width
                 width = size.width
                 guard previous != nil, previous != size.width else { return }
-                withAnimation(reduceMotion ? nil : Motion.easeOut(Motion.normal)) {
+                Motion.animate(Motion.easeOut(Motion.normal), reduceMotion: reduceMotion) {
                     proxy.scrollTo(selected, anchor: .center)
                 }
             }
             .onAppear { proxy.scrollTo(selected, anchor: .center) }
             .onChange(of: selected) { _, month in
-                withAnimation(reduceMotion ? nil : Motion.easeOut(Motion.normal)) {
+                Motion.animate(Motion.easeOut(Motion.normal), reduceMotion: reduceMotion) {
                     proxy.scrollTo(month, anchor: .center)
                 }
             }

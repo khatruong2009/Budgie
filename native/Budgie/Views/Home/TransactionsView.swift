@@ -34,7 +34,7 @@ struct TransactionsView: View {
         Group {
             if let month {
                 VStack(spacing: 0) {
-                    MonthStrip(months: months, selected: month, reduceMotion: reduceMotion) { picked in
+                    MonthStrip(months: months, selected: month) { picked in
                         monthTaps += 1
                         chosenMonth = picked
                     }
