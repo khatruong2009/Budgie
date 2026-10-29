@@ -93,8 +93,6 @@ struct AccountRow: View {
     let onEdit: () -> Void
     let onDelete: () -> Void
 
-    @State private var taps = 0
-
     var body: some View {
         let tint = entry.type == .asset ? BudgieColor.income : BudgieColor.danger
         let changeColor = stats.changeIsFavorable.map { $0 ? BudgieColor.income : BudgieColor.danger } ?? BudgieColor.textTertiary
@@ -102,10 +100,7 @@ struct AccountRow: View {
         let share = NetWorthText.rowShare(stats.share, isAssetsTab: isAssetsTab)
         let change = NetWorthText.rowChange(stats.percentChange)
         let shape = RoundedRectangle(cornerRadius: Metrics.radiusL, style: .continuous)
-        Button {
-            taps += 1
-            onEdit()
-        } label: {
+        HapticButton(action: onEdit) {
             VStack(spacing: 10) {
                 HStack(spacing: 0) {
                     IconTile(symbol: NetWorthAccountIcon(name: entry.name, type: entry.type).symbol, color: tint, size: 44)
@@ -141,7 +136,6 @@ struct AccountRow: View {
             Button("View History", systemImage: "chart.bar", action: onViewHistory)
             Button("Delete Account", systemImage: "trash", role: .destructive, action: onDelete)
         }
-        .sensoryFeedback(.impact(weight: .light), trigger: taps)
         .accessibilityLabel("\(entry.name), \(amount)")
         .accessibilityValue(
             "\(share), \(stats.percentChange == nil ? "no earlier balance" : "change \(change)")")

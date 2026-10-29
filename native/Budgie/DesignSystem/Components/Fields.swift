@@ -186,18 +186,12 @@ struct FormRow<Content: View>: View {
     @ViewBuilder var content: () -> Content
 
     @ScaledMetric(relativeTo: .footnote) private var labelWidth = Metrics.formLabelWidth
-    @State private var taps = 0
-
     var body: some View {
         if let action {
-            Button {
-                taps += 1
-                action()
-            } label: {
+            HapticButton(action: action) {
                 row
             }
             .buttonStyle(.plain)
-            .sensoryFeedback(.impact(weight: .light), trigger: taps)
         } else {
             row
         }

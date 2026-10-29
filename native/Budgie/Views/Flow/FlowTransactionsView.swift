@@ -497,17 +497,12 @@ private struct FilterButton: View {
     let symbol: String
     let action: () -> Void
 
-    @State private var taps = 0
-
     /// `rowSubtitle` at 11.
     private static let labelText = TextSpec(face: .gabaritoRegular, size: 11, height: 1.25, relativeTo: .caption2)
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: Metrics.radiusL, style: .continuous)
-        Button {
-            taps += 1
-            action()
-        } label: {
+        HapticButton(action: action) {
             HStack(spacing: 0) {
                 Image(systemName: symbol)
                     .font(.system(size: 15, weight: .medium))
@@ -536,7 +531,6 @@ private struct FilterButton: View {
             .contentShape(shape)
         }
         .buttonStyle(.plain)
-        .sensoryFeedback(.impact(weight: .light), trigger: taps)
         // On the Button itself, so VoiceOver keeps its activation.
         .accessibilityLabel(label)
         .accessibilityValue(value)

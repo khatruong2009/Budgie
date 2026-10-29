@@ -99,8 +99,6 @@ private struct BudgetTile: View {
     let formatter: MoneyFormatter
     let action: () -> Void
 
-    @State private var taps = 0
-
     private static let percentText = TextSpec(face: .monoMedium, size: 12, tabular: true, relativeTo: .caption)
     private static let chipText = TextSpec(face: .monoSemiBold, size: 13, tabular: true, relativeTo: .footnote)
     private static let subtitleText = TextSpec(face: .monoRegular, size: 11, tabular: true, relativeTo: .caption)
@@ -109,10 +107,7 @@ private struct BudgetTile: View {
         let color = statusColor
         let (subtitle, chip) = HomeSummary.budgetRow(item, formatter: formatter)
         let shape = RoundedRectangle(cornerRadius: Metrics.statCardRadius, style: .continuous)
-        Button {
-            taps += 1
-            action()
-        } label: {
+        HapticButton(action: action) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
                     ProgressRing(value: item.progress, size: 46, thickness: 5, color: color) {
@@ -149,7 +144,6 @@ private struct BudgetTile: View {
             .contentShape(shape)
         }
         .buttonStyle(PressScaleStyle(scale: 1))
-        .sensoryFeedback(.impact(weight: .light), trigger: taps)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(item.category), \(subtitle), \(chip)")
         .accessibilityAddTraits(.isButton)
@@ -173,14 +167,9 @@ private struct AddBudgetButton: View {
     let hint: String
     let action: () -> Void
 
-    @State private var taps = 0
-
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
-        Button {
-            taps += 1
-            action()
-        } label: {
+        HapticButton(action: action) {
             HStack(spacing: Metrics.spacingS) {
                 Image(systemName: "plus").font(.system(size: 15, weight: .semibold)).foregroundStyle(BudgieColor.accent)
                 Text("Add a budget").textStyle(.rowTitle).foregroundStyle(BudgieColor.textPrimary)
@@ -190,7 +179,6 @@ private struct AddBudgetButton: View {
             .contentShape(shape)
         }
         .buttonStyle(PressScaleStyle(scale: 0.98))
-        .sensoryFeedback(.impact(weight: .light), trigger: taps)
         .accessibilityHint(hint)
     }
 }
@@ -200,13 +188,8 @@ private struct AddBudgetButton: View {
 private struct AddBudgetRow: View {
     let action: () -> Void
 
-    @State private var taps = 0
-
     var body: some View {
-        Button {
-            taps += 1
-            action()
-        } label: {
+        HapticButton(action: action) {
             HStack(spacing: 12) {
                 IconTile(symbol: "plus", color: BudgieColor.accent)
                 Text("Add a budget")
@@ -219,7 +202,6 @@ private struct AddBudgetRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(PressScaleStyle(scale: 1))
-        .sensoryFeedback(.impact(weight: .light), trigger: taps)
     }
 }
 
@@ -336,14 +318,9 @@ private struct BudgetCategoryTile: View {
     let formatter: MoneyFormatter
     let action: () -> Void
 
-    @State private var taps = 0
-
     var body: some View {
         let budgeted = (limit ?? 0) > 0
-        Button {
-            taps += 1
-            action()
-        } label: {
+        HapticButton(action: action) {
             HStack(spacing: 12) {
                 IconTile(category: info)
                 VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
@@ -361,7 +338,6 @@ private struct BudgetCategoryTile: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(PressScaleStyle(scale: 1))
-        .sensoryFeedback(.impact(weight: .light), trigger: taps)
         .accessibilityIdentifier("budgets.picker.\(info.name)")
     }
 }

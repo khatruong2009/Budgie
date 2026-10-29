@@ -103,8 +103,6 @@ struct SettingsRow<Trailing: View>: View {
     var action: (() -> Void)? = nil
     @ViewBuilder var trailing: () -> Trailing
 
-    @State private var taps = 0
-
     var body: some View {
         let row = HStack(spacing: 14) {
             SettingsTile(symbol: symbol, color: color, tile: tile, iconSize: iconSize)
@@ -115,14 +113,10 @@ struct SettingsRow<Trailing: View>: View {
         .contentShape(Rectangle())
 
         if let action {
-            Button {
-                taps += 1
-                action()
-            } label: {
+            HapticButton(action: action) {
                 row
             }
             .buttonStyle(PressScaleStyle(scale: 1))
-            .sensoryFeedback(.impact(weight: .light), trigger: taps)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(title)
             .accessibilityValue(subtitle)

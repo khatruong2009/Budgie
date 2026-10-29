@@ -66,8 +66,6 @@ struct SectionHeader: View {
     var linkAccessibilityLabel: String? = nil
     var action: (() -> Void)? = nil
 
-    @State private var taps = 0
-
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
             Text(title)
@@ -76,10 +74,7 @@ struct SectionHeader: View {
                 .accessibilityAddTraits(.isHeader)
             Spacer(minLength: 8)
             if let link {
-                Button {
-                    taps += 1
-                    action?()
-                } label: {
+                HapticButton(action: { action?() }) {
                     // The text is about 18pt tall and 30-50pt wide; the tap
                     // area is 44 x 44.
                     Text(link).textStyle(.textLink).foregroundStyle(BudgieColor.accent)
@@ -87,7 +82,6 @@ struct SectionHeader: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(action == nil)
-                .sensoryFeedback(.impact(weight: .light), trigger: taps)
                 .accessibilityLabel(linkAccessibilityLabel ?? "\(link), \(title)")
             }
         }

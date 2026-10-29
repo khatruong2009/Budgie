@@ -633,15 +633,10 @@ struct FormButton: View {
     let action: () -> Void
 
     @Environment(\.isEnabled) private var isEnabled
-    @State private var taps = 0
-
     private static let label = TextSpec(face: .gabaritoBold, size: 16, relativeTo: .body)
 
     var body: some View {
-        Button {
-            taps += 1
-            action()
-        } label: {
+        HapticButton(action: action) {
             HStack(spacing: Metrics.spacingS) {
                 if loading {
                     // White on `expenseFixed` / `incomeFixed` (their token pairs).
@@ -659,7 +654,6 @@ struct FormButton: View {
         }
         .buttonStyle(PressScaleStyle(scale: 0.95))
         .opacity(isEnabled ? 1 : Metrics.opacityDisabled)
-        .sensoryFeedback(.impact(weight: .light), trigger: taps)
     }
 }
 

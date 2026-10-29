@@ -42,13 +42,8 @@ private struct GoalActionTile: View {
     let color: Color
     let action: () -> Void
 
-    @State private var taps = 0
-
     var body: some View {
-        Button {
-            taps += 1
-            action()
-        } label: {
+        HapticButton(action: action) {
             HStack(spacing: 14) {
                 IconTile(symbol: symbol, color: color)
                 Text(title)
@@ -60,7 +55,6 @@ private struct GoalActionTile: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .sensoryFeedback(.impact(weight: .light), trigger: taps)
     }
 }
 

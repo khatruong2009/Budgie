@@ -65,14 +65,10 @@ struct GlowCard<Content: View>: View {
                 .accessibilityAction { onTap?() }
                 .accessibilityAction(named: "More actions") { onLongPress() }
         } else if let onTap {
-            Button {
-                taps += 1
-                onTap()
-            } label: {
+            HapticButton(action: onTap) {
                 card
             }
             .buttonStyle(PressScaleStyle(scale: 0.98))
-            .sensoryFeedback(.impact(weight: .light), trigger: taps)
         } else {
             card
         }

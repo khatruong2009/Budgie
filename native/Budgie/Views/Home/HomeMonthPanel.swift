@@ -40,7 +40,6 @@ struct HomeMonthPanel: View {
 /// Previous year, the year, next year. Stepping keeps the month.
 private struct YearStepper: View {
     @Environment(AppModel.self) private var model
-    @State private var taps = 0
 
     var body: some View {
         let month = model.selectedMonth
@@ -56,11 +55,10 @@ private struct YearStepper: View {
             button("chevron.right", label: "Next year", identifier: "home.monthPanel.nextYear") { step(month, by: 1) }
         }
         .padding(.horizontal, Metrics.spacingS)
-        .sensoryFeedback(.impact(weight: .light), trigger: taps)
     }
 
     private func button(_ symbol: String, label: String, identifier: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+        HapticButton(action: action) {
             Image(systemName: symbol)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(BudgieColor.textSecondary)
@@ -74,7 +72,6 @@ private struct YearStepper: View {
     }
 
     private func step(_ month: DartDateTime, by years: Int) {
-        taps += 1
         let f = month.fields
         model.selectMonth(model.calendar.date(f.year + years, f.month))
     }

@@ -269,18 +269,13 @@ private struct SafeToSpendCard: View {
     let formatter: MoneyFormatter
     let onTap: () -> Void
 
-    @State private var taps = 0
-
     private static let titleText = TextSpec(face: .gabaritoSemiBold, size: 13, height: 1.25, relativeTo: .footnote)
     static let amountText = TextSpec(face: .gabaritoExtraBold, size: 32, tracking: -1, height: 1.05, tabular: true, relativeTo: .title)
     private static let subtitleText = TextSpec(face: .gabaritoRegular, size: 13, height: 1.25, relativeTo: .footnote)
 
     var body: some View {
         let card = HomeSummary.safeToSpendCard(breakdown, formatter: formatter)
-        Button {
-            taps += 1
-            onTap()
-        } label: {
+        HapticButton(action: onTap) {
             HStack(spacing: 14) {
                 VStack(alignment: .leading, spacing: Metrics.spacingXS) {
                     Text(card.title)
@@ -308,7 +303,6 @@ private struct SafeToSpendCard: View {
             .featureCard()
         }
         .buttonStyle(PressScaleStyle(scale: 0.98))
-        .sensoryFeedback(.impact(weight: .light), trigger: taps)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(card.accessibilityLabel)
         .accessibilityAddTraits(.isButton)
@@ -364,16 +358,11 @@ private struct RecentRow: View {
     let onTap: () -> Void
 
     @Environment(AppModel.self) private var model
-    @State private var taps = 0
-
     var body: some View {
         let isIncome = record.type == .income
         let day = DartDateFormat.MMMd(record.date)
         let copy = HomeSummary.recentRow(record, formatter: formatter)
-        Button {
-            taps += 1
-            onTap()
-        } label: {
+        HapticButton(action: onTap) {
             TransactionRowLayout(
                 title: copy.title, isRecurring: record.isRecurring, subtitle: copy.subtitle,
                 amount: copy.amount, amountColor: isIncome ? BudgieColor.income : BudgieColor.textPrimary
@@ -388,7 +377,6 @@ private struct RecentRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .sensoryFeedback(.impact(weight: .light), trigger: taps)
         // Flutter's label is "description, category, day, type amount";
         // VoiceOver reads the label then the value, so this sounds the
         // same while the description stays findable on its own.

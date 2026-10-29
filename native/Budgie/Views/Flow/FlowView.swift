@@ -12,7 +12,6 @@ struct FlowView: View {
     @State private var rangeMonths = CashFlowMath.defaultRange
     @State private var sheet: FlowSheet?
     @State private var page: FlowPage?
-    @State private var pillTaps = 0
     /// Range tile taps: Flutter's `selectionClick` fires on every tile tap,
     /// the already-selected one included.
     @State private var rangePicks = 0
@@ -76,14 +75,10 @@ struct FlowView: View {
     /// The header's `MonthPill` showing the chart range; opens the range
     /// sheet with a light haptic.
     private var rangePill: some View {
-        Button {
-            pillTaps += 1
-            sheet = .range
-        } label: {
+        HapticButton(action: { sheet = .range }) {
             MonthPill(label: CashFlowMath.rangeLabel(rangeMonths))
         }
         .buttonStyle(.plain)
-        .sensoryFeedback(.impact(weight: .light), trigger: pillTaps)
         .accessibilityLabel("Chart range")
         .accessibilityValue(CashFlowMath.rangeLabel(rangeMonths))
         .accessibilityHint("Chooses how many months the chart and the averages cover")
