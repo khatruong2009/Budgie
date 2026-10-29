@@ -78,8 +78,7 @@ public enum InsightEngine {
         if limit <= 0 { return [] }
         let selected = selectedMonth.fields
         let month = calendar.date(selected.year, selected.month)
-        let today = now.fields
-        let generatedDate = calendar.date(today.year, today.month, today.day)
+        let generatedDate = calendar.startOfDay(now)
         let rules = Rules(
             transactions: transactions, calendar: calendar, month: month, now: now, generatedDate: generatedDate)
         var candidates: [LocalInsight]
@@ -172,8 +171,7 @@ private struct Rules {
 
     /// `_sameMonth`: equal year and month fields.
     static func key(_ date: DartDateTime) -> Int {
-        let f = date.fields
-        return f.year * 12 + f.month
+        DartCalendar.monthKey(date)
     }
 
     var year: Int { month.fields.year }
@@ -183,7 +181,7 @@ private struct Rules {
 
     /// `DateTime(month.year, month.month - offset)`.
     func monthKey(minus offset: Int) -> Int {
-        Rules.key(calendar.date(year, monthNumber - offset))
+        Rules.key(calendar.addingMonths(month, -offset))
     }
 
     func rows(_ key: Int) -> [TransactionRecord] {
@@ -230,8 +228,7 @@ private struct Rules {
         var seen = Set<String>()
         var result: [LocalInsight] = []
         for row in rows(selectedKey) {
-            let f = row.date.fields
-            let day = calendar.date(f.year, f.month, f.day)
+            let day = calendar.startOfDay(row.date)
             let key = [
                 row.type.rawValue, InsightEngine.slug(row.description), DartFixed.toStringAsFixed(row.amount, 2),
                 day.toIso8601String(),

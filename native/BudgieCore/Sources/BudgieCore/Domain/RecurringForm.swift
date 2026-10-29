@@ -91,12 +91,12 @@ public enum RecurringForm {
         now: DartDateTime, calendar: DartCalendar, storedStart: DartDateTime? = nil
     ) -> ClosedRange<DartDateTime> {
         let floor = now.adding(days: -365)
-        var earliest = calendar.date(floor.year, floor.month, floor.day)
+        var earliest = calendar.startOfDay(floor)
         if earliest.isBefore(floor) { earliest = calendar.date(floor.year, floor.month, floor.day + 1) }
         let top = now.adding(days: 365)
-        var latest = calendar.date(top.year, top.month, top.day)
+        var latest = calendar.startOfDay(top)
         if let storedStart {
-            let day = calendar.date(storedStart.year, storedStart.month, storedStart.day)
+            let day = calendar.startOfDay(storedStart)
             if day.isBefore(earliest) { earliest = day }
             if day.isAfter(latest) { latest = day }
         }

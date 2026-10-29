@@ -288,8 +288,7 @@ public enum SpendMonth {
     /// no months the stored selection is kept as it is.
     public static func resolve(selected: DartDateTime?, available: [DartDateTime]) -> Resolution {
         if let selected {
-            let f = selected.fields
-            if available.contains(where: { $0.year == f.year && $0.month == f.month }) {
+            if available.contains(where: { DartCalendar.isSameMonth($0, selected) }) {
                 return Resolution(month: selected, resetsSelection: false)
             }
         }

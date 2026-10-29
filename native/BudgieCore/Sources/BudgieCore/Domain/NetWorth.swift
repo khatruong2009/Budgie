@@ -92,8 +92,7 @@ extension FinancialData {
 
     public func netWorthChange(forMonth month: DartDateTime) -> Double? {
         if updatedNetWorthEntryCount(forMonth: month) == 0 { return nil }
-        let f = month.fields
-        let previous = calendar.date(f.year, f.month - 1)
+        let previous = calendar.addingMonths(month, -1)
         if !hasNetWorthData(forMonth: previous) { return nil }
         return netWorth(forMonth: month) - netWorth(forMonth: previous)
     }

@@ -185,8 +185,7 @@ extension SavingsGoalRecord {
     /// `isOverdue`: not completed and the target's calendar day is before
     /// today's (both as local midnight, `DateTime(y, m, d)`).
     public func isOverdue(now: DartDateTime, calendar: DartCalendar) -> Bool {
-        let t = targetDate.fields, n = now.fields
-        return !isCompleted && calendar.date(t.year, t.month, t.day).isBefore(calendar.date(n.year, n.month, n.day))
+        return !isCompleted && calendar.startOfDay(targetDate).isBefore(calendar.startOfDay(now))
     }
 
     /// `_statusFor` (savings_goals_page.dart:246-267). Complete when
@@ -316,9 +315,8 @@ extension FinancialData {
     ) -> SavingsGoalRecord? {
         let trimmed = DartString.trim(name)
         guard !trimmed.isEmpty, targetAmount > 0, targetAmount.isFinite else { return nil }
-        let t = targetDate.fields
         let goal = SavingsGoalRecord.make(
-            id: id, name: trimmed, targetAmount: targetAmount, targetDate: calendar.date(t.year, t.month, t.day), now: now)
+            id: id, name: trimmed, targetAmount: targetAmount, targetDate: calendar.startOfDay(targetDate), now: now)
         goalRows.append(.record(goal))
         return goal
     }

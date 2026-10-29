@@ -21,8 +21,7 @@ public enum NetWorthGrowthRange: String, CaseIterable, Sendable {
     public func filter(_ data: [NetWorthHistoryPoint], calendar: DartCalendar) -> [NetWorthHistoryPoint] {
         guard let anchor = data.last?.date, self != .all else { return data }
         let months = self == .sixMonths ? 6 : 12
-        let a = anchor.fields
-        let cutoff = calendar.date(a.year, a.month - (months - 1))
+        let cutoff = calendar.addingMonths(anchor, -(months - 1))
         let filtered = data.filter { !calendar.month(of: $0.date).isBefore(cutoff) }
         if filtered.count < 2 && data.count >= 2 { return Array(data.suffix(2)) }
         return filtered.isEmpty ? data : filtered

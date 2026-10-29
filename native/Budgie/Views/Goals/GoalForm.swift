@@ -131,8 +131,7 @@ struct GoalFormDialog: View {
     private var range: (earliest: DartDateTime, latest: DartDateTime) {
         let calendar = model.calendar
         let year = openedAt.year
-        let shown = resolvedDate.fields
-        let day = calendar.date(shown.year, shown.month, shown.day)
+        let day = calendar.startOfDay(resolvedDate)
         return (min(calendar.date(year - 1, 1, 1), day), max(calendar.date(year + 20, 1, 1), day))
     }
 

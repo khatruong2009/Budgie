@@ -69,7 +69,7 @@ struct SpendMonthSheet: View {
     /// A row: the month (15 w600) and the accent check on the selected one,
     /// at least 48 tall.
     private func row(_ month: DartDateTime) -> some View {
-        let isSelected = selected.map { $0.year == month.year && $0.month == month.month } ?? false
+        let isSelected = selected.map { DartCalendar.isSameMonth($0, month) } ?? false
         return Button {
             onPick(month)
             dismiss()

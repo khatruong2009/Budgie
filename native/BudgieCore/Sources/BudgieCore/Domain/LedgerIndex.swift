@@ -174,9 +174,8 @@ public struct LedgerIndex: Sendable {
     /// `months` consecutive months, zero-filled.
     public func rollingNet(endingAt month: DartDateTime, months: Int) -> [MonthCashFlow] {
         guard months > 0 else { return [] }
-        let f = month.fields
         return (0..<months).map { index in
-            let m = calendar.date(f.year, f.month - months + 1 + index)
+            let m = calendar.addingMonths(month, 1 - months + index)
             let s = summary(forMonth: m)
             return MonthCashFlow(month: m, income: s.income, expenses: s.expenses)
         }

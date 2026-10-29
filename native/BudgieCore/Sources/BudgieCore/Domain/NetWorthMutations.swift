@@ -112,8 +112,7 @@ extension FinancialData {
     /// not duplicated, by a later save for the same month.
     public func defaultSnapshotDate(forMonth month: DartDateTime, now: DartDateTime) -> DartDateTime {
         let normalized = calendar.month(of: month)
-        let m = normalized.fields, n = now.fields
-        if m.year == n.year && m.month == n.month { return now }
+        if DartCalendar.isSameMonth(normalized, now) { return now }
         return calendar.endOfNetWorthMonth(normalized)
     }
 
@@ -192,8 +191,7 @@ extension FinancialData {
     /// anything changed (only then does Dart save).
     @discardableResult
     public mutating func carryNetWorthMonthForward(_ month: DartDateTime, now: DartDateTime) -> Bool {
-        let f = month.fields
-        let previousEnd = calendar.endOfNetWorthMonth(calendar.date(f.year, f.month - 1))
+        let previousEnd = calendar.endOfNetWorthMonth(calendar.addingMonths(month, -1))
         let date = defaultSnapshotDate(forMonth: month, now: now)
         var changed = false
         for index in netWorthRows.indices {

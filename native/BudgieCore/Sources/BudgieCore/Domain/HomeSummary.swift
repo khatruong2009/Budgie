@@ -6,8 +6,7 @@ public enum HomeSummary {
     /// `DateTime(month.year, month.month - 1)`: January wraps to December of
     /// the year before.
     public static func previousMonth(of month: DartDateTime, calendar: DartCalendar) -> DartDateTime {
-        let f = month.fields
-        return calendar.date(f.year, f.month - 1)
+        calendar.addingMonths(month, -1)
     }
 
     /// `_percentDelta`: nil when both months are zero; +100 when only the

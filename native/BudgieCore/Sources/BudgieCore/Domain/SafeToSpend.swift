@@ -84,8 +84,8 @@ public enum SafeToSpend {
         }
 
         let days: Int
-        if asOf.year == m.year && asOf.month == m.month {
-            days = monthEnd.differenceInDays(calendar.date(asOf.year, asOf.month, asOf.day)) + 1
+        if DartCalendar.isSameMonth(asOf, month) {
+            days = monthEnd.differenceInDays(calendar.startOfDay(asOf)) + 1
         } else if isBeforeMonth(asOfMonth, normalizedMonth) {
             days = monthEnd.day
         } else {
@@ -105,7 +105,7 @@ public enum SafeToSpend {
     /// `_clampDate`: time stripped; before the month -> the day before it
     /// (24 h earlier); after -> the month's last day.
     static func clamp(_ value: DartDateTime, _ start: DartDateTime, _ end: DartDateTime, _ calendar: DartCalendar) -> DartDateTime {
-        let date = calendar.date(value.year, value.month, value.day)
+        let date = calendar.startOfDay(value)
         if date < start { return start.adding(days: -1) }
         if date > end { return end }
         return date
@@ -132,7 +132,7 @@ public enum SafeToSpend {
         case .weekly: return occurrence.adding(days: 7)
         case .biweekly: return occurrence.adding(days: 14)
         case .monthly:
-            let nextMonth = calendar.date(occurrence.year, occurrence.month + 1)
+            let nextMonth = calendar.addingMonths(occurrence, 1)
             let lastDay = calendar.date(nextMonth.year, nextMonth.month + 1, 0).day
             let day = min(max(template.dayOfMonth ?? occurrence.day, 1), lastDay)
             return calendar.date(nextMonth.year, nextMonth.month, day)

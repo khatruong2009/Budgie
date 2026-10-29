@@ -207,9 +207,8 @@ public struct TransactionRecord: Identifiable, Hashable, Sendable {
     /// `Transaction.compareNewestFirst`: local calendar day desc, then
     /// createdAt desc, then id desc (UTF-16 order, as Dart compares strings).
     public static func newestFirst(_ a: TransactionRecord, _ b: TransactionRecord, calendar: DartCalendar) -> Bool {
-        let dayA = a.date.fields, dayB = b.date.fields
-        let keyA = calendar.date(dayA.year, dayA.month, dayA.day)
-        let keyB = calendar.date(dayB.year, dayB.month, dayB.day)
+        let keyA = calendar.startOfDay(a.date)
+        let keyB = calendar.startOfDay(b.date)
         if keyA != keyB { return keyA.microsecondsSinceEpoch > keyB.microsecondsSinceEpoch }
         if a.createdAt.microsecondsSinceEpoch != b.createdAt.microsecondsSinceEpoch {
             return a.createdAt.microsecondsSinceEpoch > b.createdAt.microsecondsSinceEpoch
@@ -416,7 +415,7 @@ public struct NetWorthSnapshotRecord: Hashable, Sendable {
         } else if let monthKey, !monthKey.isEmpty {
             guard let month = calendar.netWorthMonthFromKey(monthKey) else { return nil }
             let updated = (updatedAtText?.isEmpty ?? true) ? nil : calendar.tryParse(updatedAtText!)
-            if let updated, updated.year == month.year, updated.month == month.month {
+            if let updated, DartCalendar.isSameMonth(updated, month) {
                 recordedAt = updated
             } else {
                 recordedAt = month

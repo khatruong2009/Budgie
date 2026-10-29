@@ -355,8 +355,7 @@ public struct FinancialData: Sendable {
     /// (calendar day, createdAt, id as UTF-16), so 10k rows sort quickly.
     static func sortNewestFirst(_ rows: [TransactionRecord], calendar: DartCalendar) -> [TransactionRecord] {
         let keyed = rows.map { record -> (day: Int64, created: Int64, id: [UInt16], record: TransactionRecord) in
-            let f = record.date.fields
-            return (calendar.date(f.year, f.month, f.day).microsecondsSinceEpoch, record.createdAt.microsecondsSinceEpoch,
+            return (calendar.startOfDay(record.date).microsecondsSinceEpoch, record.createdAt.microsecondsSinceEpoch,
                     Array(record.id.utf16), record)
         }
         return keyed.sorted { a, b in

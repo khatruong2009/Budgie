@@ -83,8 +83,32 @@ public struct DartCalendar: Sendable {
 
     /// `TransactionModel._monthKey`: year * 12 + month.
     public func ledgerMonthKey(_ d: DartDateTime) -> Int {
+        DartCalendar.monthKey(d)
+    }
+
+    /// `year * 12 + month` of the date's fields.
+    public static func monthKey(_ d: DartDateTime) -> Int {
         let f = d.fields
         return f.year * 12 + f.month
+    }
+
+    /// `DateTime(d.year, d.month, d.day)`: local midnight of the day.
+    public func startOfDay(_ d: DartDateTime) -> DartDateTime {
+        let f = d.fields
+        return date(f.year, f.month, f.day)
+    }
+
+    /// `DateTime(d.year, d.month + months)`: first of the month, lenient.
+    public func addingMonths(_ d: DartDateTime, _ months: Int) -> DartDateTime {
+        let f = d.fields
+        return date(f.year, f.month + months)
+    }
+
+    /// Equal year and month fields.
+    public static func isSameMonth(_ a: DartDateTime, _ b: DartDateTime) -> Bool {
+        let x = a.fields
+        let y = b.fields
+        return x.year == y.year && x.month == y.month
     }
 
     /// Inverse of `ledgerMonthKey` (`getAvailableMonths`).
