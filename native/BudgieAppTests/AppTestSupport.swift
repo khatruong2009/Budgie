@@ -31,3 +31,11 @@ func scratchStore(storeDirectory: URL, preferences: UserDefaultsPreferences) -> 
 func scratchStored(storeDirectory: URL, preferences: UserDefaultsPreferences) async throws -> FinancialSnapshot {
     try await scratchStore(storeDirectory: storeDirectory, preferences: preferences).read()
 }
+
+enum TestDirectory {
+    /// A fresh, not yet created directory path `<tmp>/<prefix>-<UUID>`.
+    /// Callers create it and remove it in teardown.
+    static func make(_ prefix: String) -> URL {
+        FileManager.default.temporaryDirectory.appendingPathComponent("\(prefix)-\(UUID().uuidString)", isDirectory: true)
+    }
+}

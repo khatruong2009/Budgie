@@ -18,7 +18,7 @@ final class InsightModelTests: XCTestCase {
     private var preferences: UserDefaultsPreferences { scratchPreferences.preferences }
 
     override func setUp() async throws {
-        directory = FileManager.default.temporaryDirectory.appendingPathComponent("budgie-insights-\(UUID().uuidString)", isDirectory: true)
+        directory = TestDirectory.make("budgie-insights")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         scratchPreferences = ScratchPreferences("insights", onboardingCompleted: true)
     }

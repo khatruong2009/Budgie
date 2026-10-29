@@ -74,7 +74,7 @@ private final class Scratch {
     var preferences: UserDefaultsPreferences { scratchPreferences.preferences }
 
     init() throws {
-        directory = FileManager.default.temporaryDirectory.appendingPathComponent("budgie-data-\(UUID().uuidString)", isDirectory: true)
+        directory = TestDirectory.make("budgie-data")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         scratchPreferences = ScratchPreferences("data", onboardingCompleted: true)
     }
