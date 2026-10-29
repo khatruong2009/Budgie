@@ -14,19 +14,17 @@ import XCTest
 @MainActor
 final class InsightModelTests: XCTestCase {
     private var directory: URL!
-    private var suite: String!
-    private var preferences: UserDefaultsPreferences!
+    private var scratchPreferences: ScratchPreferences!
+    private var preferences: UserDefaultsPreferences { scratchPreferences.preferences }
 
     override func setUp() async throws {
         directory = FileManager.default.temporaryDirectory.appendingPathComponent("budgie-insights-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        suite = "budgie.tests.insights.\(UUID().uuidString)"
-        preferences = UserDefaultsPreferences(defaults: UserDefaults(suiteName: suite)!, domainName: suite)
-        OnboardingFlag.markCompleted(preferences)
+        scratchPreferences = ScratchPreferences("insights", onboardingCompleted: true)
     }
 
     override func tearDown() async throws {
-        UserDefaults(suiteName: suite)?.removePersistentDomain(forName: suite)
+        scratchPreferences.remove()
         try? FileManager.default.removeItem(at: directory)
     }
 

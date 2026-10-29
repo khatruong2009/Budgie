@@ -70,17 +70,13 @@ final class MigrationBootstrapSafetyTests: XCTestCase {
 @MainActor
 private final class Scratch {
     let directory: URL
-    let suite: String
-    let defaults: UserDefaults
-    let preferences: UserDefaultsPreferences
+    private let scratchPreferences: ScratchPreferences
+    var preferences: UserDefaultsPreferences { scratchPreferences.preferences }
 
     init() throws {
         directory = FileManager.default.temporaryDirectory.appendingPathComponent("budgie-data-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        suite = "budgie.tests.data.\(UUID().uuidString)"
-        defaults = UserDefaults(suiteName: suite)!
-        preferences = UserDefaultsPreferences(defaults: defaults, domainName: suite)
-        OnboardingFlag.markCompleted(preferences)
+        scratchPreferences = ScratchPreferences("data", onboardingCompleted: true)
     }
 
     /// A started model.
@@ -95,9 +91,7 @@ private final class Scratch {
 
     /// What is on disk now, read by a fresh store.
     func stored() async throws -> FinancialSnapshot {
-        try await FinancialStore(
-            fileSystem: DirectoryFileSystem(directory: storeDirectory), preferences: preferences, protectedData: AlwaysAvailable()
-        ).read()
+        try await scratchStored(storeDirectory: storeDirectory, preferences: preferences)
     }
 
     func completeSafetyCopies() throws -> [URL] {
@@ -116,7 +110,7 @@ private final class Scratch {
 
     func remove() {
         try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: storeDirectory.path)
-        defaults.removePersistentDomain(forName: suite)
+        scratchPreferences.remove()
         try? FileManager.default.removeItem(at: directory)
     }
 }

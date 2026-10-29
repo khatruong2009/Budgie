@@ -8,16 +8,15 @@ import XCTest
 @MainActor
 private final class ScratchApp {
     let directory: URL
-    let suite: String
-    let defaults: UserDefaults
-    let preferences: UserDefaultsPreferences
+    private let scratchPreferences: ScratchPreferences
+    var suite: String { scratchPreferences.suite }
+    var defaults: UserDefaults { scratchPreferences.defaults }
+    var preferences: UserDefaultsPreferences { scratchPreferences.preferences }
 
     init() throws {
         directory = FileManager.default.temporaryDirectory.appendingPathComponent("budgie-model-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        suite = "budgie.tests.model.\(UUID().uuidString)"
-        defaults = UserDefaults(suiteName: suite)!
-        preferences = UserDefaultsPreferences(defaults: defaults, domainName: suite)
+        scratchPreferences = ScratchPreferences("model", onboardingCompleted: false)
     }
 
     func makeModel() -> AppModel { AppModel(applicationSupport: directory, preferences: preferences) }
@@ -25,7 +24,7 @@ private final class ScratchApp {
     var storeDirectory: URL { directory.appendingPathComponent(StoreFile.directoryName, isDirectory: true) }
 
     func store() -> FinancialStore {
-        FinancialStore(fileSystem: DirectoryFileSystem(directory: storeDirectory), preferences: preferences, protectedData: AlwaysAvailable())
+        scratchStore(storeDirectory: storeDirectory, preferences: preferences)
     }
 
     /// Writes `sections` as an existing store (before the model starts).
@@ -35,10 +34,10 @@ private final class ScratchApp {
     }
 
     /// What is on disk now, read by a fresh store.
-    func stored() async throws -> FinancialSnapshot { try await store().read() }
+    func stored() async throws -> FinancialSnapshot { try await scratchStored(storeDirectory: storeDirectory, preferences: preferences) }
 
     func remove() {
-        defaults.removePersistentDomain(forName: suite)
+        scratchPreferences.remove()
         try? FileManager.default.removeItem(at: directory)
     }
 }
