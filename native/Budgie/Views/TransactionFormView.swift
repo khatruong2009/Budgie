@@ -587,21 +587,41 @@ struct CategoryMenuRow: View {
 struct TagChip: View {
     let name: String
     let selected: Bool
+    /// A selected chip leads with a check (the merchant rule editor's).
+    var showsCheck = false
 
     private static let selectedText = TextSpec(face: .gabaritoBold, size: 13, relativeTo: .footnote)
     private static let text = TextSpec(face: .gabaritoSemiBold, size: 13, relativeTo: .footnote)
 
     var body: some View {
-        Text(name)
-            .textStyle(selected ? Self.selectedText : Self.text)
-            .foregroundStyle(selected ? BudgieColor.accent : BudgieColor.textSecondary)
-            .singleLine()
+        label
             .padding(.horizontal, 14)
             .frame(minHeight: 34)
             .background(selected ? BudgieColor.accent.opacity(0.13) : Color.clear, in: Capsule())
             .overlay { if !selected { Capsule().strokeBorder(BudgieColor.cardBorder, lineWidth: Metrics.borderThin) } }
             // The chip draws 34pt tall; the tap area is 44.
             .tapArea(vertical: 5)
+    }
+
+    @ViewBuilder private var label: some View {
+        if showsCheck {
+            HStack(spacing: 6) {
+                if selected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 12, weight: .bold))
+                        .accessibilityHidden(true)
+                }
+                Text(name)
+                    .textStyle(selected ? Self.selectedText : Self.text)
+                    .singleLine()
+            }
+            .foregroundStyle(selected ? BudgieColor.accent : BudgieColor.textSecondary)
+        } else {
+            Text(name)
+                .textStyle(selected ? Self.selectedText : Self.text)
+                .foregroundStyle(selected ? BudgieColor.accent : BudgieColor.textSecondary)
+                .singleLine()
+        }
     }
 }
 

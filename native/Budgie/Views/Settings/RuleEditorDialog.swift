@@ -80,9 +80,6 @@ struct RuleEditorDialog: View {
         _maximumText = State(initialValue: maximumPrefill)
     }
 
-    private static let chipText = TextSpec(face: .gabaritoSemiBold, size: 13, relativeTo: .footnote)
-    private static let chipSelectedText = TextSpec(face: .gabaritoBold, size: 13, relativeTo: .footnote)
-
     /// Flutter's `TransactionTyp.values` order, then the Swift-only nil.
     static let types: [TransactionType?] = [.income, .expense, nil]
 
@@ -197,23 +194,7 @@ struct RuleEditorDialog: View {
                     Button {
                         if selected { tagIds.removeAll { DartString.equal($0, tag.id) } } else { tagIds.append(tag.id) }
                     } label: {
-                        HStack(spacing: 6) {
-                            if selected {
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 12, weight: .bold))
-                                    .accessibilityHidden(true)
-                            }
-                            Text(tag.name)
-                                .textStyle(selected ? Self.chipSelectedText : Self.chipText)
-                                .singleLine()
-                        }
-                        .foregroundStyle(selected ? BudgieColor.accent : BudgieColor.textSecondary)
-                        .padding(.horizontal, 14)
-                        .frame(minHeight: 34)
-                        .background(selected ? BudgieColor.accent.opacity(0.13) : Color.clear, in: Capsule())
-                        .overlay { if !selected { Capsule().strokeBorder(BudgieColor.cardBorder, lineWidth: Metrics.borderThin) } }
-                        // The chip draws 34pt tall; the tap area is 44.
-                        .tapArea(vertical: 5)
+                        TagChip(name: tag.name, selected: selected, showsCheck: true)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(tag.name)
