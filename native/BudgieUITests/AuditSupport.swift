@@ -82,26 +82,34 @@ final class AuditRunner {
         // screenshot that measures contrast both read what is drawn.
         Thread.sleep(forTimeInterval: 0.8)
         let shot = types.contains(.contrast) ? app.screenshot().image : nil
-        do {
-            try app.performAccessibilityAudit(for: types) { issue in
-                var pixels: Double?
-                var description = Self.describe(issue)
-                if let shot, issue.auditType == .contrast, let frame = issue.element?.frame {
-                    description += " | measured \(PixelContrast.measure(shot, frame: frame))"
-                    pixels = PixelContrast.ratio(shot, frame: frame)?.ratio
-                }
-                if let exclusion = AuditExclusions.match(issue, in: self.app, screen: screen, pixelRatio: pixels) {
-                    self.excluded += 1
-                    AuditReport.write("\(self.pass) | \(screen) | EXCLUDED | \(description) | \(exclusion.reason)")
+        // One audit per type: one call with every type timed out ("Audit
+        // failed to complete in time") on pages scrolled to their bottom
+        // (Categories, Home) where each type alone takes under 5s.
+        let each: [XCUIAccessibilityAuditType] = [
+            .contrast, .elementDetection, .hitRegion, .sufficientElementDescription, .dynamicType, .textClipped, .trait,
+        ]
+        for type in each where types.contains(type) {
+            do {
+                try app.performAccessibilityAudit(for: type) { issue in
+                    var pixels: Double?
+                    var description = Self.describe(issue)
+                    if let shot, issue.auditType == .contrast, let frame = issue.element?.frame {
+                        description += " | measured \(PixelContrast.measure(shot, frame: frame))"
+                        pixels = PixelContrast.ratio(shot, frame: frame)?.ratio
+                    }
+                    if let exclusion = AuditExclusions.match(issue, in: self.app, screen: screen, pixelRatio: pixels) {
+                        self.excluded += 1
+                        AuditReport.write("\(self.pass) | \(screen) | EXCLUDED | \(description) | \(exclusion.reason)")
+                        return true
+                    }
+                    self.unexpected += 1
+                    AuditReport.write("\(self.pass) | \(screen) | ISSUE | \(description)")
+                    XCTFail("[\(self.pass)] \(screen): \(description)", file: file, line: line)
                     return true
                 }
-                self.unexpected += 1
-                AuditReport.write("\(self.pass) | \(screen) | ISSUE | \(description)")
-                XCTFail("[\(self.pass)] \(screen): \(description)", file: file, line: line)
-                return true
+            } catch {
+                XCTFail("[\(pass)] \(screen): the \(Self.name(type)) audit did not run: \(error)", file: file, line: line)
             }
-        } catch {
-            XCTFail("[\(pass)] \(screen): the audit did not run: \(error)", file: file, line: line)
         }
     }
 
@@ -166,7 +174,7 @@ enum AuditExclusions {
         "Flow range sheet", "Flow month detail", "Flow SEE ALL category sheet", "Flow SEE ALL month sheet", "Currency sheet",
         "Number format sheet", "Voice sheet", "Worth account editor", "Worth editor month grid", "Goal form",
         "Goal allocation dialog", "Goal actions sheet", "Goal delete dialog", "Category editor", "Tag dialog", "Rule editor",
-        "Recurring form",
+        "Recurring form", "Edit form scrolled to its end",
     ]
 
     /// Pages scrolled to their bottom: their last rows sit under the tab bar's blur.
@@ -205,9 +213,9 @@ enum AuditExclusions {
             types: [.contrast], match: .labelPattern("^[0-9$.,€—-]$"), screens: ["Home", "Worth"],
             reason: "Hero amount glyphs (RollingAmount): one node per rolling digit, drawn over a text glow (UI_SPEC Home hero)."),
         AuditExclusion(
-            types: [.elementDetection], match: .noElement, screens: overlays + scrolled + ["Flow", "Categories"],
+            types: [.elementDetection], match: .noElement, screens: overlays + scrolled + ["Flow", "Categories", "Worth"],
             reason: "FOLLOW-UP (name the regions): no element: the page behind a sheet or dialog is dimmed and hidden from accessibility while its text "
-                + "stays visible; on scrolled pages the text under the tab bar's blur."),
+                + "stays visible; on scrolled pages, and on Worth's first account row on a 912pt phone, the text under the tab bar's blur."),
         AuditExclusion(
             types: [.textClipped], match: .labelPattern(".*"), screens: overlays,
             reason: "FOLLOW-UP (give the sheets a scrollable large detent and re-audit): text in a bottom sheet or dialog: the audit scales text without growing the presentation, which is "
@@ -245,6 +253,10 @@ enum AuditExclusions {
         AuditExclusion(
             types: [.dynamicType], match: .inNavigationBar,
             reason: "Titles and bar buttons in the system navigation bar: UIKit bar items, which scale to the bar's own cap."),
+        AuditExclusion(
+            types: [.contrast], match: .label("Delete Transaction"), screens: ["Edit Transaction form"],
+            reason: "With the keypad up the edit form scrolls, and its last row sits under the scroll area's 44pt bottom fade that cues "
+                + "more below (FormScrollArea). It is audited at rest in \"Edit form scrolled to its end\"."),
     ]
 
     @MainActor

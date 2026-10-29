@@ -1053,6 +1053,9 @@ accepted or not, to a file).
   onboarding pages, the lock screen (DEBUG hook `BUDGIE_UITEST_APP_LOCK`,
   authentication refused) and the voice sheet with the microphone denied
   (`BUDGIE_VOICE_MIC_DENIED`; nothing reaches OpenAI).
+- Each screen is audited one type at a time: a single call with every
+  type timed out ("Audit failed to complete in time") on Categories and
+  Home scrolled to their bottom, where each type alone takes under 5s.
 - `.textClipped` runs only at XXXL. "May be clipped at larger Dynamic Type
   sizes" is a prediction; at the default size it fired for dozens of
   one-line labels and for every text in any bottom sheet, a plain SwiftUI
@@ -1061,8 +1064,8 @@ accepted or not, to a file).
 - Screens: the five tab roots (Home, Worth, Goals, Spend, Flow), Settings
   and its pushed pages (Categories, Tags & rules, Recurring, Data
   diagnostics, Licences), the transaction forms (add expense, add income,
-  edit, the date picker, the recurring form), the budget picker and limit
-  sheet, the safe-to-spend sheet, the quick-expense sheet, the Home month
+  edit, the edit form scrolled to its end, the date picker, the recurring
+  form), the budget picker and limit sheet, the safe-to-spend sheet, the quick-expense sheet, the Home month
   panel, Home SEE ALL, Flow SEE ALL with its filters, category and month
   sheets, the Flow range sheet and month detail, the Spend month sheet and
   drill-in, the Worth account editor (and its month grid) and account
@@ -1214,7 +1217,7 @@ findings that are not fixed, only accepted for now.
 | 5 | contrast | `disabled` | - | A disabled control (opacity 0.38): WCAG 1.4.3 exempts inactive components. |
 | 6 | contrast | `pixelsAtLeast(4.5)` | - | The audit reports a failure, but the rendered pixels of the element measure at least 4.5:1 at rest (it sampled a glow, a border, a tinted tile or the anti-aliased edge of a thin 10-12pt glyph). |
 | 7 | contrast | `labelPattern("^[0-9$.,€—-]$")` | ["Home", "Worth"] | Hero amount glyphs (RollingAmount): one node per rolling digit, drawn over a text glow (UI_SPEC Home hero). |
-| 8 | elementDetection | `noElement` | sheets and dialogs, pages scrolled to the bottom pages, ["Flow", "Categories"] | FOLLOW-UP (name the regions): no element: the page behind a sheet or dialog is dimmed and hidden from accessibility while its text stays visible; on scrolled pages the text under the tab bar's blur. |
+| 8 | elementDetection | `noElement` | sheets and dialogs, pages scrolled to the bottom pages, ["Flow", "Categories", "Worth"] | FOLLOW-UP (name the regions): no element: the page behind a sheet or dialog is dimmed and hidden from accessibility while its text stays visible; on scrolled pages, and on Worth's first account row on a 912pt phone, the text under the tab bar's blur. |
 | 9 | textClipped | `labelPattern(".*")` | every sheet and dialog | FOLLOW-UP (give the sheets a scrollable large detent and re-audit): text in a bottom sheet or dialog: the audit scales text without growing the presentation, which is sized from its measured content (and scrolls); even a plain SwiftUI .sheet with a .medium detent is reported. Checked at accessibility-XXXL in the screenshots. |
 | 10 | dynamicType | `labelPattern("^(1 transaction\|[0-9]+ transactions\|[A-Z][a-z]+ [0-9]{4})$")` | ["Spend drill-in"] | Chips inside a ViewThatFits: the same PillChip outside one passes (lab: two identical chips, one in a ViewThatFits flagged, one beside it not). |
 | 11 | dynamicType | `labelPattern("^(Growth\|6M\|1Y\|ALL\|1M\|3M)$")` | ["Worth"] | The growth title and range pills sit in a ViewThatFits (beside each other, or stacked); see the chip row above. |
@@ -1227,6 +1230,7 @@ findings that are not fixed, only accepted for now.
 | 18 | dynamicType | `labelPattern("^(Theme\|Light, dark, or match device\|Light\|Dark\|Auto)$")` | ["Settings"] | The theme row is capped at accessibility2 on purpose (dynamicTypeSize(...accessibility2)) so its pills stay on one line. |
 | 19 | all | `inKeyboard` | - | The system software keyboard. |
 | 20 | dynamicType | `inNavigationBar` | - | Titles and bar buttons in the system navigation bar: UIKit bar items, which scale to the bar's own cap. |
+| 21 | contrast | `label("Delete Transaction")` | ["Edit Transaction form"] | With the keypad up the edit form scrolls, and its last row sits under the scroll area's 44pt bottom fade that cues more below (FormScrollArea). It is audited at rest in "Edit form scrolled to its end". |
 
 `pixelsAtLeast(4.5)` (row 6) is a rule, not a list: a contrast report is
 accepted when the screenshot, taken after the screen has come to rest, shows

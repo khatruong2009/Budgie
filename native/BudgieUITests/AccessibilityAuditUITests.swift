@@ -422,6 +422,11 @@ final class AccessibilityAuditUITests: XCTestCase {
             guard press(row, "row") else { return false }
             guard expect(app.staticTexts["Edit Expense"], "the edit form") else { return false }
             runner.audit("Edit Transaction form")
+            // Delete Transaction sits under the bottom fade until the form is
+            // scrolled to its end.
+            app.element("form.category").swipeUp()
+            guard expect(app.buttons["Delete Transaction"], "the delete button") else { return false }
+            runner.audit("Edit form scrolled to its end")
             guard press(app.buttons["Cancel"].firstMatch, "app.buttons[\"Cancel\"].firstMatch") else { return false }
             _ = app.textFields["Amount"].waitForNonExistence(timeout: 10)
             app.navigationBars.buttons.element(boundBy: 0).tap()
