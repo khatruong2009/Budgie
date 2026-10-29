@@ -223,7 +223,7 @@ struct AccountEditorDialog: View {
     private var buttons: some View {
         DialogButtons(
             cancelId: "worth.editor.cancel", submitTitle: isEditing ? "Save" : "Add", submitId: "worth.editor.save",
-            color: accent, busy: saving, cancel: dismiss
+            color: accent, busy: saving, top: 20, cancel: dismiss
         ) {
             Task { await save() }
         }

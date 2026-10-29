@@ -413,8 +413,9 @@ struct DialogTitle: View {
 }
 
 /// A dialog's button pair: outlined Cancel, and the filled submit in
-/// `color`, both 44 tall, 24 below the content above. `submitEnabled`, when
-/// given, disables the submit and dims it (`opacityDisabled`) while false.
+/// `color`, both 44 tall, `top` (24) below the content above.
+/// `submitEnabled`, when given, disables the submit and dims it
+/// (`opacityDisabled`) while false.
 struct DialogButtons: View {
     let cancelId: String
     let submitTitle: String
@@ -424,6 +425,7 @@ struct DialogButtons: View {
     /// The write is awaited: both buttons are inert and the submit spins.
     var busy = false
     var submitEnabled: Bool? = nil
+    var top: CGFloat = 24
     let cancel: () -> Void
     let submit: () -> Void
 
@@ -434,7 +436,7 @@ struct DialogButtons: View {
                 .accessibilityIdentifier(cancelId)
             submitButton
         }
-        .padding(.top, 24)
+        .padding(.top, top)
     }
 
     @ViewBuilder private var submitButton: some View {
