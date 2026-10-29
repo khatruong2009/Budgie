@@ -11,7 +11,7 @@ import UIKit
 enum BudgieColor {
     // Surfaces
     static let background = dynamic(light: 0xF3EFE6, dark: 0x07090D)
-    static let card = dynamic(light: 0xFBF9F4, dark: 0x11151C)
+    static let card = dynamic(light: PaletteHex.card.light, dark: PaletteHex.card.dark)
     static let chipSurface = dynamic(light: 0xEAE4D7, dark: 0x161B24)
     /// `MonthPill`'s border: white 8% dark, black 8% light (not `cardBorder`).
     static let pillBorder = overlay(dark: 0.08, light: 0.08)
@@ -25,23 +25,23 @@ enum BudgieColor {
     static let scrim = dynamic(light: 0x611A_1A17, dark: 0x8C00_0000, alpha: true)
 
     // Text
-    static let textPrimary = dynamic(light: 0x1A1A17, dark: 0xEEF1F5)
-    static let textSecondary = dynamic(light: 0x5C584F, dark: 0x9AA3B2)
+    static let textPrimary = dynamic(light: PaletteHex.textPrimary.light, dark: PaletteHex.textPrimary.dark)
+    static let textSecondary = dynamic(light: PaletteHex.textSecondary.light, dark: PaletteHex.textSecondary.dark)
     static let textTertiary = dynamic(light: 0x625E56, dark: 0x8C95A5)
-    static let onAccent = dynamic(light: 0xFFFFFF, dark: 0x0B0B14)
+    static let onAccent = dynamic(light: PaletteHex.onAccent.light, dark: PaletteHex.onAccent.dark)
 
     // Semantic
     /// Links, selection and the add button: deep green in light mode, lilac
     /// in dark mode.
-    static let accent = dynamic(light: 0x1D6646, dark: 0xB3ADFF)
+    static let accent = dynamic(light: PaletteHex.accent.light, dark: PaletteHex.accent.dark)
     /// Income, money kept and good changes.
-    static let income = dynamic(light: 0x1D6646, dark: 0x5EE6B0)
+    static let income = dynamic(light: PaletteHex.income.light, dark: PaletteHex.income.dark)
     /// Money spent on charts (Home's ring, legend and Expenses sparkline):
     /// terracotta in light mode (owner's call 2026-10-04; was ink), coral
     /// in dark mode.
     static let spent = dynamic(light: 0xA63D24, dark: 0xFF8B7B)
     /// Expense, over-limit and errors (`getDanger`).
-    static let danger = dynamic(light: 0xA63D24, dark: 0xFF8B7B)
+    static let danger = dynamic(light: PaletteHex.danger.light, dark: PaletteHex.danger.dark)
     static let warning = dynamic(light: 0x7E5300, dark: 0xFFC861)
     /// A `Toggle`'s tint when on.
     static let switchOn = dynamic(light: 0x1D6646, dark: 0x5EE6B0)
@@ -54,8 +54,8 @@ enum BudgieColor {
     static let primary = dynamic(light: 0x1A1A17, dark: 0x4A43C4)
     /// The forms' category wheel tiles, behind a white symbol: the first stop
     /// of the income and expense button fills.
-    static let expenseFixed = dynamic(light: 0xA63D24, dark: 0xA3372A)
-    static let incomeFixed = dynamic(light: 0x1D6646, dark: 0x0E6B4C)
+    static let expenseFixed = dynamic(light: PaletteHex.expenseFixed.light, dark: PaletteHex.expenseFixed.dark)
+    static let incomeFixed = dynamic(light: PaletteHex.incomeFixed.light, dark: PaletteHex.incomeFixed.dark)
 
     // Selection (month chips, segmented toggles): an ink chip with a paper
     // label in light mode, a lilac tint with a lilac label in dark mode.
@@ -159,19 +159,6 @@ enum BudgieColor {
 
     private static func stops(light: (UInt32, UInt32), dark: (UInt32, UInt32)) -> [Color] {
         [dynamic(light: light.0, dark: dark.0), dynamic(light: light.1, dark: dark.1)]
-    }
-}
-
-extension Color {
-    init(hex: UInt32) { self.init(uiColor: UIColor(hex: hex)) }
-}
-
-extension UIColor {
-    /// `hex` is 0xRRGGBB, or 0xAARRGGBB when `alpha` is true.
-    convenience init(hex: UInt32, alpha: Bool = false) {
-        self.init(
-            red: CGFloat((hex >> 16) & 0xFF) / 255, green: CGFloat((hex >> 8) & 0xFF) / 255,
-            blue: CGFloat(hex & 0xFF) / 255, alpha: alpha ? CGFloat((hex >> 24) & 0xFF) / 255 : 1)
     }
 }
 

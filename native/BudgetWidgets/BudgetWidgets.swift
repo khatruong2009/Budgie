@@ -3,23 +3,23 @@ import WidgetKit
 
 /// Reads the cash flow value the app writes to the shared app group.
 enum CashFlowStore {
-  static let suiteName = "group.com.khatruong.budgetbuddy"
+  static let suiteName = WidgetShared.appGroup
 
   /// Returns nil when the app has never written data (fresh install).
   /// Returns 0 when the stored value belongs to a previous month.
   static func read(for date: Date = Date()) -> Double? {
     guard let defaults = UserDefaults(suiteName: suiteName),
-      defaults.object(forKey: "cashFlow") != nil,
-      let storedMonth = defaults.string(forKey: "cashFlowMonth")
+      defaults.object(forKey: WidgetShared.cashFlowKey) != nil,
+      let storedMonth = defaults.string(forKey: WidgetShared.cashFlowMonthKey)
     else { return nil }
     guard storedMonth == monthKey(for: date) else { return 0 }
-    return defaults.double(forKey: "cashFlow")
+    return defaults.double(forKey: WidgetShared.cashFlowKey)
   }
 
   /// The app's Hide balances setting (D12), written by the Swift app only;
   /// false when absent.
   static func hidesBalances() -> Bool {
-    UserDefaults(suiteName: suiteName)?.bool(forKey: "budgieHideBalances") ?? false
+    UserDefaults(suiteName: suiteName)?.bool(forKey: WidgetShared.hideBalancesKey) ?? false
   }
 
   /// Always Gregorian: the key must match what the Dart side writes from
@@ -32,7 +32,7 @@ enum CashFlowStore {
 
   static func monthKey(for date: Date) -> String {
     let components = gregorian.dateComponents([.year, .month], from: date)
-    return String(format: "%04d-%02d", components.year ?? 0, components.month ?? 0)
+    return String(format: WidgetShared.monthKeyFormat, components.year ?? 0, components.month ?? 0)
   }
 
   static func startOfNextMonth(after date: Date) -> Date {
@@ -42,9 +42,9 @@ enum CashFlowStore {
 }
 
 /// The widget target cannot use `BudgieColor` (it lives in the app target), so
-/// this repeats the values the widgets need from
-/// native/Budgie/DesignSystem/Tokens/Colors.swift, resolved by the widget's
-/// colour scheme: "Paper" in light mode, "Midnight" in dark mode.
+/// this builds the tokens it needs from the shared `PaletteHex` values,
+/// resolved by the widget's colour scheme: "Paper" in light mode, "Midnight"
+/// in dark mode.
 struct WidgetPalette {
   let colorScheme: ColorScheme
 
@@ -53,25 +53,16 @@ struct WidgetPalette {
   }
 
   /// `BudgieColor.card`.
-  var background: Color { pick(light: 0xFBF9F4, dark: 0x11151C) }
-  var textPrimary: Color { pick(light: 0x1A1A17, dark: 0xEEF1F5) }
-  var textSecondary: Color { pick(light: 0x5C584F, dark: 0x9AA3B2) }
-  var accent: Color { pick(light: 0x1D6646, dark: 0xB3ADFF) }
-  var onAccent: Color { pick(light: 0xFFFFFF, dark: 0x0B0B14) }
-  var income: Color { pick(light: 0x1D6646, dark: 0x5EE6B0) }
-  var danger: Color { pick(light: 0xA63D24, dark: 0xFF8B7B) }
+  var background: Color { pick(light: PaletteHex.card.light, dark: PaletteHex.card.dark) }
+  var textPrimary: Color { pick(light: PaletteHex.textPrimary.light, dark: PaletteHex.textPrimary.dark) }
+  var textSecondary: Color { pick(light: PaletteHex.textSecondary.light, dark: PaletteHex.textSecondary.dark) }
+  var accent: Color { pick(light: PaletteHex.accent.light, dark: PaletteHex.accent.dark) }
+  var onAccent: Color { pick(light: PaletteHex.onAccent.light, dark: PaletteHex.onAccent.dark) }
+  var income: Color { pick(light: PaletteHex.income.light, dark: PaletteHex.income.dark) }
+  var danger: Color { pick(light: PaletteHex.danger.light, dark: PaletteHex.danger.dark) }
   /// Fills behind a white label (4.5:1 or better on both).
-  var incomeFixed: Color { pick(light: 0x1D6646, dark: 0x0E6B4C) }
-  var expenseFixed: Color { pick(light: 0xA63D24, dark: 0xA3372A) }
-}
-
-private extension Color {
-  /// `hex` is 0xRRGGBB.
-  init(hex: UInt32) {
-    self.init(
-      red: Double((hex >> 16) & 0xFF) / 255, green: Double((hex >> 8) & 0xFF) / 255,
-      blue: Double(hex & 0xFF) / 255)
-  }
+  var incomeFixed: Color { pick(light: PaletteHex.incomeFixed.light, dark: PaletteHex.incomeFixed.dark) }
+  var expenseFixed: Color { pick(light: PaletteHex.expenseFixed.light, dark: PaletteHex.expenseFixed.dark) }
 }
 
 /// Logo + cash flow strip shown at the top of the Quick Add widget.

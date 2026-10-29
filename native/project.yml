@@ -28,6 +28,7 @@ targets:
     platform: iOS
     sources:
       - path: Budgie
+      - path: Shared
     dependencies:
       - package: BudgieCore
       - target: BudgetWidgetsExtension
@@ -121,6 +122,7 @@ targets:
     platform: iOS
     sources:
       - path: BudgetWidgets
+      - path: Shared
     entitlements:
       path: BudgetWidgets/BudgetWidgets.entitlements
       properties:

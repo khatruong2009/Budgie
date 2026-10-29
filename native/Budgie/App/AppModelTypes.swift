@@ -4,7 +4,7 @@ import UIKit
 
 enum AppIdentifiers {
     static let bundleID = "com.khatruong.budgetbuddy"
-    static let appGroup = "group.com.khatruong.budgetbuddy"
+    static let appGroup = WidgetShared.appGroup
 }
 
 /// What the Add sheet should open with (quick actions, deep links, widget).

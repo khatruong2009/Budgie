@@ -465,19 +465,15 @@ final class AppModel {
 
     // MARK: - Widget
 
-    /// App Group key for Hide balances (D12). Swift-only: Flutter's widget
-    /// reads just `cashFlow` / `cashFlowMonth` and ignores it.
-    private static let widgetHideBalancesKey = "budgieHideBalances"
-
     /// `_syncWidgetCashFlow`: current month's cash flow into the App Group,
     /// with the Hide balances flag the widget masks it by.
     func syncWidget() {
         guard syncsWidget, let data, protectedData.isProtectedDataAvailable else { return }
         let value = data.widgetCashFlow(now: now)
         let defaults = UserDefaults(suiteName: AppIdentifiers.appGroup)
-        defaults?.set(value.amount, forKey: "cashFlow")
-        defaults?.set(value.month, forKey: "cashFlowMonth")
-        defaults?.set(data.appSettings.hideBalances, forKey: Self.widgetHideBalancesKey)
+        defaults?.set(value.amount, forKey: WidgetShared.cashFlowKey)
+        defaults?.set(value.month, forKey: WidgetShared.cashFlowMonthKey)
+        defaults?.set(data.appSettings.hideBalances, forKey: WidgetShared.hideBalancesKey)
         WidgetCenter.shared.reloadAllTimelines()
     }
 
@@ -489,8 +485,8 @@ final class AppModel {
             let defaults = UserDefaults(suiteName: AppIdentifiers.appGroup)
         else { return }
         let hidden = data.appSettings.hideBalances
-        guard defaults.object(forKey: Self.widgetHideBalancesKey) as? Bool != hidden else { return }
-        defaults.set(hidden, forKey: Self.widgetHideBalancesKey)
+        guard defaults.object(forKey: WidgetShared.hideBalancesKey) as? Bool != hidden else { return }
+        defaults.set(hidden, forKey: WidgetShared.hideBalancesKey)
         WidgetCenter.shared.reloadAllTimelines()
     }
 
