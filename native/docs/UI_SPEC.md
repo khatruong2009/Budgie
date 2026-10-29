@@ -3,8 +3,8 @@
 Views are thin: they read `AppModel` (`@Environment(AppModel.self)`) and call
 its async methods. They never touch `FinancialStore`, JSON, preferences or
 files. Money is shown with `model.moneyFormatter` (a port of the Flutter
-formatter: same symbols, rounding and "Match device" = en_US), dates with
-`DartDateTime` fields (never `Date` arithmetic for stored values).
+formatter: same symbols, rounding and "Match device" = en_US); the other
+money, date and persistence rules are in `FULL_APP_PLAN.md` section 3.
 
 Visual language: native SwiftUI (List/Form, NavigationStack, sheets) with
 the owner-approved redesign of 2026-10-03 (PARITY_GAPS "Visual redesign"):

@@ -44,21 +44,43 @@ Flow** — each in its own `NavigationStack`. Settings is pushed from a gear in
 the Home header; Recurring, Categories, Tags & rules, backup and CSV import
 live under Settings. SEE ALL lists are pushed pages.
 
-Rules that every native change follows (FULL_APP_PLAN.md section 3):
+Rules every native change follows, in short (full text and the reasons:
+[`FULL_APP_PLAN.md` section 3](native/docs/FULL_APP_PLAN.md)):
 - Persistence: mutate memory, then `await persist([sections])`; patch stored
-  records' raw JSON in place; keep Dart number lexemes (`100.0`).
+  records' raw JSON in place and keep Dart number lexemes; handle keys missing
+  from old data.
 - Dates only through `DartDateTime` / `DartCalendar` and the net-worth month
-  helpers; the clock comes from `AppModel.now`.
-- Compare strings as UTF-16 where Dart does (`DartString`); money through
-  `model.moneyFormatter`.
-- Ported calculations are checked against their Dart-oracle fixtures in
-  `native/Fixtures/`; changes to the store format are checked by
-  `native/scripts/verify-swift-output-in-dart.sh <dir>` (New York, Santiago,
-  Beirut). Any difference from Flutter goes in `PARITY_GAPS.md`.
-- Every animation has a Reduce Motion path; VoiceOver labels; Dynamic Type
-  through the design system's text styles.
-- If you add a field to a stored record, handle the key being missing
-  (existing users have old data).
+  helpers; the clock is `AppModel.now`.
+- Strings compare as UTF-16 where Dart does; money goes through `model.moneyFormatter`.
+- Every ported calculation has a Dart-oracle fixture, and store-format changes
+  pass `native/scripts/verify-swift-output-in-dart.sh <dir>` (New York,
+  Santiago, Beirut); any difference
+  from Flutter goes in `PARITY_GAPS.md`.
+- Every animation has a Reduce Motion path, VoiceOver labels, Dynamic Type via
+  the design system's text styles.
+
+## Doc owners
+
+Each topic lives in one doc; put changes there, not in a copy.
+
+| Topic | Owner |
+|---|---|
+| Cross-cutting rules, decisions | [`FULL_APP_PLAN.md`](native/docs/FULL_APP_PLAN.md) section 3 |
+| Store format (v2 file, checksum, backup) | [`MIGRATION_SPEC.md`](native/docs/MIGRATION_SPEC.md) section 4 |
+| Preferences and legacy keys | [`MIGRATION_SPEC.md`](native/docs/MIGRATION_SPEC.md) sections 3 and 8 |
+| Differences from Flutter | [`PARITY_GAPS.md`](native/docs/PARITY_GAPS.md) |
+| Screens | [`UI_SPEC.md`](native/docs/UI_SPEC.md) |
+| Upgrade verification and audit | [`UPGRADE_VERIFICATION.md`](native/docs/UPGRADE_VERIFICATION.md) |
+| Tasks that need a physical device | [`REAL_DEVICE_CHECKLISTS.md`](native/docs/REAL_DEVICE_CHECKLISTS.md) |
+
+## Read first
+
+1. This file.
+2. `FULL_APP_PLAN.md` section 3 (the rules).
+3. The `MIGRATION_SPEC.md` section for the data you touch (store format s4,
+   dates s7, legacy migration s8).
+4. The `UI_SPEC.md` section for the screen you change.
+5. `PARITY_GAPS.md` before changing anything Flutter also does.
 
 Before calling native work done:
 
