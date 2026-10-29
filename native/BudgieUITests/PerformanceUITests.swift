@@ -22,8 +22,6 @@ final class PerformanceUITests: XCTestCase {
         let environment = ProcessInfo.processInfo.environment
         try XCTSkipUnless(environment["BUDGIE_PERF"] == "1", "Set TEST_RUNNER_BUDGIE_PERF=1 (scripts/perf_run.sh).")
         app.launchEnvironment["BUDGIE_SKIP_ONBOARDING"] = "1"
-        // The glow A/B (Debug builds only): TEST_RUNNER_BUDGIE_PERF_NO_GLOW=1.
-        if environment["BUDGIE_PERF_NO_GLOW"] == "1" { app.launchEnvironment["BUDGIE_PERF_NO_GLOW"] = "1" }
     }
 
     // MARK: - Helpers

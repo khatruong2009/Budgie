@@ -56,7 +56,6 @@
 		57C1710C00FB36BCF8B60059 /* TagsRulesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFA90BE0220F078585F963B /* TagsRulesView.swift */; };
 		58421D731B43BA4B428F6F12 /* FlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF1B6BD45CD3611914BF395 /* FlowView.swift */; };
 		5AC290014BC51785886288D1 /* FontTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDF2F936CC7D305389BBED49 /* FontTests.swift */; };
-		5C46FB7738C7E9B39B128951 /* Glow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A98DC9BE2B7642524497EC0 /* Glow.swift */; };
 		5C9906BF143C4B6C61F3E2DE /* Cards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36BD27819DF0A258524F0996 /* Cards.swift */; };
 		6203B90952180BFA29B28B58 /* RecurringView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 696727C7D65FFD344214C039 /* RecurringView.swift */; };
 		626B03DE04BB702D62F699F5 /* Gabarito-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B252B4E7CB90F0EE19AF2304 /* Gabarito-SemiBold.ttf */; };
@@ -236,7 +235,6 @@
 		4458A9E28C360553F6FF40A7 /* RoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutingTests.swift; sourceTree = "<group>"; };
 		46A622BC18E15CB82AA11A76 /* DataImportDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataImportDialog.swift; sourceTree = "<group>"; };
 		48B0B5D6C0E064C559ED1CF2 /* CategoryTransactionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryTransactionsView.swift; sourceTree = "<group>"; };
-		4A98DC9BE2B7642524497EC0 /* Glow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Glow.swift; sourceTree = "<group>"; };
 		4B6C5556331443DB51937149 /* VoiceUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceUITests.swift; sourceTree = "<group>"; };
 		4E914AC86A596DC97136FF9E /* AddFormPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddFormPresenter.swift; sourceTree = "<group>"; };
 		5177241A386AE7A9E235D4AD /* AppLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLock.swift; sourceTree = "<group>"; };
@@ -586,7 +584,6 @@
 			isa = PBXGroup;
 			children = (
 				37D39DC37012306B07E6140E /* Colors.swift */,
-				4A98DC9BE2B7642524497EC0 /* Glow.swift */,
 				A4ACB3F3FD965A3ADF042E88 /* Metrics.swift */,
 				DC281C7ED6BA5AFCAAEF93D5 /* Motion.swift */,
 			);
@@ -992,7 +989,6 @@
 				C89FCB098684DB0A51BD750B /* FlowTransactionsView.swift in Sources */,
 				58421D731B43BA4B428F6F12 /* FlowView.swift in Sources */,
 				B77F656D6050715E177A0D57 /* Fonts.swift in Sources */,
-				5C46FB7738C7E9B39B128951 /* Glow.swift in Sources */,
 				F9767309B73C53816105EC4E /* GlowFab.swift in Sources */,
 				DADC714492DA2C972C0F669E /* GoalActions.swift in Sources */,
 				847A524749C84D4CCC56914B /* GoalCard.swift in Sources */,

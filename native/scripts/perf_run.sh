@@ -1,7 +1,7 @@
 #!/bin/bash
 # Performance lane (docs/PERFORMANCE.md): builds the Debug configuration with
-# optimisation forced on (Debug is needed for the BUDGIE_SKIP_ONBOARDING and
-# BUDGIE_PERF_NO_GLOW hooks; -Onone would make the numbers meaningless),
+# optimisation forced on (Debug is needed for the BUDGIE_SKIP_ONBOARDING
+# hook; -Onone would make the numbers meaningless),
 # seeds the 10,000-row store on ONE simulator, and runs PerformanceUITests.
 #
 # Usage:
@@ -11,7 +11,6 @@
 # `run` installs the built app, seeds the store, sets the appearance, and
 # runs the tests without building. Environment:
 #   PERF_APPEARANCE=light|dark   (default light)
-#   PERF_NO_GLOW=1               run with BUDGIE_PERF_NO_GLOW=1
 #   PERF_ITERATIONS=10
 #   PERF_ROWS=400                a smaller store (perf_seed.py --rows)
 # Results: <result-dir>/<name>.xcresult and <name>.metrics.json.
@@ -61,7 +60,6 @@ run)
   rm -rf "$results/$name.xcresult"
   export TEST_RUNNER_BUDGIE_PERF=1
   export TEST_RUNNER_BUDGIE_PERF_ITERATIONS="${PERF_ITERATIONS:-10}"
-  if [ "${PERF_NO_GLOW:-0}" = "1" ]; then export TEST_RUNNER_BUDGIE_PERF_NO_GLOW=1; fi
   set +e
   xcodebuild "${common[@]}" -resultBundlePath "$results/$name.xcresult" "${only[@]}" test-without-building
   status=$?

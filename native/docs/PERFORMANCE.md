@@ -29,7 +29,7 @@ fixture).
 
 **Lane.** `native/scripts/perf_run.sh`: Debug configuration with
 `SWIFT_OPTIMIZATION_LEVEL=-O GCC_OPTIMIZATION_LEVEL=s` (Debug is needed for the
-`BUDGIE_SKIP_ONBOARDING` and `BUDGIE_PERF_NO_GLOW` hooks; -Onone numbers are
+`BUDGIE_SKIP_ONBOARDING` hook; -Onone numbers are
 meaningless). The build log has no `-Onone` (BudgieCore is built with `-O`
 too). No Release build, so no API key is involved.
 
@@ -43,7 +43,7 @@ data, so one seeding serves a whole run. It asserts the seed is present
 ```
 cd native && xcodegen generate
 scripts/perf_run.sh build <udid> <derived-dir>
-PERF_APPEARANCE=dark PERF_NO_GLOW=1 PERF_ITERATIONS=10 \
+PERF_APPEARANCE=dark PERF_ITERATIONS=10 \
   scripts/perf_run.sh run <udid> <derived-dir> <results-dir> <name> \
   BudgieUITests/PerformanceUITests/testFlowSeeAllScroll ...
 xcrun xcresulttool get test-results metrics --path <results-dir>/<name>.xcresult
@@ -70,10 +70,11 @@ protectedData=<available|unavailable>`, `protected data available after <s>s`
 (only when it waited), `pre-native snapshot <created|exists|failed>`,
 `store loaded revision=<n>` (or `store load failed <kind>`). No financial data.
 
-**Glow A/B.** A Debug build started with `BUDGIE_PERF_NO_GLOW=1` (pass
-`TEST_RUNNER_BUDGIE_PERF_NO_GLOW=1`) draws no per-row shadow on Home SEE ALL.
-Since the visual redesign (2026-10) SEE ALL rows have no shadow, so the
-switch changes nothing; removing it is budgie-ou0.21.
+**Glow A/B (retired).** The `BUDGIE_PERF_NO_GLOW` switch (and the
+`PERF_NO_GLOW` option of `perf_run.sh`) is gone. It removed the per-row shadow
+on Home SEE ALL; since the visual redesign (2026-10) SEE ALL rows have no
+shadow, so it changed nothing (budgie-ou0.21). The measurements below are kept
+as history.
 Since the 2026-10-03 redesign the app draws no glows, text glows or hero
 blur at all, so the glow numbers below describe the earlier build. It does
 not remove the FAB's shadow or the `DialogShadow` black layer. Release
@@ -164,7 +165,7 @@ account (weekly for ten years); a typical one has 12 to 60, where this is not
 visible. Cost is O(snapshots), not O(10k rows), so it did not show on the
 regular `large_10k` fixture.
 
-### Glow A/B (`BUDGIE_PERF_NO_GLOW`, simulator)
+### Glow A/B (`BUDGIE_PERF_NO_GLOW`, retired; simulator)
 
 Per iteration (6 fast swipes; Home body = add sheet open/close plus the month
 panel twice). Glow on / glow off, 10 iterations each:
@@ -207,11 +208,8 @@ CPU with the Mac. Do these on the iPhone, with a Release-like build
    SEE ALL, Home SEE ALL, Spend drill-in, Home and the account history. Record
    hitch time ratio (ms per s) per screen. Apple's guide: under 5 ms/s is good,
    over 10 ms/s is noticeable.
-3. **Glow cost.** Same scrolls with and without `BUDGIE_PERF_NO_GLOW=1` (Debug
-   build; set it in the scheme's environment), in light and dark. A ratio
-   change above about 2 ms/s on any screen is worth acting on; the candidates
-   are the Home SEE ALL per-row `.shadow` (move it onto the background shape),
-   `.compositingGroup()` on `GlowHalo` users, and the hero's blur.
+3. **Glow cost.** Retired: the `BUDGIE_PERF_NO_GLOW` switch is gone and the
+   app draws no glows since the redesign (2026-10).
 4. **Cold and prewarm launch.** Instruments > App Launch for a cold launch with
    the 10k store (note `bootstrap`, `FinancialData.load` on the main thread and
    time to Home). For the prewarm/locked launch follow REAL_DEVICE_CHECKLISTS
