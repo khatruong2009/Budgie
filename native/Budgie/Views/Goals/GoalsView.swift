@@ -52,12 +52,9 @@ struct GoalsView: View {
                     }
             }
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+        .floatingActionInset {
             GlowFab(label: "Add savings goal") { present(.add) }
-                .padding(.trailing, Metrics.fabInset)
-                .padding(.bottom, Metrics.fabInset)
                 .accessibilityIdentifier("goals.fab")
-                .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .sensoryFeedback(.impact(weight: .medium), trigger: completions)
         // `busy` is read here, in the body: the dialog is built outside it

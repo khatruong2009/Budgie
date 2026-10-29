@@ -43,18 +43,13 @@ struct WorthView: View {
                 .accessibilityHidden(true)
         }
         .toolbar(.hidden, for: .navigationBar)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            if model.data != nil {
-                // The populated page passes the active tab's type; the empty
-                // state leaves it unset (asset), as Flutter.
-                GlowFab(label: "Add account") {
-                    openEditor(entry: nil, type: model.hasNetWorthEntries && !isAssetsTab ? .liability : .asset)
-                }
-                .accessibilityIdentifier("worth.add")
-                .padding(.trailing, Metrics.fabInset)
-                .padding(.bottom, Metrics.fabInset)
-                .frame(maxWidth: .infinity, alignment: .trailing)
+        .floatingActionInset(visible: model.data != nil) {
+            // The populated page passes the active tab's type; the empty
+            // state leaves it unset (asset), as Flutter.
+            GlowFab(label: "Add account") {
+                openEditor(entry: nil, type: model.hasNetWorthEntries && !isAssetsTab ? .liability : .asset)
             }
+            .accessibilityIdentifier("worth.add")
         }
         .navigationDestination(item: $historyEntryID) { id in AccountHistoryView(entryID: id) }
         .budgieDialog(item: $editor, padding: 0) { request in

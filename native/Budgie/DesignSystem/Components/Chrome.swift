@@ -124,13 +124,16 @@ private struct PushedTitleText: View {
 extension View {
     /// A bottom-trailing floating action button in a bottom safe-area inset
     /// (it follows the tab bar and clears the scroll content), `fabInset`
-    /// from the trailing and bottom edges.
-    func floatingActionInset<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+    /// from the trailing and bottom edges. While `visible` is false the
+    /// inset is empty (it takes no room).
+    func floatingActionInset<Content: View>(visible: Bool = true, @ViewBuilder _ content: () -> Content) -> some View {
         safeAreaInset(edge: .bottom, spacing: 0) {
-            content()
-                .padding(.trailing, Metrics.fabInset)
-                .padding(.bottom, Metrics.fabInset)
-                .frame(maxWidth: .infinity, alignment: .trailing)
+            if visible {
+                content()
+                    .padding(.trailing, Metrics.fabInset)
+                    .padding(.bottom, Metrics.fabInset)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
         }
     }
 }
