@@ -13,7 +13,7 @@
 #      Quick Add widget.
 # Usage: system_flow.sh <path/to/flutter/Runner.app>
 # Build the Runner.app from the flutter-final tag (budget_app/ is no longer
-# in the tree); upgrade_rehearsal.py's build_flutter() does exactly that.
+# in the tree) with `upgrade_rehearsal.py --build-only`, which prints its path.
 set -euo pipefail
 . "$(dirname "$0")/lib/sim.sh"
 FLUTTER_APP="${1:?path to the Flutter Runner.app}"
@@ -57,8 +57,16 @@ xcrun simctl boot "$UDID"
 xcrun simctl bootstatus "$UDID" -b >/dev/null
 cd "$NATIVE" && xcodegen generate >/dev/null
 rm -rf "$WORK/result.xcresult"
+# grep finding nothing is fine; a failed build is not (PIPESTATUS).
+set +e
 xcodebuild build-for-testing -project Budgie.xcodeproj -scheme Budgie -destination "id=$UDID" \
-  -derivedDataPath "$WORK/derived" CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual | grep -E "error:|\*\* TEST BUILD" || true
+  -derivedDataPath "$WORK/derived" CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual | grep -E "error:|\*\* TEST BUILD"
+BUILD_STATUS=${PIPESTATUS[0]}
+set -e
+if [ "$BUILD_STATUS" -ne 0 ]; then
+  echo "build-for-testing failed (exit $BUILD_STATUS)" >&2
+  exit "$BUILD_STATUS"
+fi
 # Install the Swift build over the Flutter one ourselves, so the first test
 # sees exactly "Swift installed, not yet launched" (xcodebuild's own install
 # of the app under test can land after the first test has started).

@@ -9,6 +9,9 @@ Only the simulator named SIM_NAME is touched; it is created if missing.
 No physical device, no real data.
 
 Usage: native/scripts/upgrade_rehearsal.py [--skip-build] [scenario ...]
+       native/scripts/upgrade_rehearsal.py --build-only
+Builds the Flutter app from the flutter-final tag, prints the Runner.app path
+(the argument of system_flow.sh) and exits; no simulator is touched.
 Writes native/docs/rehearsal/<timestamp>/ (report.json, screenshots, pulled state).
        native/scripts/upgrade_rehearsal.py --compare-pulled DIR [DIR ...]
 Checks app containers pulled from a physical device (REAL_DEVICE_CHECKLISTS.md).
@@ -574,11 +577,16 @@ def main():
     parser.add_argument("--skip-build", action="store_true")
     parser.add_argument("--compare-pulled", nargs="+", metavar="DIR",
                         help="check containers pulled from a device (REAL_DEVICE_CHECKLISTS.md); no simulator is used")
+    parser.add_argument("--build-only", action="store_true",
+                        help="build the Flutter Runner.app from the flutter-final tag, print its path, and exit")
     parser.add_argument("scenarios", nargs="*", default=["s1", "s3", "s4", "s5", "s6"])
     args = parser.parse_args()
     SCRATCH.mkdir(parents=True, exist_ok=True)
     if args.compare_pulled:
         return compare_pulled(args.compare_pulled)
+    if args.build_only:
+        print(build_flutter())
+        return 0
     stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     out = NATIVE / "docs" / "rehearsal" / stamp
     out.mkdir(parents=True)
