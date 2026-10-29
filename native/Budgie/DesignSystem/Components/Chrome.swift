@@ -639,7 +639,7 @@ struct SwipeToDeleteRow<Content: View>: View {
                     .fill(BudgieColor.danger)
                     .overlay(alignment: .trailing) {
                         Image(systemName: "trash")
-                            .font(.system(size: 20, weight: .semibold))
+                            .font(.system(size: Metrics.iconS, weight: .semibold))
                             .foregroundStyle(.white)
                             .padding(.trailing, 24)
                     }

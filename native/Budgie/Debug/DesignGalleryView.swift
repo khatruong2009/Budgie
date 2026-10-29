@@ -28,7 +28,7 @@ struct DesignGalleryView: View {
                     MonthPill(label: "September 2026") {}
                 } accessory: {
                     Image(systemName: "gearshape")
-                        .font(.system(size: 20, weight: .medium))
+                        .font(.system(size: Metrics.iconS, weight: .medium))
                         .foregroundStyle(BudgieColor.textSecondary)
                 }
                 .padding(.horizontal, -Metrics.pageHorizontal)

@@ -84,7 +84,7 @@ struct HomeView: View {
                 SettingsView()
             } label: {
                 Image(systemName: "gearshape")
-                    .font(.system(size: 20, weight: .medium))
+                    .font(.system(size: Metrics.iconS, weight: .medium))
                     .foregroundStyle(BudgieColor.textSecondary)
                     // The glyph's 36pt slot is unchanged; the tap area is
                     // the 44pt minimum, centred on it.
