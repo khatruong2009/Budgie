@@ -246,19 +246,6 @@ public struct TransactionRecord: Identifiable, Hashable, Sendable {
         if raw["updatedAt"]?.stringValue == nil { next.raw["updatedAt"] = .string(updatedAt.toIso8601String()) }
         return next
     }
-
-    /// `Transaction.compareNewestFirst`: local calendar day desc, then
-    /// createdAt desc, then id desc (UTF-16 order, as Dart compares strings).
-    public static func newestFirst(_ a: TransactionRecord, _ b: TransactionRecord, calendar: DartCalendar) -> Bool {
-        let keyA = calendar.startOfDay(a.date)
-        let keyB = calendar.startOfDay(b.date)
-        if keyA != keyB { return keyA.microsecondsSinceEpoch > keyB.microsecondsSinceEpoch }
-        if a.createdAt.microsecondsSinceEpoch != b.createdAt.microsecondsSinceEpoch {
-            return a.createdAt.microsecondsSinceEpoch > b.createdAt.microsecondsSinceEpoch
-        }
-        // Dart `b.id.compareTo(a.id)`: the larger id (UTF-16 order) first.
-        return Array(b.id.utf16).lexicographicallyPrecedes(Array(a.id.utf16))
-    }
 }
 
 // MARK: - Recurring template

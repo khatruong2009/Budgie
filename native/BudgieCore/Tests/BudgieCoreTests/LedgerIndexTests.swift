@@ -5,7 +5,7 @@ import Testing
 
 @Suite("LedgerIndex: one pass per revision, same answers as the Dart ledger")
 struct LedgerIndexTests {
-    @Test("matches the Dart model and the Swift oracle for every fixture", arguments: DomainParityTests.cases)
+    @Test("matches the Dart model for every fixture", arguments: DomainParityTests.cases)
     func parity(_ path: String) async throws {
         let url = Fixtures.url(path)
         let scenario = try Scenario(url)
@@ -17,14 +17,11 @@ struct LedgerIndexTests {
         let index = LedgerIndex.build(data.transactions, calendar: calendar)
 
         #expect(index.availableMonths.map { $0.toIso8601String() } == dart["availableMonths"].array.compactMap(\.string), "\(path) months")
-        #expect(index.newestFirst.map(\.id) == data.transactionsNewestFirst().map(\.id), "\(path) order vs oracle")
         #expect(index.newestFirst.map(\.id).filter(known.contains) == dart["sortedIds"].array.compactMap(\.string).filter(known.contains))
-        let oracle = data.monthLedger()
         for month in index.availableMonths {
             let key = calendar.netWorthMonthKey(month)
             let want = dart["monthly"][key]
             let summary = index.summary(forMonth: month)
-            let totals = oracle[calendar.ledgerMonthKey(month)]!
             #expect(summary.income == want["totalIncome"].double && summary.expenses == want["totalExpenses"].double, "\(path) \(key)")
             #expect(summary.net == want["summary"]["net"].double, "\(path) \(key) net")
             // Same names, same (Dart map) order, same sums.
@@ -32,16 +29,16 @@ struct LedgerIndexTests {
             for (name, amount) in summary.categoryExpenses {
                 #expect(amount == want["categoryExpenses"][name].double, "\(path) \(key) \(name)")
             }
-            #expect(summary.transactionCount == totals.transactionIDs.count)
-            #expect(sameCategories(summary, totals), "\(path) \(key) index vs oracle categories")
+            #expect(summary.transactionCount == want["transactionIds"].array.count, "\(path) \(key) count")
             let expenseRows = data.transactions.filter { $0.type == .expense && calendar.ledgerMonthKey($0.date) == calendar.ledgerMonthKey(month) }
             #expect(summary.categoryExpenseCounts.count == summary.categoryExpenses.count)
             for ((name, _), count) in zip(summary.categoryExpenses, summary.categoryExpenseCounts) {
                 #expect(expenseRows.filter { $0.category.utf16.elementsEqual(name.utf16) }.count == count)
             }
-            #expect(index.newestFirst(inMonth: month).map(\.id) == data.transactionsNewestFirst(inMonth: month).map(\.id), "\(path) \(key) month rows")
+            let monthKey = calendar.ledgerMonthKey(month)
+            #expect(index.newestFirst(inMonth: month).map(\.id) == index.newestFirst.filter { $0.monthKey == monthKey }.map(\.id), "\(path) \(key) month rows")
         }
-        #expect(index.recent(3).map(\.id) == Array(data.transactionsNewestFirst().prefix(3).map(\.id)))
+        #expect(index.recent(3).map(\.id) == Array(index.newestFirst.prefix(3).map(\.id)))
         #expect(index.recent(0).isEmpty)
     }
 
@@ -71,7 +68,7 @@ struct LedgerIndexTests {
         #expect(row.dayKey == 20260214 && row.monthKey == 2026 * 12 + 2 && row.descriptionLower == "more")
     }
 
-    @Test("canonically equivalent names are two categories (UTF-16 keys) in the index, the oracle and Dart")
+    @Test("canonically equivalent names are two categories (UTF-16 keys) in the index and Dart")
     func canonicalEquivalents() throws {
         let nfc = "Caf\u{E9}", nfd = "Cafe\u{301}"
         #expect(nfc == nfd)  // Swift String equality is canonical; Dart's is not
@@ -88,8 +85,6 @@ struct LedgerIndexTests {
         #expect(summary.categoryExpenses.map { Array($0.name.utf16) } == [nfc, nfd, "Other"].map { Array($0.utf16) })
         #expect(summary.categoryExpenses.map(\.amount) == [31, 20.5, 4])
         #expect(summary.categoryExpenseCounts == [2, 2, 1])
-        let oracle = try #require(data.monthLedger()[calendar.ledgerMonthKey(month)])
-        #expect(sameCategories(summary, oracle))
 
         // Dart: the Spend fixture's "unicode" month holds both spellings.
         let cases = try Fixtures.json("spend/breakdowns.json")["cases"].array
@@ -97,8 +92,6 @@ struct LedgerIndexTests {
         let dart = homeData(try JSONParser.parse(unicode["sections"].string!).objectValue!)
         let dartMonth = try dart.calendar.parse(unicode["months"][0]["month"].string!)
         let dartSummary = LedgerIndex.build(dart.transactions, calendar: dart.calendar).summary(forMonth: dartMonth)
-        let dartOracle = try #require(dart.monthLedger()[dart.calendar.ledgerMonthKey(dartMonth)])
-        #expect(sameCategories(dartSummary, dartOracle))
         func key(_ name: String, _ amountBits: String, _ count: Int) -> String { "\(Array(name.utf16)) \(amountBits) \(count)" }
         let want = unicode["months"][0]["mirror"]["records"].array.map {
             key($0["name"].string!, $0["amount"].string!, $0["count"].int!)
@@ -122,12 +115,6 @@ struct LedgerIndexTests {
         #expect(index.newestFirst.count == data.transactions.count)
         #expect(elapsed < .seconds(1))
     }
-}
-
-/// Same names (as UTF-16 code units), order and sums.
-private func sameCategories(_ summary: MonthSummary, _ totals: FinancialData.MonthTotals) -> Bool {
-    summary.categoryExpenses.map { Array($0.name.utf16) } == totals.categoryExpenses.map { Array($0.0.utf16) }
-        && summary.categoryExpenses.map(\.amount) == totals.categoryExpenses.map(\.1)
 }
 
 private func hex(_ value: Double) -> String {

@@ -41,8 +41,9 @@ struct NetWorthMutationTests {
                                 date: calendar.date(2026, 3, 15), id: id(), now: now)
         _ = data.addTransaction(type: .expense, description: "Groceries", amount: 100, category: "Food",
                                 date: calendar.date(2026, 3, 16), id: id(), now: now)
-        #expect(data.totals(forMonth: march).income == 250)
-        #expect(data.totals(forMonth: march).expenses == 100)
+        let marchSummary = LedgerIndex.build(data.transactions, calendar: calendar).summary(forMonth: march)
+        #expect(marchSummary.income == 250)
+        #expect(marchSummary.expenses == 100)
         #expect(data.totalAssets(forMonth: data.selectedNetWorthMonth) == 1000)
         #expect(data.totalLiabilities(forMonth: data.selectedNetWorthMonth) == 400)
         #expect(data.netWorth(forMonth: data.selectedNetWorthMonth) == 600)

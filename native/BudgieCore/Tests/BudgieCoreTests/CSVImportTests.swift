@@ -235,7 +235,7 @@ struct CSVImportTests {
         let result = emptyData().importTransactions(summary, now: now, newID: { ids.next()! })
         #expect(result.imported.map(\.createdAt) == [now, now.adding(microseconds: 1), now.adding(microseconds: 2)])
         #expect(result.imported.map(\.updatedAt) == result.imported.map(\.createdAt))
-        #expect(result.data.transactionsNewestFirst().map(\.description) == ["third", "second", "first"])
+        #expect(LedgerIndex.build(result.data.transactions, calendar: result.data.calendar).newestFirst.map(\.record.description) == ["third", "second", "first"])
         let text = DartJSON.encodeString(.object(result.imported[2].raw))
         #expect(text == #"{"id":"id-c","type":"expense","description":"third","amount":-0.0,"category":"Food","date":"2026-09-01T00:00:00.000","recurringTemplateId":null,"tagIds":[],"createdAt":"2026-09-28T09:15:30.250127","updatedAt":"2026-09-28T09:15:30.250127"}"#)
     }
@@ -383,7 +383,7 @@ struct CSVImportTests {
         let summary = try parse("\(header)\n0000-01-01,Expense,Food,a,1\n12345-01-01,Expense,Food,b,1\n275759-01-01,Expense,Food,c,1\n")
         #expect(summary.drafts.count == 3)
         let data = emptyData().importTransactions(summary, now: now, newID: { UUID().uuidString.lowercased() }).data
-        #expect(data.transactionsNewestFirst().map(\.description) == ["c", "b", "a"])
+        #expect(LedgerIndex.build(data.transactions, calendar: data.calendar).newestFirst.map(\.record.description) == ["c", "b", "a"])
         #expect(LedgerIndex.build(data.transactions, calendar: data.calendar).availableMonths.count == 3)
     }
 

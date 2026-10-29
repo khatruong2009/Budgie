@@ -32,10 +32,11 @@ enum RehearsalSummary {
         let calendar = data.calendar
         let now = model.now
         var monthly: [String: Any] = [:]
-        for month in data.availableMonths() {
-            let totals = data.totals(forMonth: month)
+        let ledger = LedgerIndex.build(data.transactions, calendar: calendar)
+        for month in ledger.availableMonths {
+            let totals = ledger.summary(forMonth: month)
             monthly[calendar.netWorthMonthKey(month)] = [
-                "totalIncome": totals.income, "totalExpenses": totals.expenses, "count": totals.transactionIDs.count,
+                "totalIncome": totals.income, "totalExpenses": totals.expenses, "count": totals.transactionCount,
             ]
         }
         var netWorth: [String: Any] = [:]

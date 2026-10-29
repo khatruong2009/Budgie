@@ -40,13 +40,13 @@ func assertDartSummary(
     #expect(data.transactions.count == dart["transactionCount"].int, "\(label) count")
     #expect(data.unreadableTransactionCount == 0 || allowUnreadable, "\(label) unreadable rows")
 
-    let months = data.availableMonths()
+    let index = LedgerIndex.build(data.transactions, calendar: calendar)
+    let months = index.availableMonths
     #expect(months.map { $0.toIso8601String() } == dart["availableMonths"].array.compactMap(\.string), "\(label) months")
-    let ledger = data.monthLedger()
     for month in months {
         let key = calendar.netWorthMonthKey(month)
         let expectedMonth = dart["monthly"][key]
-        let totals = ledger[calendar.ledgerMonthKey(month)]!
+        let totals = index.summary(forMonth: month)
         #expect(totals.income == expectedMonth["totalIncome"].double, "\(label) \(key) income")
         #expect(totals.expenses == expectedMonth["totalExpenses"].double, "\(label) \(key) expenses")
         #expect(totals.net == expectedMonth["summary"]["net"].double, "\(label) \(key) net")
@@ -56,10 +56,13 @@ func assertDartSummary(
             #expect(amount == categories[name].double, "\(label) \(key) \(name)")
         }
         let ids = expectedMonth["transactionIds"].array.compactMap(\.string)
-        #expect(totals.transactionIDs.filter(isKnown) == ids.filter(isKnown), "\(label) \(key) ids")
-        #expect(totals.transactionIDs.count == ids.count, "\(label) \(key) id count")
+        #expect(totals.transactionCount == ids.count, "\(label) \(key) id count")
+        #expect(
+            data.transactions.filter { calendar.ledgerMonthKey($0.date) == calendar.ledgerMonthKey(month) }.map(\.id).filter(isKnown)
+                == ids.filter(isKnown),
+            "\(label) \(key) ids")
     }
-    let sorted = data.transactionsNewestFirst().map(\.id).filter(isKnown)
+    let sorted = index.newestFirst.map(\.id).filter(isKnown)
     #expect(sorted == dart["sortedIds"].array.compactMap(\.string).filter(isKnown), "\(label) newest-first order")
 
     #expect(data.selectedNetWorthMonth.toIso8601String() == dart["selectedNetWorthMonth"].string, "\(label) nw month")
@@ -190,7 +193,7 @@ struct LogicParityTests {
         let calendar = DartCalendar(timeZone: TimeZone(identifier: "UTC")!)
         let fixture = try Fixtures.json("logic/ordering.json")
         let rows = fixture["transactions"].array.map { TransactionRecord.parse($0.value!, calendar: calendar, newID: { "x" })! }
-        let sorted = rows.sorted { TransactionRecord.newestFirst($0, $1, calendar: calendar) }
+        let sorted = LedgerIndex.build(rows, calendar: calendar).newestFirst
         #expect(sorted.map(\.id) == fixture["newestFirst"].array.compactMap(\.string))
     }
 }
