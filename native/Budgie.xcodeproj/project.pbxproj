@@ -138,6 +138,7 @@
 		D65461C43522A0FAEE51D806 /* RecurringUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56CC2E13F2374B8367D6EB80 /* RecurringUITests.swift */; };
 		D92EB23D1CA2485689CF5FBB /* BudgetsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F75251F37466F9FEAEBF3294 /* BudgetsSection.swift */; };
 		DADC714492DA2C972C0F669E /* GoalActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11ADA577B45D605D5B1BFC63 /* GoalActions.swift */; };
+		DB87147EBD1E88AABD5850D5 /* VoiceFakes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C834C69EB73A76378F3CDFF /* VoiceFakes.swift */; };
 		DC0ACEC38D74059FC1D891E5 /* AppLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5177241A386AE7A9E235D4AD /* AppLock.swift */; };
 		DD3477A856F81761EDAE932E /* ToastTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D535FCA57003E013F50CD1 /* ToastTests.swift */; };
 		E0EFA319E7443B8D30AD97C6 /* AppModel+Worth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B7D0CD9FD41C43A8E223F49 /* AppModel+Worth.swift */; };
@@ -227,6 +228,7 @@
 		1A2ED6A8E71E2487B153FA82 /* VoiceRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceRecorder.swift; sourceTree = "<group>"; };
 		1B7D0CD9FD41C43A8E223F49 /* AppModel+Worth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+Worth.swift"; sourceTree = "<group>"; };
 		1C1C12C3082F408F35ED722A /* OpeningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpeningView.swift; sourceTree = "<group>"; };
+		1C834C69EB73A76378F3CDFF /* VoiceFakes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceFakes.swift; sourceTree = "<group>"; };
 		1FF16CFFE8DA5D3E14133773 /* AppModel+Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+Settings.swift"; sourceTree = "<group>"; };
 		213457AB69A67DF35F652E73 /* Gabarito-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Gabarito-Bold.ttf"; sourceTree = "<group>"; };
 		21D98BE7CAA32047DC8ED7BB /* HomeHero.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeHero.swift; sourceTree = "<group>"; };
@@ -423,6 +425,7 @@
 				31D535FCA57003E013F50CD1 /* ToastTests.swift */,
 				AC8BD160059B70E88B177161 /* TransactionFormValidationTests.swift */,
 				61FCF1D192D298B8708D268F /* VoiceEntryModelTests.swift */,
+				1C834C69EB73A76378F3CDFF /* VoiceFakes.swift */,
 			);
 			path = BudgieAppTests;
 			sourceTree = "<group>";
@@ -1166,6 +1169,7 @@
 				DD3477A856F81761EDAE932E /* ToastTests.swift in Sources */,
 				6D4565D119A57E52E7C3DD79 /* TransactionFormValidationTests.swift in Sources */,
 				2F9E364C956E96BD3268C417 /* VoiceEntryModelTests.swift in Sources */,
+				DB87147EBD1E88AABD5850D5 /* VoiceFakes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
