@@ -131,30 +131,31 @@ struct WidgetCashFlowText: View {
   }
 }
 
-struct BudgetQuickActionsEntry: TimelineEntry {
+/// Shared by both widgets: the month's cash flow and the Hide balances flag.
+struct BudgetWidgetEntry: TimelineEntry {
   let date: Date
   let cashFlow: Double?
   let hidesBalances: Bool
 }
 
-struct BudgetQuickActionsProvider: TimelineProvider {
-  func placeholder(in context: Context) -> BudgetQuickActionsEntry {
-    BudgetQuickActionsEntry(date: Date(), cashFlow: CashFlowStore.read(), hidesBalances: CashFlowStore.hidesBalances())
+struct BudgetWidgetProvider: TimelineProvider {
+  func placeholder(in context: Context) -> BudgetWidgetEntry {
+    BudgetWidgetEntry(date: Date(), cashFlow: CashFlowStore.read(), hidesBalances: CashFlowStore.hidesBalances())
   }
 
-  func getSnapshot(in context: Context, completion: @escaping (BudgetQuickActionsEntry) -> Void) {
-    completion(BudgetQuickActionsEntry(date: Date(), cashFlow: CashFlowStore.read(), hidesBalances: CashFlowStore.hidesBalances()))
+  func getSnapshot(in context: Context, completion: @escaping (BudgetWidgetEntry) -> Void) {
+    completion(BudgetWidgetEntry(date: Date(), cashFlow: CashFlowStore.read(), hidesBalances: CashFlowStore.hidesBalances()))
   }
 
-  func getTimeline(in context: Context, completion: @escaping (Timeline<BudgetQuickActionsEntry>) -> Void) {
+  func getTimeline(in context: Context, completion: @escaping (Timeline<BudgetWidgetEntry>) -> Void) {
     let now = Date()
-    let entry = BudgetQuickActionsEntry(date: now, cashFlow: CashFlowStore.read(for: now), hidesBalances: CashFlowStore.hidesBalances())
+    let entry = BudgetWidgetEntry(date: now, cashFlow: CashFlowStore.read(for: now), hidesBalances: CashFlowStore.hidesBalances())
     completion(Timeline(entries: [entry], policy: .after(CashFlowStore.startOfNextMonth(after: now))))
   }
 }
 
 struct BudgetQuickActionsEntryView: View {
-  var entry: BudgetQuickActionsProvider.Entry
+  var entry: BudgetWidgetProvider.Entry
 
   @Environment(\.colorScheme) private var colorScheme
 
@@ -202,7 +203,7 @@ struct BudgetQuickActionsWidget: Widget {
   let kind: String = "BudgetQuickActions"
 
   var body: some WidgetConfiguration {
-    StaticConfiguration(kind: kind, provider: BudgetQuickActionsProvider()) { entry in
+    StaticConfiguration(kind: kind, provider: BudgetWidgetProvider()) { entry in
       BudgetQuickActionsEntryView(entry: entry)
     }
     .configurationDisplayName("Budget Quick Add")
@@ -211,30 +212,8 @@ struct BudgetQuickActionsWidget: Widget {
   }
 }
 
-struct BudgetVoiceAddEntry: TimelineEntry {
-  let date: Date
-  let cashFlow: Double?
-  let hidesBalances: Bool
-}
-
-struct BudgetVoiceAddProvider: TimelineProvider {
-  func placeholder(in context: Context) -> BudgetVoiceAddEntry {
-    BudgetVoiceAddEntry(date: Date(), cashFlow: CashFlowStore.read(), hidesBalances: CashFlowStore.hidesBalances())
-  }
-
-  func getSnapshot(in context: Context, completion: @escaping (BudgetVoiceAddEntry) -> Void) {
-    completion(BudgetVoiceAddEntry(date: Date(), cashFlow: CashFlowStore.read(), hidesBalances: CashFlowStore.hidesBalances()))
-  }
-
-  func getTimeline(in context: Context, completion: @escaping (Timeline<BudgetVoiceAddEntry>) -> Void) {
-    let now = Date()
-    let entry = BudgetVoiceAddEntry(date: now, cashFlow: CashFlowStore.read(for: now), hidesBalances: CashFlowStore.hidesBalances())
-    completion(Timeline(entries: [entry], policy: .after(CashFlowStore.startOfNextMonth(after: now))))
-  }
-}
-
 struct BudgetVoiceAddEntryView: View {
-  var entry: BudgetVoiceAddProvider.Entry
+  var entry: BudgetWidgetProvider.Entry
 
   @Environment(\.colorScheme) private var colorScheme
 
@@ -273,7 +252,7 @@ struct BudgetVoiceAddWidget: Widget {
   let kind: String = "BudgetVoiceAdd"
 
   var body: some WidgetConfiguration {
-    StaticConfiguration(kind: kind, provider: BudgetVoiceAddProvider()) { entry in
+    StaticConfiguration(kind: kind, provider: BudgetWidgetProvider()) { entry in
       BudgetVoiceAddEntryView(entry: entry)
         .widgetURL(URL(string: "budgetapp://voice-add")!)
     }
