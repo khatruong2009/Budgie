@@ -500,22 +500,21 @@ final class AppModel {
             after: transactionsChanged)
     }
 
-    /// Whether a readable transaction with this id is in memory (a false
-    /// update/delete for a missing row is not a save failure).
-    func hasTransaction(id: String) -> Bool {
-        data?.transactionRows.contains { $0.record?.id == id } ?? false
+    /// `.rejected` (nothing changed or written, no save-failed toast) for a
+    /// missing row or a non-finite amount.
+    @discardableResult
+    func updateTransaction(id: String, _ edit: TransactionRecord.Edit) async -> SaveOutcome {
+        guard edit.amount.isFinite,
+            applyMutation({ $0.updateTransaction(id: id, edit, now: now) }, after: transactionsChanged)
+        else { return .rejected }
+        return await persist([Section.transactions]) ? .saved : .failed
     }
 
+    /// `.rejected` (nothing written, no save-failed toast) for a missing row.
     @discardableResult
-    func updateTransaction(id: String, _ edit: TransactionRecord.Edit) async -> Bool {
-        guard edit.amount.isFinite else { return false }
-        return await mutate(
-            [Section.transactions], { $0.updateTransaction(id: id, edit, now: now) }, after: transactionsChanged)
-    }
-
-    @discardableResult
-    func deleteTransaction(id: String) async -> Bool {
-        await mutate([Section.transactions], { $0.deleteTransaction(id: id) }, after: transactionsChanged)
+    func deleteTransaction(id: String) async -> SaveOutcome {
+        guard applyMutation({ $0.deleteTransaction(id: id) }, after: transactionsChanged) else { return .rejected }
+        return await persist([Section.transactions]) ? .saved : .failed
     }
 
     // MARK: - Recurring

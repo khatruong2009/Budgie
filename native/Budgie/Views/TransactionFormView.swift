@@ -361,23 +361,24 @@ struct TransactionFormView: View {
         let trimmed = DartString.trim(descriptionText)
         let description = trimmed.isEmpty ? "Transaction" : trimmed
         let date = resolvedDate()
-        // The row went while the form was open (deleted elsewhere): nothing
-        // to save and nothing failed.
-        if let record = editing, !model.hasTransaction(id: record.id) {
-            dismiss()
-            return
-        }
         saving = true
         let saved: Bool
         if let record = editing {
             // An untouched amount field keeps the stored value exactly (the
             // prefill is rounded to cents).
             let amount = amountText == DartFixed.toStringAsFixed(record.amount, 2) ? record.amount : parsed
-            saved = await model.updateTransaction(
+            let outcome = await model.updateTransaction(
                 id: record.id,
                 TransactionRecord.Edit(
                     type: type, description: description, amount: amount, category: category, date: date,
                     tagIds: selectedTagIds))
+            // The row went while the form was open (deleted elsewhere):
+            // nothing to save and nothing failed.
+            if outcome == .rejected {
+                dismiss()
+                return
+            }
+            saved = outcome == .saved
         } else {
             saved = await model.addTransaction(
                 type: type, description: description, amount: parsed, category: category, date: date,
@@ -395,14 +396,11 @@ struct TransactionFormView: View {
 
     private func delete() async {
         guard let record = editing, !saving else { return }
-        guard model.hasTransaction(id: record.id) else {
-            dismiss()
-            return
-        }
         saving = true
-        let deleted = await model.deleteTransaction(id: record.id)
+        let outcome = await model.deleteTransaction(id: record.id)
         dismiss()
-        model.showToast(deleted ? .transactionDeleted : .saveFailed)
+        // Rejected: the row is already gone, nothing failed.
+        if outcome != .rejected { model.showToast(outcome == .saved ? .transactionDeleted : .saveFailed) }
     }
 
     // MARK: - Date range

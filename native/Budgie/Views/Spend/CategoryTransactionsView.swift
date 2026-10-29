@@ -102,10 +102,12 @@ struct CategoryTransactionsView: View {
             Button("Delete", role: .destructive) {
                 deleteConfirms += 1
                 Task {
-                    // Already gone (deleted elsewhere): nothing failed.
-                    guard model.hasTransaction(id: record.id) else { return }
-                    let saved = await model.deleteTransaction(id: record.id)
-                    model.showToast(saved ? .transactionDeleted : .saveFailed)
+                    // Already gone (deleted elsewhere, rejected): nothing failed.
+                    switch await model.deleteTransaction(id: record.id) {
+                    case .saved: model.showToast(.transactionDeleted)
+                    case .failed: model.showToast(.saveFailed)
+                    case .rejected: break
+                    }
                 }
             }
         } message: { _ in
