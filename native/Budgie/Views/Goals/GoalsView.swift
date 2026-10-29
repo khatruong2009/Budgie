@@ -96,8 +96,8 @@ struct GoalsView: View {
                 .padding(.top, 24)
             // Keyed by id (Flutter's cards are unkeyed, so a re-sort moved
             // ring state between goals); a repeated id gets its occurrence.
-            ForEach(Self.keyed(goals), id: \.key) { item in
-                let goal = item.goal
+            ForEach(goals.uniqueKeys(id: \.id), id: \.key) { item in
+                let goal = item.element
                 GoalCard(
                     goal: goal, now: now, calendar: model.calendar, formatter: formatter,
                     onAddMoney: { present(.allocate(goal)) },
@@ -109,15 +109,6 @@ struct GoalsView: View {
             }
         }
         .padding(.horizontal, Metrics.pageHorizontal)
-    }
-
-    private static func keyed(_ goals: [SavingsGoalRecord]) -> [(key: String, goal: SavingsGoalRecord)] {
-        var seen: [String: Int] = [:]
-        return goals.map { goal in
-            let n = seen[goal.id, default: 0]
-            seen[goal.id] = n + 1
-            return (n == 0 ? goal.id : "\(goal.id)#\(n)", goal)
-        }
     }
 
     // MARK: - Dialogs

@@ -694,3 +694,27 @@ extension View {
             })
     }
 }
+
+// MARK: - Presence binding and row keys
+
+extension Binding where Value == Bool {
+    /// True while `item` holds a value; setting it false clears the item.
+    init<Item>(isPresent item: Binding<Item?>) {
+        self.init(get: { item.wrappedValue != nil }, set: { if !$0 { item.wrappedValue = nil } })
+    }
+}
+
+extension Collection {
+    /// Row keys: each element's id, with its occurrence appended for a
+    /// repeated id (foreign data can repeat one): the first keeps `id`, the
+    /// next are `id#1`, `id#2`, and so on.
+    func uniqueKeys(id: (Element) -> String) -> [(key: String, element: Element)] {
+        var seen: [String: Int] = [:]
+        return map { element in
+            let raw = id(element)
+            let n = seen[raw, default: 0]
+            seen[raw] = n + 1
+            return (n == 0 ? raw : "\(raw)#\(n)", element)
+        }
+    }
+}

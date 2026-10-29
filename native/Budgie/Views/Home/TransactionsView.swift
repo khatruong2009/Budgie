@@ -73,7 +73,7 @@ struct TransactionsView: View {
             TransactionFormView(mode: .add(.expense))
         }
         .alert(
-            "Delete Transaction", isPresented: deleteAlertBinding, presenting: pendingDelete
+            "Delete Transaction", isPresented: Binding(isPresent: $pendingDelete), presenting: pendingDelete
         ) { record in
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
@@ -101,10 +101,6 @@ struct TransactionsView: View {
     private func effectiveMonth(in months: [DartDateTime]) -> DartDateTime? {
         if let chosenMonth, months.contains(chosenMonth) { return chosenMonth }
         return months.first
-    }
-
-    private var deleteAlertBinding: Binding<Bool> {
-        Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } })
     }
 
     // MARK: - List
