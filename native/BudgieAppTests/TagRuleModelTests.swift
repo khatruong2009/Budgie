@@ -24,7 +24,7 @@ final class TagRuleModelTests: XCTestCase {
         XCTAssertEqual(model.tags, [])
         XCTAssertEqual(model.rules, [])
         XCTAssertNil(model.validateTagName(""))
-        XCTAssertNil(model.suggestion(type: .expense, description: "whole foods", amount: 1))
+        XCTAssertNil(model.gatedSuggestion(type: .expense, description: "whole foods", amount: 1))
         XCTAssertFalse(model.hasUnsavedChanges)
     }
 

@@ -258,7 +258,7 @@ struct SettingsView: View {
     /// prompt is up and goes back off only if it fails.
     private var lockBinding: Binding<Bool> {
         Binding(
-            get: { model.data?.appSettings.appLockEnabled == true || model.isEnablingAppLock },
+            get: { model.appLockEnabled || model.isEnablingAppLock },
             set: { enable in
                 guard enable else {
                     Task { await model.setAppLockEnabled(false) }

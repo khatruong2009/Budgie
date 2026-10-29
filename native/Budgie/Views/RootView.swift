@@ -42,7 +42,7 @@ struct RootView: View {
     @ViewBuilder private var phaseContent: some View {
         switch model.phase {
         case .waitingForUnlock:
-            StatusScreen(
+            EmptyStateView(
                 symbol: "lock.fill", title: "Unlock your iPhone",
                 message: "Budgie opens your data once your iPhone is unlocked.")
         case .starting:
@@ -52,17 +52,6 @@ struct RootView: View {
         case .ready:
             MainView()
         }
-    }
-}
-
-struct StatusScreen: View {
-    var kind: EmptyStateView.Kind = .noData
-    let symbol: String
-    let title: String
-    let message: String
-
-    var body: some View {
-        EmptyStateView(kind: kind, symbol: symbol, title: title, message: message)
     }
 }
 
@@ -99,7 +88,7 @@ struct BlockedView: View {
         switch blocker {
         case .backupFailed(let reason):
             VStack(spacing: Metrics.spacingM) {
-                StatusScreen(
+                EmptyStateView(
                     kind: .error, symbol: "externaldrive.badge.exclamationmark", title: "Couldn't prepare your data",
                     message: "Budgie makes a safety copy of your data before opening it and couldn't this time. Nothing was changed. Free up some storage and try again.")
                 reasonText(reason)
@@ -107,7 +96,7 @@ struct BlockedView: View {
             }
         case .readFailed(let reason):
             VStack(spacing: Metrics.spacingM) {
-                StatusScreen(
+                EmptyStateView(
                     kind: .error, symbol: "exclamationmark.triangle", title: "Couldn't read your data",
                     message: "Your data is still on this iPhone. Nothing was changed.")
                 reasonText(reason)
@@ -115,7 +104,7 @@ struct BlockedView: View {
             }
         case .dataUnreadable:
             VStack(spacing: Metrics.spacingM) {
-                StatusScreen(
+                EmptyStateView(
                     kind: .error, symbol: "exclamationmark.octagon", title: "Your data couldn't be read",
                     message: "Your saved budget data could not be read. The original files and a safety copy have been kept on this iPhone.")
                 tryAgain

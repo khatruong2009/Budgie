@@ -12,17 +12,12 @@ enum DeviceAuth {
         case unavailable(String)
     }
 
-    /// "Face ID", "Touch ID", "Optic ID", or "Passcode" when the device has no biometry.
-    static var biometryName: String {
+    /// The device's biometry; `.none` when it has none.
+    static var biometryType: LABiometryType {
         let context = LAContext()
         var error: NSError?
         _ = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
-        switch context.biometryType {
-        case .faceID: return "Face ID"
-        case .touchID: return "Touch ID"
-        case .opticID: return "Optic ID"
-        default: return "Passcode"
-        }
+        return context.biometryType
     }
 
     static func authenticate(reason: String) async -> Outcome {
@@ -62,8 +57,6 @@ final class AppLockWindow {
     private let mainWindow: UIWindow
     private let window: UIWindow
     private var backgroundedAt: ContinuousClock.Instant?
-
-    private var enabled: Bool { model.data?.appSettings.appLockEnabled == true }
 
     init(windowScene: UIWindowScene, mainWindow: UIWindow, model: AppModel, sceneState: SceneState) {
         self.model = model
@@ -109,7 +102,7 @@ final class AppLockWindow {
     /// lock is not on yet then, and is not retro-fitted with a cover when it
     /// turns on under the prompt, since the decision is made here, at resign.
     private func raiseCover() {
-        guard enabled else { return }
+        guard model.appLockEnabled else { return }
         // A focused field's keyboard and QuickType bar live in windows above
         // this one and can show typed text in the snapshot: end editing first.
         // The fields keep their text; only the focus goes.
@@ -198,7 +191,7 @@ struct LockScreen: View {
     @State private var attempted = false
     @State private var authenticating = false
     @State private var error: String?
-    @State private var biometry = DeviceAuth.biometryName
+    @State private var biometry = DeviceAuth.biometryType
 
     var body: some View {
         ZStack {
@@ -218,7 +211,7 @@ struct LockScreen: View {
                     .padding(.top, Metrics.spacingS)
                 PillButton(
                     title: authenticating ? "Authenticating…" : "Unlock",
-                    symbol: biometry == "Face ID" ? "faceid" : biometry == "Touch ID" ? "touchid" : "lock.open",
+                    symbol: biometry == .faceID ? "faceid" : biometry == .touchID ? "touchid" : "lock.open",
                     filled: true, height: 52
                 ) {
                     unlock()

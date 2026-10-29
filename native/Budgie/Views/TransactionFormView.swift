@@ -290,7 +290,7 @@ struct TransactionFormView: View {
         // The rules run once on the draft (Flutter: `onChanged` does not fire
         // for programmatic text), on its raw amount rather than the rounded
         // text; the same gate as `applySuggestion`.
-        if let draft = prefill, let rule = model.suggestion(type: draft.type, description: draft.description, amount: draft.amount) {
+        if let draft = prefill, let rule = model.gatedSuggestion(type: draft.type, description: draft.description, amount: draft.amount) {
             category = (options[draft.type] ?? []).first { DartString.equal($0.name, rule.category) }?.name ?? rule.category
             selectedTagIds = Self.distinctTagIds(rule.tagIds)
             ruleTagIds = Set(selectedTagIds)

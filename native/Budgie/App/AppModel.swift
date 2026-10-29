@@ -131,7 +131,10 @@ final class AppModel {
         refreshInsights()
     }
 
-    private func newID() -> String { UUID().uuidString.lowercased() }
+    private func newID() -> String { Self.makeID() }
+
+    /// For work off the main actor (CSV import, backup decode, restore).
+    nonisolated static func makeID() -> String { UUID().uuidString.lowercased() }
 
     // MARK: - Bootstrap
 
@@ -149,14 +152,7 @@ final class AppModel {
     }
 
     private func bootstrap() async {
-        if !protectedData.isProtectedDataAvailable {
-            phase = .waitingForUnlock
-            let waitStart = ContinuousClock.now
-            let wait = Signpost.launch.beginInterval("protectedDataWait")
-            await protectedData.waitUntilAvailable()
-            Signpost.launch.endInterval("protectedDataWait", wait)
-            LaunchLog.protectedDataAvailable(after: Self.seconds(since: waitStart))
-        }
+        if !protectedData.isProtectedDataAvailable { await waitForUnlock() }
         phase = .starting
         // Exports a kill left behind while their share sheet was open.
         removeStaleExports()
@@ -218,10 +214,7 @@ final class AppModel {
             Signpost.launch.endInterval("store.read", read)
             LaunchLog.storeLoadFailed("protectedDataUnavailable")
             // The device locked between the check and the read: wait again.
-            phase = .waitingForUnlock
-            let waitStart = ContinuousClock.now
-            await protectedData.waitUntilAvailable()
-            LaunchLog.protectedDataAvailable(after: Self.seconds(since: waitStart))
+            await waitForUnlock()
             phase = .starting
             await bootstrap()
             return
@@ -314,6 +307,16 @@ final class AppModel {
         #endif
     }
 
+    /// Shows the waiting screen until protected data is available.
+    private func waitForUnlock() async {
+        phase = .waitingForUnlock
+        let waitStart = ContinuousClock.now
+        let wait = Signpost.launch.beginInterval("protectedDataWait")
+        await protectedData.waitUntilAvailable()
+        Signpost.launch.endInterval("protectedDataWait", wait)
+        LaunchLog.protectedDataAvailable(after: Self.seconds(since: waitStart))
+    }
+
     private static func seconds(since start: ContinuousClock.Instant) -> Double {
         let elapsed = start.duration(to: .now)
         return Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18
@@ -374,8 +377,7 @@ final class AppModel {
     private func persist(prepared payload: [(String, JSONValue)]) async -> Bool {
         guard !isRestoring else { return holdDuringRestore(payload.map(\.0)) }
         let saved = await tracker.persist(payload, serialize: serialize)
-        hasUnsavedChanges = tracker.hasUnsavedChanges
-        lastSaveError = tracker.lastError.map { String(describing: $0) }
+        syncSaveState()
         if saved && payload.contains(where: { $0.0 == Section.transactions }) { syncWidget() }
         return saved
     }
@@ -384,9 +386,14 @@ final class AppModel {
         editedDuringRestore = true
         Self.dataLog.error("a save arrived during a restore; flagged, not written")
         tracker.flag(sections, because: .writeFailed(name: StoreFile.primaryName, reason: "Not saved while a backup was restored."))
+        syncSaveState()
+        return false
+    }
+
+    /// Mirrors the tracker's unsaved state into the observable properties.
+    private func syncSaveState() {
         hasUnsavedChanges = tracker.hasUnsavedChanges
         lastSaveError = tracker.lastError.map { String(describing: $0) }
-        return false
     }
 
     /// Writes every flagged section again. A no-op while a restore runs: a
@@ -399,8 +406,7 @@ final class AppModel {
 
     private func retryFlaggedSections() async {
         _ = await tracker.retry(serialize: serialize)
-        hasUnsavedChanges = tracker.hasUnsavedChanges
-        lastSaveError = tracker.lastError.map { String(describing: $0) }
+        syncSaveState()
         if !hasUnsavedChanges { syncWidget() }
     }
 
@@ -1179,7 +1185,7 @@ final class AppModel {
     /// first matching rule, or nil when its category is not an active
     /// category of `type`. Set the category and replace the selected tags
     /// with `tagIds` (a Set in Flutter: duplicates collapse).
-    func suggestion(type: TransactionType, description: String, amount: Double) -> CategorizationRuleRecord? {
+    func gatedSuggestion(type: TransactionType, description: String, amount: Double) -> CategorizationRuleRecord? {
         guard let data else { return nil }
         return CategorizationEngine.suggestion(
             rules: data.rules, type: type, description: description, amount: amount,
@@ -1300,7 +1306,7 @@ final class AppModel {
             let revision = dataRevision
             let now = self.now
             result = await Task.detached(priority: .userInitiated) {
-                current.importTransactions(summary, now: now, newID: { UUID().uuidString.lowercased() })
+                current.importTransactions(summary, now: now, newID: Self.makeID)
             }.value
             if revision == dataRevision { break }
         } while true
@@ -1365,7 +1371,7 @@ final class AppModel {
         let now = self.now
         let result = await Task.detached(priority: .userInitiated) {
             Result { () throws(BackupError) in
-                try BackupEnvelope.decode(bytes: bytes, calendar: calendar, now: now, newID: { UUID().uuidString.lowercased() })
+                try BackupEnvelope.decode(bytes: bytes, calendar: calendar, now: now, newID: Self.makeID)
             }
         }.value
         return try result.get()
@@ -1439,7 +1445,7 @@ final class AppModel {
         guard let current = data else { return .failed(DataTransferError(reason: "Your data is not loaded yet.")) }
         let now = self.now
         let result = await Task.detached(priority: .userInitiated) {
-            current.restoring(plan, now: now, newID: { UUID().uuidString.lowercased() })
+            current.restoring(plan, now: now, newID: Self.makeID)
         }.value
 
         let calendar = self.calendar
@@ -1476,8 +1482,7 @@ final class AppModel {
         if editedDuringRestore { Self.dataLog.fault("a save arrived during the restore commit; superseded by the restore") }
         data = result.data
         tracker = PersistenceTracker(store: store)
-        hasUnsavedChanges = false
-        lastSaveError = nil
+        syncSaveState()
         for write in result.preferenceWrites { preferences.set(write.value, forKey: write.key) }
         if let mode = result.themeMode.flatMap(ThemeMode.init(rawValue:)) { setThemeMode(mode) }
         netWorthRevision &+= 1
@@ -1522,8 +1527,11 @@ final class AppModel {
 
     func setEnablingAppLock(_ enabling: Bool) { isEnablingAppLock = enabling }
 
+    /// The App Lock setting is on (this session may already be unlocked).
+    var appLockEnabled: Bool { data?.appSettings.appLockEnabled == true }
+
     /// App Lock is on and this session has not authenticated.
-    var isLocked: Bool { data?.appSettings.appLockEnabled == true && !sessionUnlocked }
+    var isLocked: Bool { appLockEnabled && !sessionUnlocked }
 
     func markUnlocked() { sessionUnlocked = true }
 
@@ -1545,23 +1553,27 @@ final class AppModel {
         return route
     }
 
-    func open(_ url: URL) {
-        let action = url.host?.isEmpty == false ? url.host! : (url.pathComponents.dropFirst().first ?? "")
-        switch action {
-        case "add-income", "add_income": pendingAdd = .income
-        case "add-expense", "add_expense": pendingAdd = .expense
-        case "voice-add", "voice_add": pendingAdd = .voice
-        default: break
+    /// The add route a deep link action names; `-` and `_` are the same.
+    private static func route(forName name: String) -> AddRoute? {
+        switch name.replacingOccurrences(of: "-", with: "_") {
+        case "add_income": .income
+        case "add_expense": .expense
+        case "voice_add": .voice
+        default: nil
         }
     }
 
+    func open(_ url: URL) {
+        let action = url.host?.isEmpty == false ? url.host! : (url.pathComponents.dropFirst().first ?? "")
+        if let route = Self.route(forName: action) { pendingAdd = route }
+    }
+
+    /// Quick action types are `action_` plus the underscore form of a route.
     func handleShortcut(_ type: String) {
-        switch type {
-        case "action_add_income": pendingAdd = .income
-        case "action_add_expense": pendingAdd = .expense
-        case "action_voice_add": pendingAdd = .voice
-        default: break
-        }
+        guard type.hasPrefix("action_"), !type.contains("-"),
+            let route = Self.route(forName: String(type.dropFirst("action_".count)))
+        else { return }
+        pendingAdd = route
     }
 
     static func registerShortcuts() {
