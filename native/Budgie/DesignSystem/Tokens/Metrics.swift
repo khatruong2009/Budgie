@@ -10,24 +10,14 @@ enum Metrics {
     static let spacingM: CGFloat = 16
     static let spacingL: CGFloat = 24
     static let spacingXL: CGFloat = 32
-    static let spacingXXL: CGFloat = 48
-    static let spacingXXXL: CGFloat = 64
 
     // Radius scale
-    static let radiusXS: CGFloat = 4
-    static let radiusS: CGFloat = 8
     static let radiusM: CGFloat = 12
     static let radiusL: CGFloat = 16
-    static let radiusXL: CGFloat = 20
-    static let radiusXXL: CGFloat = 24
 
     // Icons and touch targets
-    static let iconXS: CGFloat = 16
     static let iconS: CGFloat = 20
-    static let iconM: CGFloat = 24
-    static let iconL: CGFloat = 32
     static let iconXL: CGFloat = 48
-    static let iconXXL: CGFloat = 64
     static let touchTarget: CGFloat = 44
 
     // Borders and opacity

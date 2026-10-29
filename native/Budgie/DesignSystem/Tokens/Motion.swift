@@ -6,8 +6,6 @@ import SwiftUI
 enum Motion {
     static let fast = 0.15
     static let normal = 0.30
-    static let slow = 0.50
-    static let verySlow = 0.80
 
     static func easeOut(_ duration: Double) -> Animation { .timingCurve(0, 0, 0.58, 1, duration: duration) }
     static func easeInOut(_ duration: Double) -> Animation { .timingCurve(0.42, 0, 0.58, 1, duration: duration) }
