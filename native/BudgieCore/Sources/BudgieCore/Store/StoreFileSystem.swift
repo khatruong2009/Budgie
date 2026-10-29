@@ -38,14 +38,6 @@ public final class DirectoryFileSystem: StoreFileSystem, @unchecked Sendable {
         self.directory = directory
     }
 
-    /// `<Application Support>/financial_store`, the directory the Flutter app
-    /// uses (path_provider `getApplicationSupportDirectory()` + `financial_store`).
-    public static func applicationSupportStore() throws -> DirectoryFileSystem {
-        let base = try FileManager.default.url(
-            for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
-        return DirectoryFileSystem(directory: base.appendingPathComponent("financial_store", isDirectory: true))
-    }
-
     private func path(_ name: String) -> String {
         directory.appendingPathComponent(name).path
     }

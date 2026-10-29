@@ -66,8 +66,6 @@ public actor FinancialStore {
         self.clock = clock
     }
 
-    public var isLoaded: Bool { snapshot != nil }
-
     /// The current snapshot, loading it on first use. A fresh install yields
     /// `FinancialSnapshot.empty` and writes nothing.
     public func read() throws(FinancialStoreError) -> FinancialSnapshot {

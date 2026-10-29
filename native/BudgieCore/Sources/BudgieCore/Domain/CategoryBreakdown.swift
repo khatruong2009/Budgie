@@ -52,9 +52,6 @@ public struct CategoryBreakdown: Sendable {
         /// (:381-383), unclamped (the bar clamps to 0...1, NaN to 0).
         public let barFraction: Double
 
-        /// Only ranks 0...5 take the selected slice's tint (:291-292).
-        public var canHighlight: Bool { rank < CategoryBreakdown.maxVisibleCategories }
-
         /// Amount above a set limit: the subtitle says "over limit".
         public var isOverLimit: Bool {
             guard let budgetLimit, budgetLimit > 0 else { return false }

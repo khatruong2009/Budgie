@@ -178,10 +178,6 @@ public enum CashFlowMath {
         public let barWidth: Double
         /// Ascending months, laid out left to right with `spaceAround`.
         public let bars: [Bar]
-
-        /// Badge box left edge relative to the bar, and its width.
-        public var badgeBoxLeft: Double { -barWidth * 1.5 }
-        public var badgeBoxWidth: Double { barWidth * 4 }
     }
 
     /// `_NetCashFlowBars.build` (`hp:677-760`) and `_NetCashFlowBar`
