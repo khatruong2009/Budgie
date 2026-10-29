@@ -23,7 +23,7 @@ final class GoalsUITests: XCTestCase {
         field.typeSettled(text)
     }
 
-    /// Waits for a short-lived element by checking back to back.
+    /// Waits for a short-lived element by polling every 50 ms.
     /// `waitForExistence` first checks about a second in and then once a
     /// second, and the celebration is removed 1.6s after it starts: that
     /// first check landed about 1.6s after the submit tap, at the edge of
@@ -32,6 +32,7 @@ final class GoalsUITests: XCTestCase {
         let deadline = Date().addingTimeInterval(timeout)
         repeat {
             if element.exists { return true }
+            Thread.sleep(forTimeInterval: 0.05)
         } while Date() < deadline
         return false
     }

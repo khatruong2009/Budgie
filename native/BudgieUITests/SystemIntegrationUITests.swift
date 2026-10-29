@@ -134,14 +134,22 @@ final class SystemIntegrationUITests: XCTestCase {
         XCTAssertTrue(search.waitForExistence(timeout: 10), "widget gallery search not found")
         search.tap()
         search.typeText("Budgie")
-        sleep(2)
-        snapshot("widget search")
         // The result row, not the search field's own text.
-        let candidates = springboard.descendants(matching: .any)
-            .matching(NSPredicate(format: "label == 'Budgie'")).allElementsBoundByIndex
-            .filter { $0.elementType != .searchField && $0.frame.minY > search.frame.maxY + 4 && $0.isHittable }
-        guard let result = candidates.first else { return XCTFail("Budgie not in widget search results") }
-        result.tap()
+        func searchResult() -> XCUIElement? {
+            springboard.descendants(matching: .any)
+                .matching(NSPredicate(format: "label == 'Budgie'")).allElementsBoundByIndex
+                .filter { $0.elementType != .searchField && $0.frame.minY > search.frame.maxY + 4 && $0.isHittable }
+                .first
+        }
+        let resultDeadline = Date().addingTimeInterval(10)
+        var found = searchResult()
+        while found == nil && Date() < resultDeadline {
+            Thread.sleep(forTimeInterval: 0.25)
+            found = searchResult()
+        }
+        snapshot("widget search")
+        guard let result = found else { return XCTFail("Budgie not in widget search results") }
+        result.tapSettled()
         // The detail sheet lists the extension's widgets; the first is
         // "Budget Quick Add". Its button label carries a leading symbol.
         XCTAssertTrue(springboard.staticTexts["Budget Quick Add"].waitForExistence(timeout: 10), "widget detail sheet not shown")
