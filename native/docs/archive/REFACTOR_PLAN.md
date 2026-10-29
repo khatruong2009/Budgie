@@ -1,3 +1,5 @@
+> Archived: done on branch `claude/refactor-sweep` (2026-10-29); skipped tasks are beads under the `budgie-ywx` epic.
+
 # Refactor plan: dead code, duplication, structure, docs
 
 Source: a read-only audit of the whole repo on 2026-10-29 (eight agents,
