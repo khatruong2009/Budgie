@@ -701,30 +701,14 @@ private struct ResultRow: View {
         let isIncome = record.type == .income
         let amount = row.flowAmountText(formatter)
         Button(action: action) {
-            HStack(spacing: 12) {
+            TransactionRowLayout(
+                // A blank description keeps its line, as in Flutter.
+                title: record.description.isEmpty ? " " : record.description, isRecurring: record.isRecurring,
+                subtitle: row.flowSubtitle, amount: amount,
+                amountColor: isIncome ? BudgieColor.income : BudgieColor.textPrimary
+            ) {
                 FlowCategoryTile(info: info, isIncome: isIncome)
-                VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
-                    HStack(spacing: 6) {
-                        // A blank description keeps its line, as in Flutter.
-                        Text(record.description.isEmpty ? " " : record.description)
-                            .textStyle(.rowTitle)
-                            .foregroundStyle(BudgieColor.textPrimary)
-                            .lineLimit(1)
-                        if record.isRecurring { RecurrenceGlyph(size: 16).fixedSize() }
-                    }
-                    Text(row.flowSubtitle)
-                        .textStyle(.rowSubtitle)
-                        .foregroundStyle(BudgieColor.textSecondary)
-                        .singleLine()
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                Text(amount)
-                    .textStyle(.amountSmall)
-                    .foregroundStyle(isIncome ? BudgieColor.income : BudgieColor.textPrimary)
-                    .singleLine()
-                    .layoutPriority(1)
             }
-            .padding(12)
             // Covers the swipe's delete backdrop while the row is at rest.
             .background(BudgieColor.card, in: RoundedRectangle(cornerRadius: Metrics.radiusL, style: .continuous))
             .contentShape(Rectangle())

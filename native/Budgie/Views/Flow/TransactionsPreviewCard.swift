@@ -43,30 +43,15 @@ private struct FlowTransactionRow: View {
             taps += 1
             action()
         } label: {
-            HStack(spacing: 12) {
+            TransactionRowLayout(
+                // Flutter shows a blank line for an empty description.
+                title: record.description.isEmpty ? " " : record.description, isRecurring: record.isRecurring,
+                subtitle: "\(record.category) \u{00B7} \(day)",
+                amount: formatter.formatSigned(isIncome ? record.amount : -record.amount, plusForPositive: true),
+                amountColor: isIncome ? BudgieColor.income : BudgieColor.textPrimary
+            ) {
                 FlowCategoryTile(info: info, isIncome: isIncome)
-                VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
-                    HStack(spacing: 6) {
-                        // Flutter shows a blank line for an empty description.
-                        Text(record.description.isEmpty ? " " : record.description)
-                            .textStyle(.rowTitle)
-                            .foregroundStyle(BudgieColor.textPrimary)
-                            .lineLimit(1)
-                        if record.isRecurring { RecurrenceGlyph(size: 16).fixedSize() }
-                    }
-                    Text("\(record.category) \u{00B7} \(day)")
-                        .textStyle(.rowSubtitle)
-                        .foregroundStyle(BudgieColor.textSecondary)
-                        .singleLine()
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                Text(formatter.formatSigned(isIncome ? record.amount : -record.amount, plusForPositive: true))
-                    .textStyle(.amountSmall)
-                    .foregroundStyle(isIncome ? BudgieColor.income : BudgieColor.textPrimary)
-                    .singleLine()
-                    .layoutPriority(1)
             }
-            .padding(12)
             .contentShape(Rectangle())
         }
         .buttonStyle(PressScaleStyle(scale: 1))

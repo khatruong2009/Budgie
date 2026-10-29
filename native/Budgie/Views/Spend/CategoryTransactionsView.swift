@@ -183,30 +183,13 @@ private struct ExpenseRow: View {
     var body: some View {
         let amount = formatter.format(record.amount)
         Button(action: onTap) {
-            HStack(spacing: 12) {
+            TransactionRowLayout(
+                textMinWidth: 56, plainSubtitleAndAmount: true,
+                title: record.description, isRecurring: record.isRecurring,
+                subtitle: DartDateFormat.MMMd(record.date), amount: amount, amountColor: BudgieColor.textPrimary
+            ) {
                 IconTile(symbol: symbol, color: color)
-                VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
-                    HStack(spacing: 6) {
-                        Text(record.description)
-                            .textStyle(.rowTitle)
-                            .foregroundStyle(BudgieColor.textPrimary)
-                            .lineLimit(1)
-                        if record.isRecurring { RecurrenceGlyph(size: 16).fixedSize() }
-                    }
-                    Text(DartDateFormat.MMMd(record.date))
-                        .textStyle(.rowSubtitle)
-                        .foregroundStyle(BudgieColor.textSecondary)
-                }
-                .frame(minWidth: 56, maxWidth: .infinity, alignment: .leading)
-                // First pick of the row's width; truncates rather than
-                // widening the page when it is wider than the row.
-                Text(amount)
-                    .textStyle(.amountSmall)
-                    .foregroundStyle(BudgieColor.textPrimary)
-                    .lineLimit(1)
-                    .layoutPriority(1)
             }
-            .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
         }

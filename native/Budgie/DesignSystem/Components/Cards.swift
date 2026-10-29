@@ -173,6 +173,13 @@ extension IconTile {
 /// only; the button, accessibility and data stay with the row.
 struct TransactionRowLayout<Tile: View>: View {
     var titleLines: Int? = 1
+    /// Set on a title that names its alignment (`.multilineTextAlignment`).
+    var titleAlignment: TextAlignment? = nil
+    /// The text column's minimum width, when it has one.
+    var textMinWidth: CGFloat? = nil
+    /// A subtitle with no line limit and an amount limited to `lineLimit(1)`,
+    /// instead of both being `singleLine()`.
+    var plainSubtitleAndAmount = false
     let title: String
     let isRecurring: Bool
     let subtitle: String
@@ -185,25 +192,50 @@ struct TransactionRowLayout<Tile: View>: View {
             tile
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
-                    Text(title)
-                        .textStyle(.rowTitle)
-                        .foregroundStyle(BudgieColor.textPrimary)
-                        .lineLimit(titleLines)
+                    titleText
                     if isRecurring { RecurrenceGlyph(size: 16).fixedSize() }
                 }
-                Text(subtitle)
-                    .textStyle(.rowSubtitle)
-                    .foregroundStyle(BudgieColor.textSecondary)
-                    .singleLine()
+                subtitleText
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            Text(amount)
-                .textStyle(.amountSmall)
-                .foregroundStyle(amountColor)
-                .singleLine()
+            .frame(minWidth: textMinWidth, maxWidth: .infinity, alignment: .leading)
+            amountText
                 .layoutPriority(1)
         }
         .padding(12)
+    }
+
+    @ViewBuilder private var titleText: some View {
+        let text = Text(title)
+            .textStyle(.rowTitle)
+            .foregroundStyle(BudgieColor.textPrimary)
+            .lineLimit(titleLines)
+        if let titleAlignment {
+            text.multilineTextAlignment(titleAlignment)
+        } else {
+            text
+        }
+    }
+
+    @ViewBuilder private var subtitleText: some View {
+        let text = Text(subtitle)
+            .textStyle(.rowSubtitle)
+            .foregroundStyle(BudgieColor.textSecondary)
+        if plainSubtitleAndAmount {
+            text
+        } else {
+            text.singleLine()
+        }
+    }
+
+    @ViewBuilder private var amountText: some View {
+        let text = Text(amount)
+            .textStyle(.amountSmall)
+            .foregroundStyle(amountColor)
+        if plainSubtitleAndAmount {
+            text.lineLimit(1)
+        } else {
+            text.singleLine()
+        }
     }
 }
 

@@ -255,31 +255,14 @@ private struct TransactionRow: View {
         let signed = formatter.formatSigned(isIncome ? record.amount : -record.amount, plusForPositive: true)
 
         Button(action: onTap) {
-            HStack(spacing: 12) {
+            TransactionRowLayout(
+                titleLines: nil, titleAlignment: .leading,
+                title: record.description, isRecurring: record.isRecurring,
+                subtitle: MonthListCopy.rowSubtitle(record), amount: signed,
+                amountColor: isIncome ? BudgieColor.income : BudgieColor.textPrimary
+            ) {
                 IconTile(category: info)
-                VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
-                    HStack(spacing: 6) {
-                        Text(record.description)
-                            .textStyle(.rowTitle)
-                            .foregroundStyle(BudgieColor.textPrimary)
-                            .multilineTextAlignment(.leading)
-                        if record.isRecurring { RecurrenceGlyph(size: 16).fixedSize() }
-                    }
-                    Text(MonthListCopy.rowSubtitle(record))
-                        .textStyle(.rowSubtitle)
-                        .foregroundStyle(BudgieColor.textSecondary)
-                        .singleLine()
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                // Its own width first, so the title and subtitle get the
-                // rest of the row.
-                Text(signed)
-                    .textStyle(.amountSmall)
-                    .foregroundStyle(isIncome ? BudgieColor.income : BudgieColor.textPrimary)
-                    .singleLine()
-                    .layoutPriority(1)
             }
-            .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
         }
