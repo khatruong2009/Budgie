@@ -1,3 +1,4 @@
+import BudgieCore
 import SwiftUI
 
 // MARK: - Sheet chrome
@@ -712,6 +713,45 @@ extension Binding where Value == Bool {
     /// True while `item` holds a value; setting it false clears the item.
     init<Item: Sendable>(isPresent item: Binding<Item?>) {
         self.init(get: { item.wrappedValue != nil }, set: { if !$0 { item.wrappedValue = nil } })
+    }
+}
+
+// MARK: - Delete transaction alert
+
+extension View {
+    /// The "Delete Transaction" confirmation for the row held in `pending`:
+    /// Delete removes it (a heavy-impact haptic, the deleted toast, or the
+    /// save-failed one; a row already gone shows nothing), Cancel and a
+    /// dismissal clear `pending`.
+    func deleteTransactionAlert(pending: Binding<TransactionRecord?>) -> some View {
+        modifier(DeleteTransactionAlert(pending: pending))
+    }
+}
+
+private struct DeleteTransactionAlert: ViewModifier {
+    @Binding var pending: TransactionRecord?
+    @Environment(AppModel.self) private var model
+    @State private var deleteConfirms = 0
+
+    func body(content: Content) -> some View {
+        content
+            .alert("Delete Transaction", isPresented: Binding(isPresent: $pending), presenting: pending) { record in
+                Button("Cancel", role: .cancel) {}
+                Button("Delete", role: .destructive) {
+                    deleteConfirms += 1
+                    Task {
+                        // Already gone (deleted elsewhere, rejected): nothing failed.
+                        switch await model.deleteTransaction(id: record.id) {
+                        case .saved: model.showToast(.transactionDeleted)
+                        case .failed: model.showToast(.saveFailed)
+                        case .rejected: break
+                        }
+                    }
+                }
+            } message: { _ in
+                Text("Are you sure you want to delete this transaction?")
+            }
+            .sensoryFeedback(.impact(weight: .heavy), trigger: deleteConfirms)
     }
 }
 

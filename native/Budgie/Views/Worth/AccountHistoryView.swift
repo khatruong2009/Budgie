@@ -81,7 +81,7 @@ struct AccountHistoryView: View {
         // `_confirmDeleteNetWorthSnapshot` (NW:2905-2938): Material
         // AlertDialog, both actions plain accent TextButtons (Delete is not
         // red), no haptics.
-        .alert("Delete balance update?", isPresented: snapshotAlertBinding, presenting: pendingSnapshot) { pending in
+        .alert("Delete balance update?", isPresented: Binding(isPresent: $pendingSnapshot), presenting: pendingSnapshot) { pending in
             Button("Cancel", role: .cancel) {}
             Button("Delete") {
                 Task { await deleteSnapshot(pending.snapshot) }
@@ -170,10 +170,6 @@ struct AccountHistoryView: View {
                 }
             })
         }
-    }
-
-    private var snapshotAlertBinding: Binding<Bool> {
-        Binding(get: { pendingSnapshot != nil }, set: { if !$0 { pendingSnapshot = nil } })
     }
 
     /// Awaits the write; a failed one keeps the change in memory and says so.

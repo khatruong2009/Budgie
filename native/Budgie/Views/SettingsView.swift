@@ -72,7 +72,7 @@ struct SettingsView: View {
         }
         .onAppear { isVisible = true }
         .onDisappear { isVisible = false }
-        .alert("App lock", isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } })) {
+        .alert("App lock", isPresented: Binding(isPresent: $notice)) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(notice ?? "")

@@ -19,7 +19,6 @@ struct CategoryTransactionsView: View {
     @State private var editing: TransactionRecord?
     @State private var pendingDelete: TransactionRecord?
     @State private var rowTaps = 0
-    @State private var deleteConfirms = 0
 
     var body: some View {
         let category = drillIn.category
@@ -84,28 +83,8 @@ struct CategoryTransactionsView: View {
         .sheet(item: $editing) { record in
             TransactionFormView(mode: .edit(record))
         }
-        .alert("Delete Transaction", isPresented: deleteAlertBinding, presenting: pendingDelete) { record in
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) {
-                deleteConfirms += 1
-                Task {
-                    // Already gone (deleted elsewhere, rejected): nothing failed.
-                    switch await model.deleteTransaction(id: record.id) {
-                    case .saved: model.showToast(.transactionDeleted)
-                    case .failed: model.showToast(.saveFailed)
-                    case .rejected: break
-                    }
-                }
-            }
-        } message: { _ in
-            Text("Are you sure you want to delete this transaction?")
-        }
+        .deleteTransactionAlert(pending: $pendingDelete)
         .sensoryFeedback(.impact(weight: .light), trigger: rowTaps)
-        .sensoryFeedback(.impact(weight: .heavy), trigger: deleteConfirms)
-    }
-
-    private var deleteAlertBinding: Binding<Bool> {
-        Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } })
     }
 
     /// The category's colour and icon as its Spend row shows them now, or

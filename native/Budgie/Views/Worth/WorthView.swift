@@ -60,7 +60,7 @@ struct WorthView: View {
         .budgieDialog(item: $editor, padding: 0) { request in
             AccountEditorDialog(request: request) { editor = nil }
         }
-        .alert("Delete account?", isPresented: deleteAlertBinding, presenting: pendingDelete) { entry in
+        .alert("Delete account?", isPresented: Binding(isPresent: $pendingDelete), presenting: pendingDelete) { entry in
             Button("Cancel", role: .cancel) {}
             // Flutter's accent TextButton: a plain role, as on the history page.
             Button("Delete") {
@@ -155,10 +155,6 @@ struct WorthView: View {
         // Already gone (deleted elsewhere): nothing failed.
         guard model.netWorthEntry(id: entry.id) != nil else { return }
         if !(await model.deleteNetWorthEntry(id: entry.id)) { model.showToast(.saveFailed) }
-    }
-
-    private var deleteAlertBinding: Binding<Bool> {
-        Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } })
     }
 }
 

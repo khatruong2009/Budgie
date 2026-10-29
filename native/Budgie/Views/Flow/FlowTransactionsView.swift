@@ -31,7 +31,6 @@ struct FlowTransactionsView: View {
     @State private var pendingDelete: TransactionRecord?
     @State private var rowTaps = 0
     @State private var selections = 0
-    @State private var deleteConfirms = 0
 
     /// `rowSubtitle` at 13 ("Showing ... matches").
     private static let smallText = TextSpec(face: .gabaritoRegular, size: 13, height: 1.25, relativeTo: .footnote)
@@ -97,25 +96,9 @@ struct FlowTransactionsView: View {
         .sheet(item: $editing) { record in
             TransactionFormView(mode: .edit(record))
         }
-        .alert("Delete Transaction", isPresented: deleteAlertBinding, presenting: pendingDelete) { record in
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) {
-                deleteConfirms += 1
-                Task {
-                    // Already gone (deleted elsewhere, rejected): nothing failed.
-                    switch await model.deleteTransaction(id: record.id) {
-                    case .saved: model.showToast(.transactionDeleted)
-                    case .failed: model.showToast(.saveFailed)
-                    case .rejected: break
-                    }
-                }
-            }
-        } message: { _ in
-            Text("Are you sure you want to delete this transaction?")
-        }
+        .deleteTransactionAlert(pending: $pendingDelete)
         .sensoryFeedback(.impact(weight: .light), trigger: rowTaps)
         .sensoryFeedback(.selection, trigger: selections)
-        .sensoryFeedback(.impact(weight: .heavy), trigger: deleteConfirms)
     }
 
     // MARK: - State
@@ -128,10 +111,6 @@ struct FlowTransactionsView: View {
         let rows = filter.apply(model.ledger)
         results = FilterResults(rows: rows, summary: TransactionFilter.summary(rows))
         Signpost.ui.endInterval("flow.refilter", state, "matches=\(rows.count, privacy: .public)")
-    }
-
-    private var deleteAlertBinding: Binding<Bool> {
-        Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } })
     }
 
     /// The 'SELECT MONTH' choice: the shared month (Flutter) and, fixing the

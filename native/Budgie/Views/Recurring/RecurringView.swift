@@ -75,7 +75,7 @@ struct RecurringView: View {
         .sheet(item: $sheet) { sheet in
             RecurringFormView(template: sheet.template)
         }
-        .alert("Delete Recurring Transaction?", isPresented: deleteAlertBinding, presenting: pendingDelete) { template in
+        .alert("Delete Recurring Transaction?", isPresented: Binding(isPresent: $pendingDelete), presenting: pendingDelete) { template in
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
                 deleteConfirms += 1
@@ -92,10 +92,6 @@ struct RecurringView: View {
     static func deleteMessage(_ description: String) -> String {
         "This will stop generating future transactions for \"\(description)\". "
             + "Previously generated transactions will not be affected."
-    }
-
-    private var deleteAlertBinding: Binding<Bool> {
-        Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } })
     }
 
     // MARK: - Content
