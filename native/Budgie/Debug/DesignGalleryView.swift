@@ -109,7 +109,7 @@ struct DesignGalleryView: View {
             Text("$3,200 in  ·  $43 out").textStyle(.rowSubtitle).foregroundStyle(BudgieColor.textSecondary)
             Text("SAVED THIS MONTH").textStyle(.monoLink).foregroundStyle(BudgieColor.accent)
             GlowProgressBar(
-                value: 0.013, height: 14, color: BudgieColor.accent, gradient: nil, showThumb: true,
+                value: 0.013, height: 14, color: BudgieColor.accent, showThumb: true,
                 trackBorder: Color.primary.opacity(0.06), fillInset: 2)
             .padding(.top, 12)
         }

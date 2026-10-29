@@ -14,8 +14,6 @@ struct GlowProgressBar: View {
     var height: CGFloat = 8
     var color: Color = BudgieColor.accent
     var track: Color? = nil
-    /// Fill gradient (the Home gauge).
-    var gradient: LinearGradient? = nil
     /// End-of-fill thumb dot (the Home gauge).
     var showThumb = false
     /// 1pt border colour around the track.
@@ -41,7 +39,7 @@ struct GlowProgressBar: View {
                     .overlay { if let trackBorder { Capsule().strokeBorder(trackBorder, lineWidth: 1) } }
                 if shown > 0 {
                     Capsule()
-                        .fill(gradient.map(AnyShapeStyle.init) ?? AnyShapeStyle(color))
+                        .fill(color)
                         .frame(width: fillWidth, height: innerHeight)
                         .offset(x: fillInset + border)
                     if showThumb {
