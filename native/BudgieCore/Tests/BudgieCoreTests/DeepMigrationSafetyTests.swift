@@ -180,19 +180,15 @@ struct DeepMigrationSafetyTests {
     }
 }
 
-private final class LockAfterStage: StoreFileSystem, @unchecked Sendable {
-    let base: InMemoryFileSystem
+private final class LockAfterStage: ForwardingStoreFileSystem, @unchecked Sendable {
     let gate: Switch
     let stagedName: String
     init(base: InMemoryFileSystem, gate: Switch, stagedName: String) {
-        self.base = base; self.gate = gate; self.stagedName = stagedName
+        self.gate = gate; self.stagedName = stagedName
+        super.init(base: base)
     }
-    func read(_ name: String) throws -> [UInt8]? { try base.read(name) }
-    func writeStaged(_ name: String, _ bytes: [UInt8]) throws {
-        try base.writeStaged(name, bytes)
+    override func writeStaged(_ name: String, _ bytes: [UInt8]) throws {
+        try super.writeStaged(name, bytes)
         if name == stagedName { gate.set(false) }
     }
-    func commitStaged(_ name: String) throws { try base.commitStaged(name) }
-    func rename(_ name: String, to newName: String) throws { try base.rename(name, to: newName) }
-    func list() throws -> [String] { try base.list() }
 }

@@ -82,3 +82,16 @@ enum TestDirectory {
         FileManager.default.temporaryDirectory.appendingPathComponent("\(prefix)-\(UUID().uuidString)")
     }
 }
+
+/// A `StoreFileSystem` that forwards every operation to an in-memory base.
+/// Fault decorators subclass it and override only the operations they change
+/// (calling `super` to perform the real one).
+class ForwardingStoreFileSystem: StoreFileSystem, @unchecked Sendable {
+    let base: InMemoryFileSystem
+    init(base: InMemoryFileSystem) { self.base = base }
+    func read(_ name: String) throws -> [UInt8]? { try base.read(name) }
+    func writeStaged(_ name: String, _ bytes: [UInt8]) throws { try base.writeStaged(name, bytes) }
+    func commitStaged(_ name: String) throws { try base.commitStaged(name) }
+    func rename(_ name: String, to newName: String) throws { try base.rename(name, to: newName) }
+    func list() throws -> [String] { try base.list() }
+}

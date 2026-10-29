@@ -4,22 +4,18 @@ import Testing
 @testable import BudgieCore
 
 /// Fails every write while `broken` is set.
-final class FlakyFileSystem: StoreFileSystem, @unchecked Sendable {
-    let base = InMemoryFileSystem()
+final class FlakyFileSystem: ForwardingStoreFileSystem, @unchecked Sendable {
     private let lock = NSLock()
     private var _broken = false
     var broken: Bool {
         get { lock.withLock { _broken } }
         set { lock.withLock { _broken = newValue } }
     }
-    func read(_ name: String) throws -> [UInt8]? { try base.read(name) }
-    func writeStaged(_ name: String, _ bytes: [UInt8]) throws {
+    init() { super.init(base: InMemoryFileSystem()) }
+    override func writeStaged(_ name: String, _ bytes: [UInt8]) throws {
         if broken { throw StoreFileSystemError.posix(operation: "write", name: name, errno: ENOSPC) }
-        try base.writeStaged(name, bytes)
+        try super.writeStaged(name, bytes)
     }
-    func commitStaged(_ name: String) throws { try base.commitStaged(name) }
-    func rename(_ name: String, to newName: String) throws { try base.rename(name, to: newName) }
-    func list() throws -> [String] { try base.list() }
 }
 
 @Suite("Unsaved-changes tracking (PersistenceStatus)")

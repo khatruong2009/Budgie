@@ -5,7 +5,7 @@ import Testing
 
 /// Wraps a file system and fails at a chosen primitive operation, the way a
 /// crash, a full disk or a device lock would.
-final class FaultyFileSystem: StoreFileSystem, @unchecked Sendable {
+final class FaultyFileSystem: ForwardingStoreFileSystem, @unchecked Sendable {
     enum Fault {
         /// Process dies before the operation has any effect.
         case crashBefore
@@ -17,7 +17,6 @@ final class FaultyFileSystem: StoreFileSystem, @unchecked Sendable {
 
     struct Crash: Error {}
 
-    let base: InMemoryFileSystem
     private let lock = NSLock()
     private var operation = 0
     let failAt: Int?
@@ -25,9 +24,9 @@ final class FaultyFileSystem: StoreFileSystem, @unchecked Sendable {
     private(set) var reads = 0
 
     init(base: InMemoryFileSystem, failAt: Int?, fault: Fault = .crashBefore) {
-        self.base = base
         self.failAt = failAt
         self.fault = fault
+        super.init(base: base)
     }
 
     private func step() -> Bool {
@@ -37,12 +36,12 @@ final class FaultyFileSystem: StoreFileSystem, @unchecked Sendable {
         }
     }
 
-    func read(_ name: String) throws -> [UInt8]? {
+    override func read(_ name: String) throws -> [UInt8]? {
         lock.withLock { reads += 1 }
-        return try base.read(name)
+        return try super.read(name)
     }
 
-    func writeStaged(_ name: String, _ bytes: [UInt8]) throws {
+    override func writeStaged(_ name: String, _ bytes: [UInt8]) throws {
         if step() {
             switch fault {
             case .crashBefore: throw Crash()
@@ -51,20 +50,18 @@ final class FaultyFileSystem: StoreFileSystem, @unchecked Sendable {
                 throw fault == .diskFull ? StoreFileSystemError.posix(operation: "write", name: name, errno: ENOSPC) : Crash()
             }
         }
-        try base.writeStaged(name, bytes)
+        try super.writeStaged(name, bytes)
     }
 
-    func commitStaged(_ name: String) throws {
+    override func commitStaged(_ name: String) throws {
         if step() { throw Crash() }
-        try base.commitStaged(name)
+        try super.commitStaged(name)
     }
 
-    func rename(_ name: String, to newName: String) throws {
+    override func rename(_ name: String, to newName: String) throws {
         if step() { throw Crash() }
-        try base.rename(name, to: newName)
+        try super.rename(name, to: newName)
     }
-
-    func list() throws -> [String] { try base.list() }
 }
 
 final class Switch: ProtectedDataAvailability, @unchecked Sendable {

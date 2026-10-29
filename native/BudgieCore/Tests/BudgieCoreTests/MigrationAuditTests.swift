@@ -136,18 +136,12 @@ struct MigrationAuditTests {
     }
 }
 
-private final class SubstitutingFileSystem: StoreFileSystem, @unchecked Sendable {
-    let base: InMemoryFileSystem
-    init(base: InMemoryFileSystem) { self.base = base }
-    func read(_ name: String) throws -> [UInt8]? { try base.read(name) }
-    func writeStaged(_ name: String, _ bytes: [UInt8]) throws { try base.writeStaged(name, bytes) }
-    func commitStaged(_ name: String) throws {
-        try base.commitStaged(name)
+private final class SubstitutingFileSystem: ForwardingStoreFileSystem, @unchecked Sendable {
+    override func commitStaged(_ name: String) throws {
+        try super.commitStaged(name)
         if name == StoreFile.primaryName, var snapshot = StoreFile.decode(base.snapshot[name]!) {
             snapshot.sections["probe"] = .string("different value")
             base.set(name, StoreFile.encode(snapshot, writtenAt: fixedNow()))
         }
     }
-    func rename(_ name: String, to newName: String) throws { try base.rename(name, to: newName) }
-    func list() throws -> [String] { try base.list() }
 }
