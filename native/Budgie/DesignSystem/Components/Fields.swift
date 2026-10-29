@@ -29,6 +29,9 @@ struct BudgieField: View {
     /// The text field's own accessibility identifier (an identifier on the
     /// whole `BudgieField` lands on its container, not the field).
     var identifier: String? = nil
+    /// The label VoiceOver reads, when it should say more than the visible
+    /// title (the Worth editor's "Balance" reads as "Asset balance").
+    var accessibilityTitle: String? = nil
 
     @FocusState private var focused: Bool
 
@@ -112,7 +115,7 @@ struct BudgieField: View {
             .autocorrectionDisabled(keyboard == .decimalPad || keyboard == .numberPad)
             .focused($focused)
             // A prompt replaces the title as the field's label.
-            .accessibilityLabel(title)
+            .accessibilityLabel(accessibilityTitle ?? title)
             .accessibilityIdentifier(identifier ?? "")
             .onAppear { if autofocus { focused = true } }
     }

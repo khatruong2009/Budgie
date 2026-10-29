@@ -482,10 +482,12 @@ the editor's prefill).
   `carryNetWorthMonthForward` stays Core-only).
 - Editor: `budgieDialog(padding: 0)` with the type glow; banner (type
   tile, "Add account" / "Edit account", `yMMMM` of the balance month,
-  close), Asset / Liability pills, "Balance month" `DateTile` opening an
-  inline month grid (1970 to this month), "Account name" and "Asset
-  balance" / "Liability balance" `BudgieField`s (`NetWorthAmountInput`
-  sanitize and prefill), Cancel and Add / Save. Save: "Name is required",
+  close), then balance first so it stays in view above the number pad:
+  the "Balance" `.amount` `BudgieField` (VoiceOver "Asset balance" /
+  "Liability balance"; `NetWorthAmountInput` sanitize and prefill), the
+  `.inline` "Account name" field, and one row with the Asset / Liability
+  arrow toggle and the "Balance month" button opening an inline month grid
+  (1970 to this month); Cancel and Add / Save. Save: "Name is required",
   "Enter a valid balance", then `addNetWorthEntry` / `updateNetWorthEntry`
   with the balance month, awaited before closing; scrim and buttons
   disabled while saving.
