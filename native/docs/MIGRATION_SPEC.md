@@ -589,73 +589,46 @@ black screen.) The rehearsal records the persisted class after every step.
 | Q8 | Beads set up (prefix `budgie`, local-only, no remotes). |
 | Q9 | XcodeGen; commit `project.yml` and the generated `Budgie.xcodeproj`. |
 
-### 14.1 Questions as asked
+### 14.1 Why (the questions, resolved)
 
-**Q1. Bug-compatible or fixed date math?** Dart advances weekly/biweekly
-templates by 168/336 elapsed hours, so after a DST change they drift an hour
-(and a midnight template moves to 23:00 the previous day). Safe-to-spend drops
-expenses dated today (compares a timestamp against midnight) and counts
-`daysRemaining` one short in spring-forward months.
-*Recommendation:* replicate exactly in the MVP. Both apps generate from the
-same cursor, parity tests can assert against Dart output, and the user sees
-the same numbers after the upgrade. Fix later in both apps together (tracked
-in PARITY_GAPS).
+The decisions are in 14.0; this keeps the reason for each. The questions and
+the "approve?" prompts are dropped.
 
-**Q2. Template edits.** Dart's edit form resets `nextOccurrence` to
-`startDate` and `isActive` to true, so the next launch re-generates up to 90
-days of duplicates (confirmed in code; a fix task chip is open for the Flutter
-app). Dart also has no pause UI; you asked for pause in the MVP.
-*Recommendation:* Swift preserves `nextOccurrence` and `isActive` on edit
-(recomputing the cursor only if the schedule fields change, never backwards
-past the last generated occurrence), implements pause as `isActive = false`
-(Dart already honours it), and commits generated rows + cursor in one write.
-All invisible to the Dart reader.
-
-**Q3. Both store files unreadable.** Dart sets them aside and, with no legacy
-data, opens an empty ledger; the next save starts over at revision 1.
-*Recommendation:* same set-aside, but Swift shows a blocking "Your data could
-not be read" screen (with the `pre-native-migration` and `.corrupt` files
-intact) instead of an empty ledger, and does not write until the user chooses
-"Start fresh". Divergence from Dart, safer.
-
-**Q4. Deployment target.** Flutter ships at iOS 15.0. `@Observable` needs
-iOS 17 (Swift Charts needs 16). Users on iOS 15/16 would stay on the last
-Flutter version. *Recommendation:* iOS 17.0 as you specified; confirm.
-
-**Q5. Header extras.** Adding a `writer` header key would make "last written
-by Flutter" detection trivial, and Dart ignores it. *Recommendation:* no;
-use the native-only `native.lastCommittedChecksum` instead, keeping the file
-identical.
-
-**Q6. Build numbers.** What is the highest `CFBundleVersion` uploaded for
-3.4.0, and should the Swift MVP ship as 3.5.0 or 4.0.0? (Only matters at
-submission time; no upload will happen without asking.)
-
-**Q7. Fixture harness (rule 8).** *Resolved: option (a); see 14.0.* I need Dart to produce the fixture corpus
-and to verify Swift-written files. Proposal, least invasive first:
-(a) a Flutter test package `native/ParityHarness/` that drives the real
-models, `AtomicFinancialStore` (via `resetForTesting(directory:)`) and
-`SharedPreferences.setMockInitialValues`, emits fixtures + expected outputs,
-and has a second test that loads Swift-written files through the same code.
-A script (`native/ParityHarness/run.sh`) exports `budget_app/` at the current
-commit (`git archive`) into the scratch directory, adds a stub `.env` there
-(dummy key; `budget_app` bundles `.env` as an asset, so its tests cannot build
-without one), and points the harness's `path:` dependency at that copy.
-**Nothing inside `budget_app/` is created or changed, tracked or untracked.**
-(Research G already had a stub `.env` inside `budget_app/` blocked, and built
-from a scratch copy the same way.)
-(b) Fallback if (a) hits a tooling wall: the same tests under
-`budget_app/test/parity/`, skipped unless a `--dart-define` is set, plus a
-gitignored stub `budget_app/.env`. Approve (a), (b), or neither?
-
-**Q8. Issue tracking.** The repo has no `.beads/`. This is multi-session work
-with real dependencies; want me to set it up with your usual config?
-
-**Q9. Project format.** XcodeGen (`project.yml`, installed at
-`/opt/homebrew/bin/xcodegen`, Tuist is not installed). Reason: the project is
-a reviewable text file, no `pbxproj` merge noise, deterministic regeneration.
-I'd commit `project.yml` and the generated `Budgie.xcodeproj` so the app
-builds without XcodeGen. Confirm.
+- **Q1.** Dart advances weekly/biweekly templates by 168/336 elapsed hours (an
+  hour of drift after a DST change; a midnight template lands at 23:00 the
+  previous day), and safe-to-spend drops expenses dated today and counts
+  `daysRemaining` one short in spring-forward months. Replicated exactly so
+  both apps generate from the same cursor and the user sees the same numbers
+  after the upgrade; fixed later in both together (PARITY_GAPS).
+- **Q2.** Dart's edit form resets `nextOccurrence` to `startDate` and
+  `isActive` to true, so the next launch regenerates up to 90 days of
+  duplicates; Dart has no pause UI. Swift preserves both and commits rows and
+  cursor in one write, which the Dart reader cannot tell apart.
+- **Q3.** Dart sets both files aside and opens an empty ledger (the next save
+  restarts at revision 1). Swift sets them aside the same way but blocks
+  instead, with the `pre-native-migration` and `.corrupt` files intact. A
+  deliberate, safer divergence from Dart.
+- **Q4.** Flutter ships at iOS 15.0; `@Observable` needs iOS 17, so iOS 15/16
+  users stay on the last Flutter version.
+- **Q5.** A `writer` header key would make "last written by Flutter" easy to
+  detect and Dart would ignore it, but the file stays byte-identical instead;
+  the native-only `native.lastCommittedChecksum` serves.
+- **Q6.** Only matters at submission time; no upload happens without asking.
+  See 14.0 for the version and build.
+- **Q7.** `run.sh` exports `budget_app/` with `git archive` into a scratch
+  directory, adds a stub `.env` there (the app bundles `.env` as an asset, so
+  its tests cannot build without one) and points the harness's `path:`
+  dependency at the copy, so nothing inside `budget_app/` is created or
+  changed. Research G had already built from a scratch copy the same way. The
+  harness drives the real models, `AtomicFinancialStore` (via
+  `resetForTesting(directory:)`) and `SharedPreferences.setMockInitialValues`,
+  and a second test loads Swift-written files through the same code. The
+  rejected option (b) put the tests under `budget_app/test/parity/` with a
+  gitignored stub `.env`.
+- **Q8.** The work is multi-session with real dependencies.
+- **Q9.** The project is a reviewable text file, with no `pbxproj` merge noise
+  and deterministic regeneration; the generated project is committed so the
+  app builds without XcodeGen.
 
 ---------------------------------------------------------------------------------
 
