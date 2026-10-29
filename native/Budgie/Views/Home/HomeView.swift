@@ -61,6 +61,8 @@ struct HomeView: View {
                 SafeToSpendSheet(breakdown: breakdown, formatter: model.moneyFormatter)
             case .quickExpense:
                 QuickExpenseSheet { pendingQuickCategory = $0 }
+            case .edit(let record):
+                TransactionFormView(mode: .edit(record))
             }
         }
     }
@@ -144,7 +146,7 @@ struct HomeView: View {
             SectionHeader(title: "Recent activity", link: "See all", linkAccessibilityLabel: "See all transactions") {
                 page = .transactions
             }
-            RecentActivityCard(rows: model.ledger.recent(3), formatter: formatter)
+            RecentActivityCard(rows: model.ledger.recent(3), formatter: formatter) { sheet = .edit($0) }
         }
         .padding(.horizontal, Metrics.pageHorizontal)
         .padding(.top, Metrics.sectionGap)
@@ -166,6 +168,8 @@ enum HomeSheet: Identifiable {
     case addExpense(category: String)
     case breakdown(SafeToSpendBreakdown)
     case quickExpense
+    /// A Recent activity row's edit form, as SEE ALL opens it.
+    case edit(TransactionRecord)
 
     var id: String {
         switch self {
@@ -173,6 +177,7 @@ enum HomeSheet: Identifiable {
         case .addExpense(let category): "add-expense-\(category)"
         case .breakdown: "breakdown"
         case .quickExpense: "quick-expense"
+        case .edit(let record): "edit-\(record.id)"
         }
     }
 }
@@ -317,10 +322,11 @@ private struct SafeToSpendCard: View {
 // MARK: - Recent activity
 
 /// The newest three transactions of any month (`_RecentActivityCard`,
-/// spending_page.dart:1706-1816). Rows are not tappable.
+/// spending_page.dart:1706-1816). A row opens its edit form, like SEE ALL.
 private struct RecentActivityCard: View {
     let rows: ArraySlice<LedgerRow>
     let formatter: MoneyFormatter
+    let onSelect: (TransactionRecord) -> Void
 
     /// `rowSubtitle` at 14.
     private static let empty = TextSpec(face: .gabaritoRegular, size: 14, height: 1.25, relativeTo: .subheadline)
@@ -348,7 +354,9 @@ private struct RecentActivityCard: View {
             .overlay(shape.strokeBorder(BudgieColor.textTertiary.opacity(0.6), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])))
             .accessibilityElement(children: .combine)
         } else {
-            GlowListCard(rows: rows.map { RecentRow(record: $0.record, formatter: formatter) })
+            GlowListCard(rows: rows.map { row in
+                RecentRow(record: row.record, formatter: formatter) { onSelect(row.record) }
+            })
         }
     }
 }
@@ -356,48 +364,58 @@ private struct RecentActivityCard: View {
 private struct RecentRow: View {
     let record: TransactionRecord
     let formatter: MoneyFormatter
+    let onTap: () -> Void
 
     @Environment(AppModel.self) private var model
+    @State private var taps = 0
 
     var body: some View {
         let isIncome = record.type == .income
         let day = DartDateFormat.MMMd(record.date)
         let copy = HomeSummary.recentRow(record, formatter: formatter)
-        HStack(spacing: 12) {
-            if isIncome {
-                IconTile(symbol: "arrow.down.left", color: BudgieColor.income)
-            } else {
-                IconTile(category: model.categoryInfo(named: record.category, type: .expense))
-            }
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Text(copy.title)
-                        .textStyle(.rowTitle)
-                        .foregroundStyle(BudgieColor.textPrimary)
-                        .lineLimit(1)
-                    if record.isRecurring { RecurrenceGlyph(size: 16).fixedSize() }
+        Button {
+            taps += 1
+            onTap()
+        } label: {
+            HStack(spacing: 12) {
+                if isIncome {
+                    IconTile(symbol: "arrow.down.left", color: BudgieColor.income)
+                } else {
+                    IconTile(category: model.categoryInfo(named: record.category, type: .expense))
                 }
-                Text(copy.subtitle)
-                    .textStyle(.rowSubtitle)
-                    .foregroundStyle(BudgieColor.textSecondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Text(copy.title)
+                            .textStyle(.rowTitle)
+                            .foregroundStyle(BudgieColor.textPrimary)
+                            .lineLimit(1)
+                        if record.isRecurring { RecurrenceGlyph(size: 16).fixedSize() }
+                    }
+                    Text(copy.subtitle)
+                        .textStyle(.rowSubtitle)
+                        .foregroundStyle(BudgieColor.textSecondary)
+                        .singleLine()
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                Text(copy.amount)
+                    .textStyle(.amountSmall)
+                    .foregroundStyle(isIncome ? BudgieColor.income : BudgieColor.textPrimary)
                     .singleLine()
+                    .layoutPriority(1)
             }
+            .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            Text(copy.amount)
-                .textStyle(.amountSmall)
-                .foregroundStyle(isIncome ? BudgieColor.income : BudgieColor.textPrimary)
-                .singleLine()
-                .layoutPriority(1)
+            .contentShape(Rectangle())
         }
-        .padding(12)
+        .buttonStyle(.plain)
+        .sensoryFeedback(.impact(weight: .light), trigger: taps)
         // Flutter's label is "description, category, day, type amount";
         // VoiceOver reads the label then the value, so this sounds the
         // same while the description stays findable on its own.
-        .accessibilityElement(children: .combine)
         .accessibilityLabel(copy.title)
         .accessibilityValue(
             "\(record.category), \(day), \(isIncome ? "income" : "expense") \(formatter.format(record.amount))"
                 + (record.isRecurring ? ", recurring" : ""))
-        .accessibilityAddTraits(.isStaticText)
+        .accessibilityHint("Double tap to edit")
     }
 }

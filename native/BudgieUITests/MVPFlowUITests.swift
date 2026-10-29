@@ -33,8 +33,7 @@ final class MVPFlowUITests: XCTestCase {
         app.buttons["home.settings"].tap()
     }
 
-    /// Any element whose label contains `text` (Home rows are combined
-    /// accessibility elements, not buttons).
+    /// Any element whose label contains `text`.
     private func labelled(_ text: String) -> XCUIElement {
         app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
     }
@@ -63,8 +62,14 @@ final class MVPFlowUITests: XCTestCase {
         amount.enterText("12.34")
         app.textFields["Description"].enterText("UI test coffee")
         app.buttons["Add"].tapSettled()
-        // Home's Recent activity shows it.
-        XCTAssertTrue(labelled("UI test coffee").waitForExistence(timeout: 5))
+        // Home's Recent activity shows it, and the row opens its edit form.
+        let recent = app.buttons.containing(NSPredicate(format: "label CONTAINS 'UI test coffee'")).firstMatch
+        XCTAssertTrue(recent.waitForExistence(timeout: 5))
+        recent.tapSettled()
+        XCTAssertTrue(app.buttons["Update"].waitForExistence(timeout: 5), "Recent activity row opens the edit form")
+        XCTAssertEqual(app.textFields["Amount"].value as? String, "12.34")
+        app.buttons["Cancel"].firstMatch.tapSettled()
+        XCTAssertTrue(app.buttons["Update"].waitForNonExistence(timeout: 5))
 
         // Edit it from the full list (SEE ALL).
         app.buttons["See all transactions"].firstMatch.tap()

@@ -659,6 +659,8 @@ available; the status column records how it matches Flutter.
   over the add button 12pt clear of it, as Flutter's Column; it opens the
   voice flow through the same presenter as the quick action, so it is
   gated, and dropped while a voice flow is already up, like them.
+- Home Recent activity: a row opens its edit form like SEE ALL's rows
+  (Flutter's rows are not tappable).
 - Home spend gauge: under Reduce Motion a changed value jumps (Flutter
   only skips the first fill and still animates changes).
 - Home accessibility: the gauge reads "Spent X of Y income" and the year
