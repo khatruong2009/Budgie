@@ -20,17 +20,13 @@ struct RangeSheet: View {
                 .foregroundStyle(BudgieColor.textSecondary)
                 .accessibilityAddTraits(.isHeader)
                 .padding(.horizontal, 4)
-            GlowCard(padding: 0) {
-                VStack(spacing: 0) {
-                    ForEach(options.indices, id: \.self) { index in
-                        if index > 0 { Hairline() }
-                        RangeOptionRow(months: options[index], selected: options[index] == selected) {
-                            onPick(options[index])
-                        }
-                    }
+            OptionListCard(count: options.count) { index in
+                OptionRow(
+                    title: CashFlowMath.rangeLabel(options[index]), selected: options[index] == selected,
+                    boldWhenSelected: true, identifier: "flow.range.\(options[index])"
+                ) {
+                    onPick(options[index])
                 }
-                .padding(.horizontal, Metrics.spacingM)
-                .padding(.vertical, Metrics.spacingXXS)
             }
             .padding(.top, 12)
         }
@@ -41,41 +37,6 @@ struct RangeSheet: View {
         .modifier(
             FlowSheetFit(
                 estimate: 12 + 14 + 12 + (4 + CGFloat(options.count) * 49 - 1 + 2) + Metrics.spacingL))
-    }
-}
-
-/// A row: the option (15 w600; w700 when selected) and the accent check,
-/// at least 48 tall.
-private struct RangeOptionRow: View {
-    let months: Int
-    let selected: Bool
-    let action: () -> Void
-
-    /// `rowTitle` with w700.
-    private static let selectedStyle = TextSpec(face: .gabaritoBold, size: 15, height: 1.25, relativeTo: .body)
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 14) {
-                Text(CashFlowMath.rangeLabel(months))
-                    .textStyle(selected ? Self.selectedStyle : .rowTitle)
-                    .foregroundStyle(BudgieColor.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                if selected {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(BudgieColor.accent)
-                        .frame(width: 24, height: 24)
-                        .accessibilityHidden(true)
-                }
-            }
-            .padding(.vertical, 12)
-            .frame(minHeight: Metrics.formRowHeight)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(selected ? .isSelected : [])
-        .accessibilityIdentifier("flow.range.\(months)")
     }
 }
 

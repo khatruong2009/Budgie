@@ -206,3 +206,65 @@ struct TransactionRowLayout<Tile: View>: View {
         .padding(12)
     }
 }
+
+/// A card of option rows with a hairline between them, as in the picker
+/// sheets: `count` rows built by index.
+struct OptionListCard<Row: View>: View {
+    let count: Int
+    @ViewBuilder let row: (Int) -> Row
+
+    var body: some View {
+        GlowCard(padding: 0) {
+            VStack(spacing: 0) {
+                ForEach(0..<count, id: \.self) { index in
+                    if index > 0 { Hairline() }
+                    row(index)
+                }
+            }
+            .padding(.horizontal, Metrics.spacingM)
+            .padding(.vertical, Metrics.spacingXXS)
+        }
+    }
+}
+
+/// A picker row: the option (15 w600, w700 when `boldWhenSelected` and
+/// selected) and an accent check on the selected one, at least 48 tall.
+struct OptionRow: View {
+    let title: String
+    let selected: Bool
+    var boldWhenSelected = false
+    var hidesCheckFromVoiceOver = true
+    var identifier: String? = nil
+    let action: () -> Void
+
+    /// `rowTitle` with w700.
+    private static let selectedStyle = TextSpec(face: .gabaritoBold, size: 15, height: 1.25, relativeTo: .body)
+
+    var body: some View {
+        let button = Button(action: action) {
+            HStack(spacing: 14) {
+                Text(title)
+                    .textStyle(boldWhenSelected && selected ? Self.selectedStyle : .rowTitle)
+                    .foregroundStyle(BudgieColor.textPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                if selected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(BudgieColor.accent)
+                        .frame(width: 24, height: 24)
+                        .accessibilityHidden(hidesCheckFromVoiceOver)
+                }
+            }
+            .padding(.vertical, 12)
+            .frame(minHeight: Metrics.formRowHeight)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+        if let identifier {
+            button.accessibilityIdentifier(identifier)
+        } else {
+            button
+        }
+    }
+}
