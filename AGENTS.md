@@ -6,7 +6,8 @@ making changes.
 ## What this repo is
 
 A personal budget tracking app ("Budgie"): a SwiftUI iOS app in
-[`native/`](native), on the App Store as 4.0.0.
+[`native/`](native). The current version is 4.1.0 (`MARKETING_VERSION` in
+`native/project.yml`).
 
 It replaced a Flutter app (3.4.0) with the same bundle ID, App Group and
 store file, so users upgraded in place. The Flutter code (`budget_app/`) was

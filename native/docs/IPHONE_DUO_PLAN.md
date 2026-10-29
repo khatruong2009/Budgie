@@ -42,7 +42,7 @@ The app is one narrow column built for a portrait iPhone. It never reads a size 
 Ranked by impact:
 
 1. **Bottom-tab-bar assumptions (27.1).** On the outer display and in inner landscape, the tab bar becomes a vertical rail.
-   - Toast inset hard-coded to 49: `Views/MainView.swift:43`.
+   - Toast host: `.toastHost(isActive:)` in `Views/MainView.swift` (one per tab) overlays the toast at the bottom inside the tab's safe area (`DesignSystem/Components/ToastHost.swift`, 8pt above the safe-area edge), so a tab bar on any edge keeps it clear. The 49pt inset this plan was written against is gone.
    - FAB clearance paddings: `Views/Home/HomeView.swift:33` (130), `Views/Goals/GoalsView.swift:43` (96), `Views/Worth/WorthView.swift:91,136` (96).
    - FABs are overlaid bottom-trailing (`HomeView.swift:41-45`, `GoalsView.swift:58`, `WorthView.swift:50`). Trailing is where the status column and the rail sit.
    - Every tab root hides the navigation bar and draws `BudgieHeader` (`DesignSystem/Components/Headers.swift:16-27`), whose month pill is centred.

@@ -3,7 +3,9 @@
 Status: APPROVED 2026-09-28. All section 14 decisions resolved as recommended;
 Q7 = option (a). See 14.0.
 
-Source of truth: `budget_app/` at commit `b69008d`. Research notes backing every
+Source of truth: the Flutter app (`budget_app/`), removed from the tree and kept
+at the `flutter-final` git tag (commit `a3641f5`). The research notes cite
+`budget_app/` as it was at `b69008d` (3.4.0). Research notes backing every
 claim are in `native/docs/research/` (A-I). Where this spec and a research note
 disagree, this spec wins; the disagreements are listed in section 15.
 
@@ -629,7 +631,7 @@ identical.
 3.4.0, and should the Swift MVP ship as 3.5.0 or 4.0.0? (Only matters at
 submission time; no upload will happen without asking.)
 
-**Q7. Fixture harness (rule 8).** I need Dart to produce the fixture corpus
+**Q7. Fixture harness (rule 8).** *Resolved: option (a); see 14.0.* I need Dart to produce the fixture corpus
 and to verify Swift-written files. Proposal, least invasive first:
 (a) a Flutter test package `native/ParityHarness/` that drives the real
 models, `AtomicFinancialStore` (via `resetForTesting(directory:)`) and

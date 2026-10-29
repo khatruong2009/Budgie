@@ -1,6 +1,7 @@
 # Parity harness
 
-Dart tests that run the **real** Flutter code (`budget_app/`) to produce the
+Dart tests that run the **real** Flutter code (`budget_app/`, exported from the
+`flutter-final` git tag) to produce the
 fixture corpus in `native/Fixtures/`, and to verify that files written by the
 Swift app load in the Flutter app.
 
