@@ -66,125 +66,47 @@ case "$MODE" in
   generate)
     mkdir -p "$FIXTURES"
     wants() { [ -z "${PARITY_ONLY:-}" ] || [[ " $PARITY_ONLY " == *" $1 "* ]]; }
-    # Each generator runs under the zones it needs; see the test files.
-    if wants logic_fixtures_test.dart; then
-      # Santiago and Beirut have a DST change at midnight (a missing and a
-      # repeated hour at the start/end of a day).
-      for tz in America/New_York UTC Australia/Lord_Howe Asia/Kolkata America/Santiago Asia/Beirut; do
-        TZ="$tz" PARITY_TZ="$tz" flutter test test/parity/logic_fixtures_test.dart "$@"
+    # One line per generator: test file | fixture dir wiped first (blank =
+    # none) | zones, run in this order. Each runs under the zones it needs;
+    # see the test files. Notes on particular rows:
+    #   logic: Santiago and Beirut have a DST change at midnight (a missing
+    #     and a repeated hour at the start/end of a day).
+    #   backup, csv_import: New York first, it also writes the
+    #     zone-independent files.
+    #   home_page: writes home/tz/<zone>/page.json; home_fixtures_test.dart
+    #     keeps home/tz.
+    # (fd 3 so that flutter keeps the script's own stdin.)
+    while IFS='|' read -r -u 3 file wipe zones; do
+      wants "$file" || continue
+      [ -z "$wipe" ] || rm -rf "$FIXTURES/$wipe"
+      for tz in $zones; do
+        TZ="$tz" PARITY_TZ="$tz" flutter test "test/parity/$file" "$@"
       done
-    fi
-    if wants format_fixtures_test.dart; then
-      TZ=UTC PARITY_TZ=UTC flutter test test/parity/format_fixtures_test.dart "$@"
-    fi
-    if wants store_fixtures_test.dart; then
-      TZ=America/New_York PARITY_TZ=America/New_York flutter test test/parity/store_fixtures_test.dart "$@"
-    fi
-    if wants legacy_fixtures_test.dart; then
-      TZ=America/New_York PARITY_TZ=America/New_York flutter test test/parity/legacy_fixtures_test.dart "$@"
-    fi
-    if wants home_fixtures_test.dart; then
-      TZ=America/New_York PARITY_TZ=America/New_York flutter test test/parity/home_fixtures_test.dart "$@"
-    fi
-    if wants spend_fixtures_test.dart; then
-      TZ=America/New_York PARITY_TZ=America/New_York flutter test test/parity/spend_fixtures_test.dart "$@"
-    fi
-    if wants worth_fixtures_test.dart; then
-      rm -rf "$FIXTURES/worth"
-      for tz in America/New_York America/Santiago Australia/Lord_Howe Asia/Kolkata UTC; do
-        TZ="$tz" PARITY_TZ="$tz" flutter test test/parity/worth_fixtures_test.dart "$@"
-      done
-    fi
-    if wants goals_fixtures_test.dart; then
-      rm -rf "$FIXTURES/goals"
-      for tz in America/New_York America/Santiago Australia/Lord_Howe Asia/Kolkata UTC; do
-        TZ="$tz" PARITY_TZ="$tz" flutter test test/parity/goals_fixtures_test.dart "$@"
-      done
-    fi
-    if wants settings_fixtures_test.dart; then
-      TZ=America/New_York PARITY_TZ=America/New_York flutter test test/parity/settings_fixtures_test.dart "$@"
-    fi
-    if wants categories_fixtures_test.dart; then
-      TZ=America/New_York PARITY_TZ=America/New_York flutter test test/parity/categories_fixtures_test.dart "$@"
-    fi
-    if wants tags_fixtures_test.dart; then
-      TZ=America/New_York PARITY_TZ=America/New_York flutter test test/parity/tags_fixtures_test.dart "$@"
-    fi
-    if wants recurring_fixtures_test.dart; then
-      rm -rf "$FIXTURES/recurring"
-      for tz in America/New_York UTC Australia/Lord_Howe Asia/Kolkata America/Santiago; do
-        TZ="$tz" PARITY_TZ="$tz" flutter test test/parity/recurring_fixtures_test.dart "$@"
-      done
-    fi
-    if wants flow_fixtures_test.dart; then
-      rm -rf "$FIXTURES/flow"
-      for tz in America/New_York UTC Australia/Lord_Howe Asia/Kolkata America/Santiago; do
-        TZ="$tz" PARITY_TZ="$tz" flutter test test/parity/flow_fixtures_test.dart "$@"
-      done
-    fi
-    if wants backup_fixtures_test.dart; then
-      rm -rf "$FIXTURES/backup"
-      # New York first: it also writes the zone-independent files.
-      for tz in America/New_York Australia/Lord_Howe UTC America/Santiago; do
-        TZ="$tz" PARITY_TZ="$tz" flutter test test/parity/backup_fixtures_test.dart "$@"
-      done
-    fi
-    if wants csv_import_fixtures_test.dart; then
-      rm -rf "$FIXTURES/csvimport"
-      # New York first: it also writes the zone-independent files.
-      for tz in America/New_York UTC Australia/Lord_Howe Asia/Kolkata America/Santiago; do
-        TZ="$tz" PARITY_TZ="$tz" flutter test test/parity/csv_import_fixtures_test.dart "$@"
-      done
-    fi
-    if wants insight_fixtures_test.dart; then
-      rm -rf "$FIXTURES/insights"
-      for tz in America/New_York UTC Australia/Lord_Howe Asia/Kolkata America/Santiago; do
-        TZ="$tz" PARITY_TZ="$tz" flutter test test/parity/insight_fixtures_test.dart "$@"
-      done
-    fi
-    if wants voice_fixtures_test.dart; then
-      rm -rf "$FIXTURES/voice"
-      for tz in America/New_York UTC Australia/Lord_Howe Asia/Kolkata America/Santiago Asia/Beirut; do
-        TZ="$tz" PARITY_TZ="$tz" flutter test test/parity/voice_fixtures_test.dart "$@"
-      done
-    fi
-    if wants launch_fixtures_test.dart; then
-      rm -rf "$FIXTURES/launch"
-      for tz in America/New_York UTC Australia/Lord_Howe Asia/Kolkata America/Santiago Asia/Beirut; do
-        TZ="$tz" PARITY_TZ="$tz" flutter test test/parity/launch_fixtures_test.dart "$@"
-      done
-    fi
-    if wants transactions_fixtures_test.dart; then
-      rm -rf "$FIXTURES/transactions"
-      for tz in America/New_York America/Santiago Australia/Lord_Howe; do
-        TZ="$tz" PARITY_TZ="$tz" flutter test test/parity/transactions_fixtures_test.dart "$@"
-      done
-    fi
-    if wants recurring_form_fixtures_test.dart; then
-      rm -rf "$FIXTURES/recurring_form"
-      for tz in America/New_York America/Santiago Australia/Lord_Howe; do
-        TZ="$tz" PARITY_TZ="$tz" flutter test test/parity/recurring_form_fixtures_test.dart "$@"
-      done
-    fi
-    if wants home_page_fixtures_test.dart; then
-      # Writes home/tz/<zone>/page.json; home_fixtures_test.dart keeps home/tz.
-      rm -rf "$FIXTURES/home/tz"
-      for tz in America/New_York America/Santiago; do
-        TZ="$tz" PARITY_TZ="$tz" flutter test test/parity/home_page_fixtures_test.dart "$@"
-      done
-    fi
-    if wants month_list_fixtures_test.dart; then
-      rm -rf "$FIXTURES/monthlist"
-      for tz in America/New_York America/Santiago; do
-        TZ="$tz" PARITY_TZ="$tz" flutter test test/parity/month_list_fixtures_test.dart "$@"
-      done
-    fi
-    if wants voice_request_fixtures_test.dart; then
-      rm -rf "$FIXTURES/voicerequest"
-      for tz in America/New_York America/Santiago; do
-        TZ="$tz" PARITY_TZ="$tz" flutter test test/parity/voice_request_fixtures_test.dart "$@"
-      done
-    fi
+    done 3<<'TABLE'
+logic_fixtures_test.dart||America/New_York UTC Australia/Lord_Howe Asia/Kolkata America/Santiago Asia/Beirut
+format_fixtures_test.dart||UTC
+store_fixtures_test.dart||America/New_York
+legacy_fixtures_test.dart||America/New_York
+home_fixtures_test.dart||America/New_York
+spend_fixtures_test.dart||America/New_York
+worth_fixtures_test.dart|worth|America/New_York America/Santiago Australia/Lord_Howe Asia/Kolkata UTC
+goals_fixtures_test.dart|goals|America/New_York America/Santiago Australia/Lord_Howe Asia/Kolkata UTC
+settings_fixtures_test.dart||America/New_York
+categories_fixtures_test.dart||America/New_York
+tags_fixtures_test.dart||America/New_York
+recurring_fixtures_test.dart|recurring|America/New_York UTC Australia/Lord_Howe Asia/Kolkata America/Santiago
+flow_fixtures_test.dart|flow|America/New_York UTC Australia/Lord_Howe Asia/Kolkata America/Santiago
+backup_fixtures_test.dart|backup|America/New_York Australia/Lord_Howe UTC America/Santiago
+csv_import_fixtures_test.dart|csvimport|America/New_York UTC Australia/Lord_Howe Asia/Kolkata America/Santiago
+insight_fixtures_test.dart|insights|America/New_York UTC Australia/Lord_Howe Asia/Kolkata America/Santiago
+voice_fixtures_test.dart|voice|America/New_York UTC Australia/Lord_Howe Asia/Kolkata America/Santiago Asia/Beirut
+launch_fixtures_test.dart|launch|America/New_York UTC Australia/Lord_Howe Asia/Kolkata America/Santiago Asia/Beirut
+transactions_fixtures_test.dart|transactions|America/New_York America/Santiago Australia/Lord_Howe
+recurring_form_fixtures_test.dart|recurring_form|America/New_York America/Santiago Australia/Lord_Howe
+home_page_fixtures_test.dart|home/tz|America/New_York America/Santiago
+month_list_fixtures_test.dart|monthlist|America/New_York America/Santiago
+voice_request_fixtures_test.dart|voicerequest|America/New_York America/Santiago
+TABLE
     ;;
   verify)
     export SWIFT_OUT="${SWIFT_OUT:-$FIXTURES/swift-written}"
