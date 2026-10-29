@@ -108,6 +108,7 @@
 		B77F656D6050715E177A0D57 /* Fonts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05C1B7F8DAB0F15009E0A853 /* Fonts.swift */; };
 		B91242CD5E29A921F06A5593 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6462237A82B43EB73DD31CEB /* Assets.xcassets */; };
 		BC10481C46C47C6063FFDA2B /* OFL-SplineSansMono.txt in Resources */ = {isa = PBXBuildFile; fileRef = 30903279E7AD171EFDE4B3AB /* OFL-SplineSansMono.txt */; };
+		BE6BBA92ED9A076491482DBE /* HomeCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24BBECA9461EC73C2910FA4A /* HomeCards.swift */; };
 		BF38CD62E608945FBD5BAB27 /* SpendFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA32401735DBCDA54E6E88D7 /* SpendFlowUITests.swift */; };
 		BFC3EC7B557D4B28AD5E1E5B /* MVPFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EEBFF6A3864E8DA7A0385E9 /* MVPFlowUITests.swift */; };
 		C02683C5A3EEAFEFAA011A50 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E758855687C3C7914C62089 /* SettingsView.swift */; };
@@ -226,6 +227,7 @@
 		2238E110E1ADF849421F8C77 /* TagRuleModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagRuleModelTests.swift; sourceTree = "<group>"; };
 		23D9B19C20CF2374DFDE0E03 /* TagsRulesUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsRulesUITests.swift; sourceTree = "<group>"; };
 		23E4855FE7D1DCE3F6ADC11D /* AppModel+Transactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+Transactions.swift"; sourceTree = "<group>"; };
+		24BBECA9461EC73C2910FA4A /* HomeCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeCards.swift; sourceTree = "<group>"; };
 		25E73CB60439653B98043F5C /* AppModel+Insights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+Insights.swift"; sourceTree = "<group>"; };
 		26BB2E615765EF1D846843C2 /* Gabarito-ExtraBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Gabarito-ExtraBold.ttf"; sourceTree = "<group>"; };
 		2777802F707F8DCF2A2D7C8B /* AccountTrendChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountTrendChart.swift; sourceTree = "<group>"; };
@@ -504,6 +506,7 @@
 			children = (
 				A68B7F4E5776878A1B4E5DF5 /* BudgetLimitSheet.swift */,
 				F75251F37466F9FEAEBF3294 /* BudgetsSection.swift */,
+				24BBECA9461EC73C2910FA4A /* HomeCards.swift */,
 				21D98BE7CAA32047DC8ED7BB /* HomeHero.swift */,
 				51ADA0B74BB5F802C9C663C8 /* HomeMonthPanel.swift */,
 				BA5BEE45B350EE7D82AA1717 /* HomeView.swift */,
@@ -1041,6 +1044,7 @@
 				8ADD0777977928235CF3B44A /* GoalForm.swift in Sources */,
 				81DFE4BB0C9874BFF79A6FB0 /* GoalsView.swift in Sources */,
 				08260060690300F8A2D702DE /* Headers.swift in Sources */,
+				BE6BBA92ED9A076491482DBE /* HomeCards.swift in Sources */,
 				19FB5D980F78CF1BB363E8AC /* HomeHero.swift in Sources */,
 				1B9213F25E5905AD4B770CC3 /* HomeMonthPanel.swift in Sources */,
 				FBECFD4FBDB6F096E092588B /* HomeView.swift in Sources */,
