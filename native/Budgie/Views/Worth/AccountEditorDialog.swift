@@ -52,7 +52,7 @@ struct AccountEditorDialog: View {
     }
 
     private var isEditing: Bool { request.entry != nil }
-    private var accent: Color { type == .asset ? BudgieColor.income : BudgieColor.danger }
+    private var accent: Color { type.tint }
 
     var body: some View {
         VStack(spacing: 0) {

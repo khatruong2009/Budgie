@@ -103,23 +103,27 @@ struct SettingsView: View {
             AnyView(SettingsRow(
                 symbol: "square.on.circle", color: BudgieColor.accent, title: "Categories",
                 subtitle: "\(activeCategories) active · custom names, icons, and order",
+                identifier: "settings.categories",
                 action: { destination = .categories }
-            ).accessibilityIdentifier("settings.categories")),
+            )),
             AnyView(SettingsRow(
                 symbol: "sparkles", color: BudgieColor.info, title: "Tags & rules",
                 subtitle: "\(data.tags.count) tags · \(data.rules.count) rules",
+                identifier: "settings.tagsRules",
                 action: { destination = .tagsAndRules }
-            ).accessibilityIdentifier("settings.tagsRules")),
+            )),
             AnyView(SettingsRow(
                 symbol: "banknote", color: BudgieColor.income, title: "Currency",
                 subtitle: SettingsOptions.currencyLabel(settings.baseCurrencyCode),
+                identifier: "settings.currency",
                 action: { choice = .currency }
-            ).accessibilityIdentifier("settings.currency")),
+            )),
             AnyView(SettingsRow(
                 symbol: "globe", color: BudgieColor.info, iconSize: SettingsGlyph.full, title: "Number format",
                 subtitle: SettingsOptions.localeLabel(settings.localeOverride),
+                identifier: "settings.numberFormat",
                 action: { choice = .locale }
-            ).accessibilityIdentifier("settings.numberFormat")),
+            )),
         ]
     }
 
@@ -135,8 +139,9 @@ struct SettingsView: View {
         if settings.appLockEnabled {
             rows.append(AnyView(SettingsRow(
                 symbol: "timer", color: BudgieColor.info, iconSize: SettingsGlyph.full, title: "Lock delay", subtitle: delay,
+                identifier: "settings.lockDelay",
                 action: { choice = .lockDelay }
-            ).accessibilityIdentifier("settings.lockDelay")))
+            )))
         }
         rows.append(AnyView(SettingsToggleRow(
             symbol: "eye.slash", color: BudgieColor.warning, title: "Hide balances",
@@ -155,32 +160,37 @@ struct SettingsView: View {
             AnyView(SettingsRow(
                 symbol: "repeat", color: BudgieColor.accent, title: "Recurring transactions",
                 subtitle: recurringSubtitle(data.templates.filter(\.isActive)),
+                identifier: "settings.recurring",
                 action: { destination = .recurring }
-            ).accessibilityIdentifier("settings.recurring")),
+            )),
             AnyView(SettingsRow(
                 symbol: "arrow.down.to.line", color: BudgieColor.income, iconSize: SettingsGlyph.small,
                 title: "Export as CSV", subtitle: "All \(transactionCount) transactions",
                 busy: dataTask == .exportCSV, busyLabel: DataTask.exportCSV.busyLabel,
+                identifier: "settings.exportCSV",
                 action: unlessBusy(exportCSV)
-            ).accessibilityIdentifier("settings.exportCSV")),
+            )),
             AnyView(SettingsRow(
                 symbol: "arrow.up.to.line", color: BudgieColor.info, iconSize: SettingsGlyph.small,
                 title: "Import from CSV", subtitle: "Add transactions from a file",
                 busy: dataTask == .importCSV, busyLabel: DataTask.importCSV.busyLabel,
+                identifier: "settings.importCSV",
                 action: unlessBusy { pickFile(.csv) }
-            ).accessibilityIdentifier("settings.importCSV")),
+            )),
             AnyView(SettingsRow(
                 symbol: "icloud.and.arrow.up", color: BudgieColor.income,
                 title: "Export backup", subtitle: "Everything, as a JSON file",
                 busy: dataTask == .exportBackup, busyLabel: DataTask.exportBackup.busyLabel,
+                identifier: "settings.exportBackup",
                 action: unlessBusy(exportBackup)
-            ).accessibilityIdentifier("settings.exportBackup")),
+            )),
             AnyView(SettingsRow(
                 symbol: "arrow.counterclockwise.circle", color: BudgieColor.danger,
                 title: "Import backup", subtitle: "Restore everything (replaces current data)",
                 busy: dataTask == .importBackup, busyLabel: DataTask.importBackup.busyLabel,
+                identifier: "settings.importBackup",
                 action: unlessBusy { pickFile(.backup) }
-            ).accessibilityIdentifier("settings.importBackup")),
+            )),
         ]
     }
 
@@ -195,13 +205,15 @@ struct SettingsView: View {
             AnyView(SettingsRow(
                 symbol: "list.bullet.rectangle", color: BudgieColor.versionIcon, tile: BudgieColor.versionTile,
                 title: "Data diagnostics", subtitle: "What this device loaded",
+                identifier: "settings.diagnostics",
                 action: { destination = .diagnostics }
-            ).accessibilityIdentifier("settings.diagnostics")),
+            )),
             AnyView(SettingsRow(
                 symbol: "doc.text", color: BudgieColor.versionIcon, tile: BudgieColor.versionTile,
                 title: "Licences", subtitle: "Fonts (SIL Open Font License)",
+                identifier: "settings.licences",
                 action: { destination = .licences }
-            ).accessibilityIdentifier("settings.licences")),
+            )),
         ]
         #if DEBUG
         rows.append(AnyView(SettingsRow(
@@ -381,7 +393,7 @@ struct SettingsView: View {
                     completedToast: Toast(message: "Transactions exported successfully!")))
             } catch {
                 finishDataTask()
-                model.showToast(Toast(message: "Error exporting transactions: \(error.localizedDescription)", style: .danger))
+                model.showToast(Toast.error("Error exporting transactions: \(error.localizedDescription)"))
             }
         }
     }
@@ -397,7 +409,7 @@ struct SettingsView: View {
                     url: url, subject: BackupEnvelope.shareSubject, completedToast: Toast(message: BackupEnvelope.exportedMessage)))
             } catch {
                 finishDataTask()
-                model.showToast(Toast(message: BackupEnvelope.exportFailedMessage(error.reason), style: .danger))
+                model.showToast(Toast.error(BackupEnvelope.exportFailedMessage(error.reason)))
             }
         }
     }
@@ -447,7 +459,7 @@ struct SettingsView: View {
                 switch kind {
                 case .csv: showToast(CSVImport.failureMessage(failure))
                 case .backup:
-                    model.showToast(Toast(message: BackupEnvelope.importFailedMessage(failure.message), style: .danger))
+                    model.showToast(Toast.error(BackupEnvelope.importFailedMessage(failure.message)))
                 }
             case .success(let bytes):
                 switch kind {
@@ -510,7 +522,7 @@ struct SettingsView: View {
             confirmation = Confirmation(kind: .restore(plan))
         } catch {
             finishDataTask()
-            model.showToast(Toast(message: BackupEnvelope.importFailedMessage(error.message), style: .danger))
+            model.showToast(Toast.error(BackupEnvelope.importFailedMessage(error.message)))
         }
     }
 

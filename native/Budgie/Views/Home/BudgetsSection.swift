@@ -86,7 +86,6 @@ private enum BudgetSheet: Identifiable {
     }
 }
 
-
 // MARK: - Tiles
 
 /// One budget (`_BudgetRow`, spending_page.dart:1587-1701): a status-coloured
@@ -236,7 +235,6 @@ private struct BudgetPickerSheet: View {
     @Environment(\.sheetHostHeight) private var hostHeight
     @State private var headerHeight: CGFloat = 0
     @State private var listHeight: CGFloat = 0
-
 
     var body: some View {
         let categories = kind == .edit ? overview.budgeted : overview.unbudgeted

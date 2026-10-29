@@ -99,10 +99,19 @@ struct SettingsRow<Trailing: View>: View {
     let subtitle: String
     var busy = false
     var busyLabel = "Exporting"
+    var identifier: String? = nil
     var action: (() -> Void)? = nil
     @ViewBuilder var trailing: () -> Trailing
 
     var body: some View {
+        if let identifier {
+            content.accessibilityIdentifier(identifier)
+        } else {
+            content
+        }
+    }
+
+    @ViewBuilder private var content: some View {
         let row = HStack(spacing: 14) {
             SettingsTile(symbol: symbol, color: color, tile: tile, iconSize: iconSize)
             SettingsRowText(title: title, subtitle: subtitle, subtitleLines: 1)
@@ -133,11 +142,12 @@ extension SettingsRow where Trailing == SettingsChevron {
     /// A row that opens something: the chevron, or the spinner while `busy`.
     init(
         symbol: String, color: Color, tile: Color? = nil, iconSize: CGFloat = SettingsGlyph.standard, title: String,
-        subtitle: String, busy: Bool = false, busyLabel: String = "Exporting", action: (() -> Void)?
+        subtitle: String, busy: Bool = false, busyLabel: String = "Exporting", identifier: String? = nil,
+        action: (() -> Void)?
     ) {
         self.init(
             symbol: symbol, color: color, tile: tile, iconSize: iconSize, title: title, subtitle: subtitle, busy: busy,
-            busyLabel: busyLabel, action: action,
+            busyLabel: busyLabel, identifier: identifier, action: action,
             trailing: { SettingsChevron(busy: busy) })
     }
 }

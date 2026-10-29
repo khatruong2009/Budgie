@@ -35,6 +35,9 @@ struct Toast: Identifiable, Equatable {
             action: .retrySaves, duration: 8)
     }
 
+    /// A failure message in danger rose.
+    static func error(_ message: String) -> Toast { Toast(message: message, style: .danger) }
+
     /// After a transaction delete.
     static var transactionDeleted: Toast { Toast(message: "Transaction deleted", style: .danger) }
 

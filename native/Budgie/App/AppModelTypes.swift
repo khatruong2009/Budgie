@@ -76,7 +76,7 @@ extension AppModel {
         var toast: Toast {
             switch self {
             case .restored: Toast(message: BackupEnvelope.restoredMessage)
-            case .failed(let error): Toast(message: BackupEnvelope.importFailedMessage(error.reason), style: .danger)
+            case .failed(let error): Toast.error(BackupEnvelope.importFailedMessage(error.reason))
             }
         }
     }

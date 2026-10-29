@@ -135,8 +135,7 @@ struct WorthView: View {
     // MARK: - Actions
 
     private func openEditor(entry: NetWorthEntryRecord?, type: NetWorthEntryType) {
-        editor = AccountEditorRequest(
-            month: model.selectedNetWorthMonth, entry: entry, initialType: type, calendar: model.calendar)
+        editor = AccountEditorRequest(model: model, entry: entry, initialType: type)
     }
 
     /// `selectNetWorthMonth` persists even a re-tapped month (as Flutter);
@@ -297,4 +296,22 @@ struct AccountEditorRequest: Identifiable {
     let entry: NetWorthEntryRecord?
     let initialType: NetWorthEntryType
     let calendar: DartCalendar
+
+    /// The page's selected month and calendar, for `entry` (nil: a new account).
+    @MainActor
+    init(model: AppModel, entry: NetWorthEntryRecord?, initialType: NetWorthEntryType) {
+        self.init(month: model.selectedNetWorthMonth, entry: entry, initialType: initialType, calendar: model.calendar)
+    }
+
+    init(month: DartDateTime, entry: NetWorthEntryRecord?, initialType: NetWorthEntryType, calendar: DartCalendar) {
+        self.month = month
+        self.entry = entry
+        self.initialType = initialType
+        self.calendar = calendar
+    }
+}
+
+extension NetWorthEntryType {
+    /// Income green for an asset, danger rose for a liability.
+    var tint: Color { self == .asset ? BudgieColor.income : BudgieColor.danger }
 }

@@ -54,9 +54,7 @@ struct AccountHistoryView: View {
             if let entry {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        editor = AccountEditorRequest(
-                            month: model.selectedNetWorthMonth, entry: entry, initialType: entry.type,
-                            calendar: model.calendar)
+                        editor = AccountEditorRequest(model: model, entry: entry, initialType: entry.type)
                     } label: {
                         Image(systemName: "pencil").foregroundStyle(BudgieColor.textPrimary)
                     }
@@ -103,7 +101,7 @@ struct AccountHistoryView: View {
 
     private func content(_ entry: NetWorthEntryRecord) -> some View {
         let history = NetWorthAccountHistory(history: model.netWorthEntryHistory(id: entryID), type: entry.type)
-        let color = entry.type == .asset ? BudgieColor.income : BudgieColor.danger
+        let color = entry.type.tint
         let formatter = model.moneyFormatter
         let count = history.chart.count
 

@@ -35,9 +35,7 @@ struct QuickExpenseSheet: View {
                 LazyVStack(spacing: 0) {
                     ForEach(categories.indices, id: \.self) { index in
                         if index > 0 {
-                            BudgieColor.hairline.frame(height: Metrics.borderThin)
-                                .padding(.leading, 12 + 40 + 12)
-                                .accessibilityHidden(true)
+                            Hairline().padding(.leading, 64)
                         }
                         row(categories[index])
                     }

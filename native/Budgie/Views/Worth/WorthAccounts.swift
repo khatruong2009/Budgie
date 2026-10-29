@@ -94,7 +94,7 @@ struct AccountRow: View {
     let onDelete: () -> Void
 
     var body: some View {
-        let tint = entry.type == .asset ? BudgieColor.income : BudgieColor.danger
+        let tint = entry.type.tint
         let changeColor = stats.changeIsFavorable.map { $0 ? BudgieColor.income : BudgieColor.danger } ?? BudgieColor.textTertiary
         let amount = formatter.formatSigned(stats.amount, decimalDigits: 0)
         let share = NetWorthText.rowShare(stats.share, isAssetsTab: isAssetsTab)
