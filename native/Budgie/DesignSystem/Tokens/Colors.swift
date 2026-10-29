@@ -12,7 +12,6 @@ enum BudgieColor {
     // Surfaces
     static let background = dynamic(light: 0xF3EFE6, dark: 0x07090D)
     static let card = dynamic(light: 0xFBF9F4, dark: 0x11151C)
-    static let surface = dynamic(light: 0xFBF9F4, dark: 0x11151C)
     static let chipSurface = dynamic(light: 0xEAE4D7, dark: 0x161B24)
     /// `MonthPill`'s border: white 8% dark, black 8% light (not `cardBorder`).
     static let pillBorder = overlay(dark: 0.08, light: 0.08)
@@ -107,8 +106,6 @@ enum BudgieColor {
     // white; the stops are close, so the fills read as flat.
     static let incomeStops = stops(light: (0x1D6646, 0x247755), dark: (0x0E6B4C, 0x127D59))
     static let expenseStops = stops(light: (0xA63D24, 0xB5482D), dark: (0xA3372A, 0xB8432F))
-    static let incomeGradient = gradient(incomeStops)
-    static let expenseGradient = gradient(expenseStops)
 
     /// The 14-colour chart and category palette: the seven category hues,
     /// then a lighter (light mode) or paler (dark mode) set of the same.
@@ -167,14 +164,6 @@ enum BudgieColor {
 
     private static func stops(light: (UInt32, UInt32), dark: (UInt32, UInt32)) -> [Color] {
         [dynamic(light: light.0, dark: dark.0), dynamic(light: light.1, dark: dark.1)]
-    }
-
-    private static func gradient(_ stops: [Color]) -> LinearGradient {
-        LinearGradient(colors: stops, startPoint: .topLeading, endPoint: .bottomTrailing)
-    }
-
-    private static func gradient(light: (UInt32, UInt32), dark: (UInt32, UInt32)) -> LinearGradient {
-        gradient(stops(light: light, dark: dark))
     }
 }
 
