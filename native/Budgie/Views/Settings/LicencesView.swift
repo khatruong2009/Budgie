@@ -33,20 +33,7 @@ struct LicencesView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(BudgieColor.background)
-        .navigationTitle("Licences")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.visible, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarBackground(BudgieColor.background, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("Licences")
-                    .textStyle(.cardTitle)
-                    .foregroundStyle(BudgieColor.textPrimary)
-                    .singleLine()
-                    .accessibilityAddTraits(.isHeader)
-            }
-        }
+        .budgiePushedTitle("Licences", singleLine: true)
     }
 
     static func text(_ name: String) -> String {

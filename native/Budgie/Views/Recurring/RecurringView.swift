@@ -51,20 +51,8 @@ struct RecurringView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(BudgieColor.background)
-        .navigationTitle("Recurring Transactions")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.visible, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarBackground(BudgieColor.background, for: .navigationBar)
+        .budgiePushedTitle("Recurring Transactions", scales: true)
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("Recurring Transactions")
-                    .textStyle(.cardTitle)
-                    .foregroundStyle(BudgieColor.textPrimary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                    .accessibilityAddTraits(.isHeader)
-            }
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button {
                     Task { await generateDue() }

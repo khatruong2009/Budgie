@@ -80,20 +80,7 @@ struct CategoryTransactionsView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(BudgieColor.background)
-        .navigationTitle(category)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.visible, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarBackground(BudgieColor.background, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text(category)
-                    .textStyle(.cardTitle)
-                    .foregroundStyle(BudgieColor.textPrimary)
-                    .singleLine()
-                    .accessibilityAddTraits(.isHeader)
-            }
-        }
+        .budgiePushedTitle(category, singleLine: true)
         .sheet(item: $editing) { record in
             TransactionFormView(mode: .edit(record))
         }

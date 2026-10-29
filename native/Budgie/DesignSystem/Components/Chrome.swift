@@ -70,8 +70,12 @@ extension View {
     /// A pushed page's title: the system title names the screen (VoiceOver,
     /// the back button of pages pushed above it), an inline bar stays visible
     /// on the background colour, and `style` draws the title as a header in
-    /// the principal slot. `scales` lets a long title shrink to one line.
-    func budgiePushedTitle(_ title: String, style: TextSpec = .cardTitle, scales: Bool = false) -> some View {
+    /// the principal slot. `scales` lets a long title shrink to one line;
+    /// `singleLine` keeps it to one line (`singleLine()`), wrapping only at
+    /// the accessibility sizes.
+    func budgiePushedTitle(
+        _ title: String, style: TextSpec = .cardTitle, scales: Bool = false, singleLine: Bool = false
+    ) -> some View {
         navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(.visible, for: .navigationBar)
@@ -79,7 +83,7 @@ extension View {
             .toolbarBackground(BudgieColor.background, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    PushedTitleText(title: title, style: style, scales: scales)
+                    PushedTitleText(title: title, style: style, scales: scales, singleLine: singleLine)
                 }
             }
     }
@@ -89,6 +93,7 @@ private struct PushedTitleText: View {
     let title: String
     let style: TextSpec
     let scales: Bool
+    let singleLine: Bool
 
     var body: some View {
         if scales {
@@ -97,6 +102,12 @@ private struct PushedTitleText: View {
                 .foregroundStyle(BudgieColor.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
+                .accessibilityAddTraits(.isHeader)
+        } else if singleLine {
+            Text(title)
+                .textStyle(style)
+                .foregroundStyle(BudgieColor.textPrimary)
+                .singleLine()
                 .accessibilityAddTraits(.isHeader)
         } else {
             Text(title)

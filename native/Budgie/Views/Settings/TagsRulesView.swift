@@ -68,20 +68,7 @@ struct TagsRulesView: View {
         .accessibilityIdentifier("tagsRules.list")
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(BudgieColor.background)
-        .navigationTitle("Tags & rules")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.visible, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarBackground(BudgieColor.background, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("Tags & rules")
-                    .textStyle(.cardTitle)
-                    .foregroundStyle(BudgieColor.textPrimary)
-                    .singleLine()
-                    .accessibilityAddTraits(.isHeader)
-            }
-        }
+        .budgiePushedTitle("Tags & rules", singleLine: true)
         .budgieDialog(item: $dialog) { presented in
             switch presented {
             case .newTag: NewTagDialog { dialog = nil }

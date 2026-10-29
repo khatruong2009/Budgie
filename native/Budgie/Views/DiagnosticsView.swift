@@ -42,20 +42,7 @@ struct DiagnosticsView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(BudgieColor.background)
-        .navigationTitle("Budgie")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.visible, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarBackground(BudgieColor.background, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("Budgie")
-                    .textStyle(.cardTitle)
-                    .foregroundStyle(BudgieColor.textPrimary)
-                    .singleLine()
-                    .accessibilityAddTraits(.isHeader)
-            }
-        }
+        .budgiePushedTitle("Budgie", singleLine: true)
     }
 
     private func section(_ title: String, rows: [AnyView]) -> some View {

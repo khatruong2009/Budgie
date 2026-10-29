@@ -57,19 +57,8 @@ struct CategoriesView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(BudgieColor.background)
-        .navigationTitle("Categories")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.visible, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarBackground(BudgieColor.background, for: .navigationBar)
+        .budgiePushedTitle("Categories", singleLine: true)
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("Categories")
-                    .textStyle(.cardTitle)
-                    .foregroundStyle(BudgieColor.textPrimary)
-                    .singleLine()
-                    .accessibilityAddTraits(.isHeader)
-            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     editor = CategoryEditorRequest(type: type, category: nil)
