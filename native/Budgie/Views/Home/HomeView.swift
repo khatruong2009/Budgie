@@ -377,33 +377,16 @@ private struct RecentRow: View {
             taps += 1
             onTap()
         } label: {
-            HStack(spacing: 12) {
+            TransactionRowLayout(
+                title: copy.title, isRecurring: record.isRecurring, subtitle: copy.subtitle,
+                amount: copy.amount, amountColor: isIncome ? BudgieColor.income : BudgieColor.textPrimary
+            ) {
                 if isIncome {
                     IconTile(symbol: "arrow.down.left", color: BudgieColor.income)
                 } else {
                     IconTile(category: model.categoryInfo(named: record.category, type: .expense))
                 }
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 6) {
-                        Text(copy.title)
-                            .textStyle(.rowTitle)
-                            .foregroundStyle(BudgieColor.textPrimary)
-                            .lineLimit(1)
-                        if record.isRecurring { RecurrenceGlyph(size: 16).fixedSize() }
-                    }
-                    Text(copy.subtitle)
-                        .textStyle(.rowSubtitle)
-                        .foregroundStyle(BudgieColor.textSecondary)
-                        .singleLine()
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                Text(copy.amount)
-                    .textStyle(.amountSmall)
-                    .foregroundStyle(isIncome ? BudgieColor.income : BudgieColor.textPrimary)
-                    .singleLine()
-                    .layoutPriority(1)
             }
-            .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
         }

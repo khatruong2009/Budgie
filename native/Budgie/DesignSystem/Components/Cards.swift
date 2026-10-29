@@ -167,3 +167,42 @@ extension IconTile {
             color: BudgieColor.category(info?.colorToken ?? "accent"), size: size, radius: radius, iconSize: iconSize)
     }
 }
+
+/// The inside of a transaction row: tile, title (with the recurrence mark),
+/// subtitle and a trailing amount that keeps its own width. Presentational
+/// only; the button, accessibility and data stay with the row.
+struct TransactionRowLayout<Tile: View>: View {
+    var titleLines: Int? = 1
+    let title: String
+    let isRecurring: Bool
+    let subtitle: String
+    let amount: String
+    let amountColor: Color
+    @ViewBuilder let tile: Tile
+
+    var body: some View {
+        HStack(spacing: 12) {
+            tile
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(title)
+                        .textStyle(.rowTitle)
+                        .foregroundStyle(BudgieColor.textPrimary)
+                        .lineLimit(titleLines)
+                    if isRecurring { RecurrenceGlyph(size: 16).fixedSize() }
+                }
+                Text(subtitle)
+                    .textStyle(.rowSubtitle)
+                    .foregroundStyle(BudgieColor.textSecondary)
+                    .singleLine()
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Text(amount)
+                .textStyle(.amountSmall)
+                .foregroundStyle(amountColor)
+                .singleLine()
+                .layoutPriority(1)
+        }
+        .padding(12)
+    }
+}
