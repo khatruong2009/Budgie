@@ -33,8 +33,8 @@ struct TagsRulesView: View {
                         EmptyCard(message: "Add tags to group transactions across categories.")
                             .accessibilityIdentifier("tags.empty")
                     } else {
-                        GlowListCard(rows: Self.keyed(tags, id: \.id).map { item in
-                            TagRow(tag: item.value, key: item.key) { dialog = .deleteTag(item.value) }
+                        GlowListCard(rows: tags.uniqueKeys(id: \.id).map { item in
+                            TagRow(tag: item.element, key: item.key) { dialog = .deleteTag(item.element) }
                         })
                     }
                 }
@@ -48,8 +48,8 @@ struct TagsRulesView: View {
                         EmptyCard(message: "Rules can automatically choose a category and tags from a merchant name.")
                             .accessibilityIdentifier("rules.empty")
                     } else {
-                        GlowListCard(rows: Self.keyed(rules, id: \.id).map { item in
-                            let rule = item.value
+                        GlowListCard(rows: rules.uniqueKeys(id: \.id).map { item in
+                            let rule = item.element
                             return RuleRow(
                                 rule: rule, key: item.key, subtitle: Self.ruleSubtitle(rule, formatter: model.moneyFormatter),
                                 switching: switching.contains(rule.id),
@@ -127,18 +127,6 @@ struct TagsRulesView: View {
         }
         if !rule.isEnabled { parts.append("off") }
         return parts.joined(separator: separator)
-    }
-
-    /// Row keys: the id, with its occurrence for a repeated id (foreign
-    /// data).
-    private static func keyed<Value>(_ values: [Value], id: (Value) -> String) -> [(key: String, value: Value)] {
-        var seen: [String: Int] = [:]
-        return values.map { value in
-            let raw = id(value)
-            let n = seen[raw, default: 0]
-            seen[raw] = n + 1
-            return (n == 0 ? raw : "\(raw)#\(n)", value)
-        }
     }
 }
 

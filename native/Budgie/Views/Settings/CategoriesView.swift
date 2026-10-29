@@ -38,12 +38,12 @@ struct CategoriesView: View {
                 .padding(EdgeInsets(top: Metrics.spacingS, leading: Metrics.pageHorizontal, bottom: 0, trailing: Metrics.pageHorizontal))
             archivedSwitch
             ScrollView {
-                GlowListCard(lazy: true, rows: Self.keyed(categories).map { item in
+                GlowListCard(lazy: true, rows: categories.uniqueKeys(id: \.id).enumerated().map { index, item in
                     CategoryRow(
-                        category: item.category,
+                        category: item.element,
                         actions: CategoryRowAction.menu(
-                            index: item.index, count: categories.count, isArchived: item.category.isArchived)
-                    ) { perform($0, on: item.category) }
+                            index: index, count: categories.count, isArchived: item.element.isArchived)
+                    ) { perform($0, on: item.element) }
                 })
                 .padding(EdgeInsets(top: 0, leading: Metrics.pageHorizontal, bottom: Metrics.spacingXL, trailing: Metrics.pageHorizontal))
                 .frame(maxWidth: Metrics.maxContentWidth)
@@ -130,17 +130,6 @@ struct CategoriesView: View {
             case .failed: model.showToast(.saveFailed)
             case .rejected(let error): model.showToast(CategoryRowAction.refusedToast(error))
             }
-        }
-    }
-
-    /// Row keys: the id, with its occurrence for a repeated id (foreign
-    /// data), and the row's index in the list shown.
-    private static func keyed(_ categories: [CategoryInfo]) -> [(key: String, index: Int, category: CategoryInfo)] {
-        var seen: [String: Int] = [:]
-        return categories.enumerated().map { index, category in
-            let n = seen[category.id, default: 0]
-            seen[category.id] = n + 1
-            return (n == 0 ? category.id : "\(category.id)#\(n)", index, category)
         }
     }
 }
