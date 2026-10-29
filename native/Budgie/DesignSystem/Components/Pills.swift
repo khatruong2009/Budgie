@@ -117,6 +117,25 @@ struct PillButton: View {
     }
 }
 
+/// A `Button` that plays the light impact on every tap. Style it from
+/// outside (`.buttonStyle`), as with a plain `Button`.
+struct HapticButton<Label: View>: View {
+    let action: () -> Void
+    @ViewBuilder let label: Label
+
+    @State private var taps = 0
+
+    var body: some View {
+        Button {
+            taps += 1
+            action()
+        } label: {
+            label
+        }
+        .sensoryFeedback(.impact(weight: .light), trigger: taps)
+    }
+}
+
 /// Segmented capsule control (`SegmentedPillControl`): a track with the
 /// active segment in the selection fill (Settings theme), or the mono
 /// variant with no track and an accent-tint active segment (chart range

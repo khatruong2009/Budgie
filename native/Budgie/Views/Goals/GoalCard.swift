@@ -144,13 +144,8 @@ struct GoalCard: View {
 struct GoalMoreButton: View {
     let action: () -> Void
 
-    @State private var taps = 0
-
     var body: some View {
-        Button {
-            taps += 1
-            action()
-        } label: {
+        HapticButton(action: action) {
             // Material `more_horiz_rounded` 18 / w500: 11.5pt wide, 3pt
             // dots; SF `ellipsis` medium at 12 is 12 x 3.
             Image(systemName: "ellipsis")
@@ -162,7 +157,6 @@ struct GoalMoreButton: View {
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
-        .sensoryFeedback(.impact(weight: .light), trigger: taps)
         .accessibilityLabel("More goal actions")
         .accessibilityIdentifier("goals.card.more")
     }
