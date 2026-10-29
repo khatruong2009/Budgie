@@ -12,7 +12,7 @@ struct DartSortTests {
     }
 
     static func vectors() throws -> (firstUnstable: Int, cases: [Vector]) {
-        let fixture = J(try JSONParser.parse([UInt8](Fixtures.data("backup/dart_sort.json"))))
+        let fixture = try Fixtures.json("backup/dart_sort.json")
         let cases = fixture["cases"].array.map { item in
             Vector(
                 keys: item["keys"].array.map { $0.int! },

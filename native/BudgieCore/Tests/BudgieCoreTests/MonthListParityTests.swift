@@ -8,7 +8,7 @@ import Testing
 private let monthListZones = ["America/New_York", "America/Santiago"]
 
 private func fixture(_ zone: String, _ file: String) throws -> J {
-    J(try JSONParser.parse([UInt8](Fixtures.data("monthlist/tz/\(zone.replacingOccurrences(of: "/", with: "_"))/\(file)"))))
+    try Fixtures.json("\(Fixtures.zonePath("monthlist", zone))/\(file)")
 }
 
 private func strings(_ j: J) -> [String] { j.array.map { $0.string! } }

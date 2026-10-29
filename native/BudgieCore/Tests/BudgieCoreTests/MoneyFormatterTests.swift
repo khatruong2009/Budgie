@@ -7,7 +7,7 @@ import Testing
 struct MoneyFormatterTests {
     @Test("every vector, every field")
     func vectors() throws {
-        let fixture = try Fixtures.json("logic/money_format.json") as! [String: Any]
+        let fixture = try Fixtures.jsonObject("logic/money_format.json") as! [String: Any]
         let vectors = fixture["vectors"] as! [[String: Any]]
         #expect(!vectors.isEmpty)
 
@@ -44,7 +44,7 @@ struct MoneyFormatterTests {
 
     @Test("hideBalances masks format and formatSigned")
     func hidden() throws {
-        let fixture = try Fixtures.json("logic/money_format.json") as! [String: Any]
+        let fixture = try Fixtures.jsonObject("logic/money_format.json") as! [String: Any]
         let hidden = fixture["hidden"] as! [String: String]
         let formatter = MoneyFormatter(currencyCode: "EUR", locale: "de_DE", hideBalances: true)
         #expect(formatter.format(1234.56) == hidden["format"])

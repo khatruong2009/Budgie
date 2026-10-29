@@ -4,7 +4,7 @@ import Testing
 @testable import BudgieCore
 
 private func fixture(_ name: String) throws -> J {
-    J(try JSONParser.parse([UInt8](Fixtures.data("spend/\(name)"))))
+    try Fixtures.json("spend/\(name)")
 }
 
 private func bits(_ value: J) -> Double? {

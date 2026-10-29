@@ -12,7 +12,7 @@ import Testing
 /// just after each gap and fold, carrying epoch microseconds because a
 /// fold-hour wall time names two instants) are checked in every logic zone.
 private func logicFixture(_ zone: String, _ file: String) throws -> J {
-    J(try JSONParser.parse([UInt8](Fixtures.data(zoneDirectory(zone) + "/" + file))))
+    try Fixtures.json(zoneDirectory(zone) + "/" + file)
 }
 
 private func instant(_ value: J, _ zone: TimeZone) -> DartDateTime {

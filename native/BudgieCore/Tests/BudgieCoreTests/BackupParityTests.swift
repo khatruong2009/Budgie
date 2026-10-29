@@ -13,7 +13,7 @@ func fixtureBytes(_ value: J) -> [UInt8] {
 let backupZones = ["America/New_York", "Australia/Lord_Howe", "UTC", "America/Santiago"]
 
 func backupFixture(_ zone: String, _ file: String) throws -> J {
-    J(try JSONParser.parse([UInt8](Fixtures.data("backup/tz/\(zone.replacingOccurrences(of: "/", with: "_"))/\(file)"))))
+    try Fixtures.json("\(Fixtures.zonePath("backup", zone))/\(file)")
 }
 
 /// Typed preferences (the harness `typedPrefs` form) as a fixture value.
@@ -471,7 +471,7 @@ struct BackupRestoreParityTests {
 struct IndentedJSONTests {
     @Test("every Dart vector, byte for byte, and a lexeme-preserving round trip")
     func vectors() throws {
-        let fixture = J(try JSONParser.parse([UInt8](Fixtures.data("backup/indent_vectors.json"))))
+        let fixture = try Fixtures.json("backup/indent_vectors.json")
         let cases = fixture["cases"].array
         #expect(cases.count > 200)
         for vector in cases {

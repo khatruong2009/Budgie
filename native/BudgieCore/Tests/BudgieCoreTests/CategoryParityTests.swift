@@ -4,7 +4,7 @@ import Testing
 @testable import BudgieCore
 
 private func fixture(_ name: String) throws -> J {
-    J(try JSONParser.parse([UInt8](Fixtures.data("categories/\(name)"))))
+    try Fixtures.json("categories/\(name)")
 }
 
 /// The sections a category edit can write, in commit order.

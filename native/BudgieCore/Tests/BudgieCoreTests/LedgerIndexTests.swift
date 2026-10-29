@@ -92,7 +92,7 @@ struct LedgerIndexTests {
         #expect(sameCategories(summary, oracle))
 
         // Dart: the Spend fixture's "unicode" month holds both spellings.
-        let cases = J(try JSONParser.parse([UInt8](Fixtures.data("spend/breakdowns.json"))))["cases"].array
+        let cases = try Fixtures.json("spend/breakdowns.json")["cases"].array
         let unicode = try #require(cases.first { $0["dataset"].string == "unicode" })
         let dart = homeData(try JSONParser.parse(unicode["sections"].string!).objectValue!)
         let dartMonth = try dart.calendar.parse(unicode["months"][0]["month"].string!)

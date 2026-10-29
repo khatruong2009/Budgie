@@ -8,7 +8,7 @@ struct CSVExportTests {
     private static let utc = TimeZone(identifier: "UTC")!
 
     private func fixture() throws -> [String: Any] {
-        try Fixtures.json("logic/csv_export.json") as! [String: Any]
+        try Fixtures.jsonObject("logic/csv_export.json") as! [String: Any]
     }
 
     private func rows(_ fixture: [String: Any]) throws -> [CSVExport.Row] {
@@ -24,7 +24,7 @@ struct CSVExportTests {
 
     @Test("toStringAsFixed(2) matches every numbers.json vector")
     func fixedVectors() throws {
-        let numbers = try Fixtures.json("logic/numbers.json") as! [String: Any]
+        let numbers = try Fixtures.jsonObject("logic/numbers.json") as! [String: Any]
         let doubles = numbers["doubles"] as! [[String: Any]]
         var mismatches: [String] = []
         for entry in doubles {

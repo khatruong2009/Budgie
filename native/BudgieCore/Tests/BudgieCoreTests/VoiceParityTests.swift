@@ -10,8 +10,7 @@ private let voiceZones = [
 ]
 
 private func voiceFixture(_ zone: String) throws -> J {
-    let name = zone.replacingOccurrences(of: "/", with: "_")
-    return J(try JSONParser.parse([UInt8](Fixtures.data("voice/tz/\(name)/parse.json"))))
+    try Fixtures.json("\(Fixtures.zonePath("voice", zone))/parse.json")
 }
 
 private func voiceHex(_ value: Double) -> String {

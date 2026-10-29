@@ -4,7 +4,7 @@ import Testing
 @testable import BudgieCore
 
 private func fixture(_ name: String) throws -> J {
-    J(try JSONParser.parse([UInt8](Fixtures.data("settings/\(name)"))))
+    try Fixtures.json("settings/\(name)")
 }
 
 private func settings(_ section: J) -> AppSettings {

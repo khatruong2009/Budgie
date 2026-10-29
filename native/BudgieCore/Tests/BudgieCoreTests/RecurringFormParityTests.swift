@@ -8,7 +8,7 @@ import Testing
 private let formZones = ["America/New_York", "America/Santiago", "Australia/Lord_Howe"]
 
 private func fixture(_ zone: String) throws -> J {
-    J(try JSONParser.parse([UInt8](Fixtures.data("recurring_form/tz/\(zone.replacingOccurrences(of: "/", with: "_"))/validation.json"))))
+    try Fixtures.json("\(Fixtures.zonePath("recurring_form", zone))/validation.json")
 }
 
 private func bits(_ value: J) -> Double? {

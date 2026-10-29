@@ -8,7 +8,7 @@ import Testing
 let recurringZones = fixtureZones
 
 private func recurringFixture(_ zone: String, _ file: String) throws -> J {
-    J(try JSONParser.parse([UInt8](Fixtures.data("recurring/tz/\(zone.replacingOccurrences(of: "/", with: "_"))/\(file)"))))
+    try Fixtures.json("\(Fixtures.zonePath("recurring", zone))/\(file)")
 }
 
 /// A fixture instant, from its microseconds (an ambiguous local time

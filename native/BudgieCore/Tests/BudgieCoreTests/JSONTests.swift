@@ -5,7 +5,7 @@ import Testing
 
 @Suite("JSON: Dart-compatible encoding")
 struct DartEncodingTests {
-    let numbers = try! Fixtures.json("logic/numbers.json") as! [String: Any]
+    let numbers = try! Fixtures.jsonObject("logic/numbers.json") as! [String: Any]
 
     @Test("every double formats exactly like Dart jsonEncode (7000+ vectors)")
     func doubles() throws {
@@ -87,7 +87,7 @@ struct LosslessRoundTripTests {
 
     @Test("canonical encoding of the typical store equals Dart jsonEncode(jsonDecode(payload))")
     func canonicalMatchesDart() throws {
-        let expected = try Fixtures.json("store/typical/expected.json") as! [String: Any]
+        let expected = try Fixtures.jsonObject("store/typical/expected.json") as! [String: Any]
         let sections = (expected["load"] as! [String: Any])["sections"] as! [String: Any]
         let dartText = sections["json"] as! String
         let bytes = [UInt8](try Fixtures.data("store/typical/input/financial_store_v2.json"))

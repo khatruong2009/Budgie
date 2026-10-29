@@ -14,7 +14,7 @@ func homeData(_ sections: JSONObject, zone: TimeZone = Scenario.zone) -> Financi
 }
 
 private func fixture(_ name: String) throws -> J {
-    J(try JSONParser.parse([UInt8](Fixtures.data("home/\(name)"))))
+    try Fixtures.json("home/\(name)")
 }
 
 private func bits(_ value: J) -> Double? {

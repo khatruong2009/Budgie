@@ -4,7 +4,7 @@ import Testing
 @testable import BudgieCore
 
 private func fixture(_ name: String) throws -> J {
-    J(try JSONParser.parse([UInt8](Fixtures.data("worth/\(name)"))))
+    try Fixtures.json("worth/\(name)")
 }
 
 private func bits(_ value: J) -> Double? {
@@ -51,7 +51,7 @@ struct WorthParityTests {
     /// is. Whatever Swift wrote loads back to the same memory.
     @Test("mutation scenarios", arguments: dstFixtureZones)
     func mutations(zone: String) throws {
-        let f = try fixture("tz/\(zone.replacingOccurrences(of: "/", with: "_"))/mutations.json")
+        let f = try Fixtures.json("\(Fixtures.zonePath("worth", zone))/mutations.json")
         #expect(f["tz"].string == zone)
         let calendar = DartCalendar(timeZone: TimeZone(identifier: zone)!)
         let scenarios = f["scenarios"].array

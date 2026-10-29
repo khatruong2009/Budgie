@@ -1,0 +1,60 @@
+import Foundation
+import Testing
+
+@testable import BudgieCore
+
+/// Navigation over expected.json parsed with the lossless parser, so doubles
+/// compare bit for bit with what Dart printed.
+struct J {
+    let value: JSONValue?
+    init(_ value: JSONValue?) { self.value = value }
+    subscript(_ key: String) -> J { J(value?.objectValue?[key]) }
+    subscript(_ index: Int) -> J { J(value?.arrayValue.flatMap { index < $0.count ? $0[index] : nil }) }
+    var double: Double? { value?.numberValue?.doubleValue }
+    var int: Int? { value?.numberValue?.intValue.map { Int($0) } }
+    var string: String? { value?.stringValue }
+    var bool: Bool? { value?.boolValue }
+    var array: [J] { value?.arrayValue?.map { J($0) } ?? [] }
+    var keys: [String] { value?.objectValue?.keys ?? [] }
+    var isNull: Bool { value == nil || value!.isNull }
+}
+
+func loadExpected(_ url: URL) throws -> J {
+    J(try JSONParser.parse([UInt8](Data(contentsOf: url.appendingPathComponent("expected.json")))))
+}
+
+/// Runs the Swift launch sequence (load, pending writes, generator, one
+/// commit) the way the app does.
+func launch(_ scenario: Scenario, zone: TimeZone = Scenario.zone) async throws -> FinancialData? {
+    try await launchWithSnapshot(scenario, zone: zone)?.data
+}
+
+/// `launch`, plus the store's snapshot after the launch commits.
+func launchWithSnapshot(
+    _ scenario: Scenario, zone: TimeZone = Scenario.zone, matchesPaddedCategoryNames: Bool = false
+) async throws -> (data: FinancialData, snapshot: FinancialSnapshot)? {
+    let calendar = DartCalendar(timeZone: zone)
+    let now = scenario.launchNow(in: zone)
+    let store = scenario.makeStore(zone: zone)
+    var snapshot: FinancialSnapshot
+    do {
+        snapshot = try await store.read()
+    } catch .dataUnreadable(let names) {
+        try await store.acknowledgeUnreadableData(names)
+        snapshot = try await store.read()
+    } catch {
+        return nil
+    }
+    var loaded = FinancialData.load(
+        snapshot, preferences: scenario.preferences, calendar: calendar, now: { now }, newID: { UUID().uuidString.lowercased() },
+        matchesPaddedCategoryNames: matchesPaddedCategoryNames)
+    if !loaded.pendingWrites.isEmpty { snapshot = try await store.updateSections(loaded.pendingWrites) }
+    let result = RecurringGenerator.generateDue(in: &loaded.data, now: now, clock: { now }, newID: { UUID().uuidString.lowercased() })
+    if result.changed {
+        snapshot = try await store.updateSections([
+            (Section.transactions, loaded.data.transactionsSection()),
+            (Section.recurringTransactions, loaded.data.templatesSection()),
+        ])
+    }
+    return (loaded.data, snapshot)
+}

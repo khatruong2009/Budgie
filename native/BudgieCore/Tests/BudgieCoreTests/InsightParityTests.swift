@@ -6,11 +6,11 @@ import Testing
 /// Fixtures written by native/ParityHarness/parity/insight_fixtures_test.dart
 /// from the real InsightEngine and LocalInsightsSection.
 private func insightFixture(_ relative: String) throws -> J {
-    J(try JSONParser.parse([UInt8](Fixtures.data("insights/" + relative))))
+    try Fixtures.json("insights/" + relative)
 }
 
 private func insightZoneFixture(_ zone: String, _ name: String) throws -> J {
-    try insightFixture("tz/" + zone.replacingOccurrences(of: "/", with: "_") + "/" + name)
+    try Fixtures.json("\(Fixtures.zonePath("insights", zone))/\(name)")
 }
 
 private func bits(_ value: J) -> Double? {

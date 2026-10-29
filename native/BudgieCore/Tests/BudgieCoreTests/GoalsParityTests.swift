@@ -4,7 +4,7 @@ import Testing
 @testable import BudgieCore
 
 private func fixture(_ name: String) throws -> J {
-    J(try JSONParser.parse([UInt8](Fixtures.data("goals/\(name)"))))
+    try Fixtures.json("goals/\(name)")
 }
 
 private func bits(_ value: J) -> Double? {
@@ -53,7 +53,7 @@ struct GoalsParityTests {
     /// ids follow Dart's format and counter.
     @Test("mutation scenarios", arguments: dstFixtureZones)
     func mutations(zone: String) throws {
-        let f = try fixture("tz/\(zone.replacingOccurrences(of: "/", with: "_"))/mutations.json")
+        let f = try Fixtures.json("\(Fixtures.zonePath("goals", zone))/mutations.json")
         #expect(f["tz"].string == zone)
         let calendar = DartCalendar(timeZone: TimeZone(identifier: zone)!)
         let scenarios = f["scenarios"].array
@@ -127,7 +127,7 @@ struct GoalsParityTests {
     /// allocation dialog's `willComplete`; the page's sort and summary.
     @Test("derived values", arguments: dstFixtureZones)
     func derived(zone: String) throws {
-        let f = try fixture("tz/\(zone.replacingOccurrences(of: "/", with: "_"))/derived.json")
+        let f = try Fixtures.json("\(Fixtures.zonePath("goals", zone))/derived.json")
         #expect(f["tz"].string == zone)
         let calendar = DartCalendar(timeZone: TimeZone(identifier: zone)!)
         let unused = calendar.date(2020)

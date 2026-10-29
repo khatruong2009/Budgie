@@ -8,7 +8,7 @@ import Testing
 private let homePageZones = ["America/New_York", "America/Santiago"]
 
 private func fixture(_ zone: String) throws -> J {
-    J(try JSONParser.parse([UInt8](Fixtures.data("home/tz/\(zone.replacingOccurrences(of: "/", with: "_"))/page.json"))))
+    try Fixtures.json("\(Fixtures.zonePath("home", zone))/page.json")
 }
 
 private func bits(_ value: J) -> Double? {

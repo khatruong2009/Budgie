@@ -7,11 +7,11 @@ import Testing
 let flowDatasets = ["typical", "gaps", "cross_year", "empty", "one_month", "negative_tiny", "large"]
 
 private func flowFixture(_ relative: String) throws -> J {
-    J(try JSONParser.parse([UInt8](Fixtures.data("flow/" + relative))))
+    try Fixtures.json("flow/" + relative)
 }
 
 private func flowZoneFixture(_ zone: String, _ name: String) throws -> J {
-    try flowFixture("tz/" + zone.replacingOccurrences(of: "/", with: "_") + "/" + name)
+    try Fixtures.json("\(Fixtures.zonePath("flow", zone))/\(name)")
 }
 
 private func bits(_ value: J) -> Double? {

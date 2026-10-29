@@ -321,7 +321,7 @@ struct SwiftOutputForDartTests {
     /// delete. Not the unreadable rows: Dart's load casts every
     /// row to a map and throws on one, whoever wrote the file.
     static func foreignGoalRows() throws -> [JSONValue] {
-        let fixture = J(try JSONParser.parse([UInt8](Fixtures.data("goals/tz/America_New_York/mutations.json"))))
+        let fixture = try Fixtures.json("goals/tz/America_New_York/mutations.json")
         let foreign = fixture["scenarios"].array.first { $0["name"].string == "foreign" }!
         let initial = try JSONParser.parse(foreign["initial"].string!)
         var rows = initial.objectValue![Section.savingsGoals]!.arrayValue!

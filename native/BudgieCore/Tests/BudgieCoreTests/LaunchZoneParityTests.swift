@@ -95,8 +95,7 @@ struct LaunchZoneParityTests {
         let tz = TimeZone(identifier: zone)!
         for name in launchScenarioNames {
             let label = "\(zone) \(name)"
-            let fixture = J(try JSONParser.parse(
-                [UInt8](Fixtures.data("launch/tz/\(zone.replacingOccurrences(of: "/", with: "_"))/\(name).json"))))
+            let fixture = try Fixtures.json("\(Fixtures.zonePath("launch", zone))/\(name).json")
             #expect(fixture["tz"].string == zone, "\(label) tz")
             #expect(fixture["scenario"].string == name, "\(label) scenario")
 

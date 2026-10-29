@@ -444,7 +444,7 @@ struct CSVImportRoundTripTests {
 
     @Test("the Dart export in Fixtures/logic/csv_export.json imports into an empty store")
     func dartExport() throws {
-        let fixture = try Fixtures.json("logic/csv_export.json") as! [String: Any]
+        let fixture = try Fixtures.jsonObject("logic/csv_export.json") as! [String: Any]
         let bytes = [UInt8](Data(base64Encoded: fixture["base64"] as! String)!)
         let summary = try CSVImport.parse(bytes: bytes, existing: [], calendar: DartCalendar(timeZone: TimeZone(identifier: "UTC")!))
         let transactions = fixture["transactions"] as! [[String: Any]]

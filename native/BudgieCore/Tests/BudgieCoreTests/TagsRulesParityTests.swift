@@ -4,7 +4,7 @@ import Testing
 @testable import BudgieCore
 
 private func fixture() throws -> J {
-    J(try JSONParser.parse([UInt8](Fixtures.data("tags/mutations.json"))))
+    try Fixtures.json("tags/mutations.json")
 }
 
 private let sections = [Section.transactionTags, Section.categorizationRules]

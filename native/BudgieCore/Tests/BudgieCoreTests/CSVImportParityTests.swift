@@ -4,7 +4,7 @@ import Testing
 @testable import BudgieCore
 
 private func fixture(_ name: String) throws -> J {
-    J(try JSONParser.parse([UInt8](Fixtures.data("csvimport/\(name)"))))
+    try Fixtures.json("csvimport/\(name)")
 }
 
 private func units(_ value: J) -> [UInt16] { value.array.map { UInt16($0.int!) } }
@@ -127,7 +127,7 @@ struct CSVImportParityTests {
     /// launch clock) and the categories Dart's next launch writes.
     @Test("adversarial corpus and 600 random files", arguments: csvImportZones)
     func imports(_ zone: String) throws {
-        let f = try fixture("tz/\(zone.replacingOccurrences(of: "/", with: "_"))/import.json")
+        let f = try Fixtures.json("\(Fixtures.zonePath("csvimport", zone))/import.json")
         #expect(f["tz"].string == zone)
         let calendar = DartCalendar(timeZone: TimeZone(identifier: zone)!)
         let now = try calendar.parse(f["now"].string!)

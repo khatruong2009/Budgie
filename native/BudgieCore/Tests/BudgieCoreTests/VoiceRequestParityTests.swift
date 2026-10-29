@@ -8,7 +8,7 @@ import Testing
 private let voiceRequestZones = ["America/New_York", "America/Santiago"]
 
 private func fixture(_ zone: String) throws -> J {
-    J(try JSONParser.parse([UInt8](Fixtures.data("voicerequest/tz/\(zone.replacingOccurrences(of: "/", with: "_"))/request.json"))))
+    try Fixtures.json("\(Fixtures.zonePath("voicerequest", zone))/request.json")
 }
 
 private func same(_ actual: String, _ expected: String, _ label: String) {

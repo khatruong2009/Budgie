@@ -7,7 +7,7 @@ import Testing
 struct FormatParityTests {
     @Test("every en_US pattern the app uses, against intl")
     func dateFormats() throws {
-        let fixture = J(try JSONParser.parse([UInt8](Fixtures.data("logic/date_formats.json"))))
+        let fixture = try Fixtures.json("logic/date_formats.json")
         let calendar = DartCalendar(timeZone: Scenario.zone)
         let formatters: [String: (DartDateTime) -> String] = [
             "MMMM": DartDateFormat.MMMM, "MMM": DartDateFormat.MMM, "y": DartDateFormat.y,
@@ -33,7 +33,7 @@ struct FormatParityTests {
     /// Mtavruli, Osage, Adlam, ...) are not applied.
     @Test("Dart toLowerCase for every scalar")
     func lowercaseEveryScalar() throws {
-        let fixture = J(try JSONParser.parse([UInt8](Fixtures.data("logic/lower.json"))))
+        let fixture = try Fixtures.json("logic/lower.json")
         var expected: [UInt32: [UInt16]] = [:]
         for entry in fixture["lower"].array {
             expected[UInt32(entry[0].int!)] = entry[1].array.map { UInt16($0.int!) }
@@ -51,7 +51,7 @@ struct FormatParityTests {
 
     @Test("trim, toLowerCase, ==, contains, startsWith, compareTo over an awkward corpus")
     func strings() throws {
-        let fixture = J(try JSONParser.parse([UInt8](Fixtures.data("logic/strings.json"))))
+        let fixture = try Fixtures.json("logic/strings.json")
         let single = fixture["single"].array
         #expect(single.count > 20)
         for c in single {

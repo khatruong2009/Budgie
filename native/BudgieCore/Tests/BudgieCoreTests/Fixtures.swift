@@ -1,5 +1,7 @@
 import Foundation
 
+@testable import BudgieCore
+
 /// Access to native/Fixtures (produced by native/ParityHarness from the real
 /// Flutter code).
 enum Fixtures {
@@ -18,8 +20,19 @@ enum Fixtures {
         try Data(contentsOf: url(relative))
     }
 
-    static func json(_ relative: String) throws -> Any {
+    static func jsonObject(_ relative: String) throws -> Any {
         try JSONSerialization.jsonObject(with: data(relative), options: [.fragmentsAllowed])
+    }
+
+    /// A fixture parsed with the lossless parser (doubles compare bit for bit).
+    static func json(_ relative: String) throws -> J {
+        J(try JSONParser.parse([UInt8](data(relative))))
+    }
+
+    /// `<group>/tz/<zone>` with the zone's `/` flattened, the directory the
+    /// harness writes per-zone fixtures to.
+    static func zonePath(_ group: String, _ zone: String) -> String {
+        "\(group)/tz/\(zone.replacingOccurrences(of: "/", with: "_"))"
     }
 
     /// Scenario directories under `store/` or `legacy/`.
