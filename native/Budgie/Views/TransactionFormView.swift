@@ -324,7 +324,7 @@ struct TransactionFormView: View {
         guard
             let rule = model.suggestion(
                 type: type, description: descriptionText,
-                amountText: Self.normalizedAmount(amountText, locale: .current)),
+                amountText: RecurringForm.normalizedAmount(amountText, locale: .current)),
             let name = (options[type] ?? []).first(where: { DartString.equal($0.name, rule.category) })?.name
         else { return }
         category = name
@@ -440,17 +440,11 @@ struct TransactionFormView: View {
     /// to '.') nil or non-finite is invalid; `<= 0` is not positive.
     nonisolated static func validateAmount(_ text: String, locale: Locale = .current) -> Result<Double, AmountError> {
         if text.isEmpty { return .failure(.required) }
-        guard let value = DartDouble.tryParse(normalizedAmount(text, locale: locale)), value.isFinite else {
+        guard let value = DartDouble.tryParse(RecurringForm.normalizedAmount(text, locale: locale)), value.isFinite else {
             return .failure(.invalid)
         }
         guard value > 0 else { return .failure(.notPositive) }
         return .success(value)
-    }
-
-    /// The text with the locale's decimal separator (e.g. ',') as '.'.
-    nonisolated static func normalizedAmount(_ text: String, locale: Locale) -> String {
-        guard let separator = locale.decimalSeparator, separator != "." else { return text }
-        return text.replacingOccurrences(of: separator, with: ".")
     }
 }
 

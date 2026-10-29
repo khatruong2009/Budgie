@@ -67,8 +67,8 @@ final class AmountInputTests: XCTestCase {
     }
 
     func testSeparatorsAndCurrencySymbolFollowTheFormat() {
-        XCTAssertTrue(AmountInput.separators(english) == (",", "."))
-        XCTAssertTrue(AmountInput.separators(german) == (".", ","))
+        XCTAssertTrue(AmountParser.separators(english) == (",", "."))
+        XCTAssertTrue(AmountParser.separators(german) == (".", ","))
         XCTAssertEqual(AmountInput.currencySymbol(english), "$")
         XCTAssertEqual(AmountInput.currencySymbol(german), "\u{20AC}")
         XCTAssertEqual(AmountInput.currencySymbol(MoneyFormatter(currencyCode: "BRL")), "R$")

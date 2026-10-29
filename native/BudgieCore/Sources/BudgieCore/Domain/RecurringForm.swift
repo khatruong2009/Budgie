@@ -143,7 +143,7 @@ public enum RecurringForm {
     }
 
     /// The text with the locale's decimal separator (e.g. ',') as '.'.
-    static func normalizedAmount(_ text: String, locale: Locale) -> String {
+    public static func normalizedAmount(_ text: String, locale: Locale) -> String {
         guard let separator = locale.decimalSeparator, separator != "." else { return text }
         return text.replacingOccurrences(of: separator, with: ".")
     }
