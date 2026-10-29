@@ -11,16 +11,6 @@ private func fixture(_ zone: String, _ file: String) throws -> J {
     try Fixtures.json("\(Fixtures.zonePath("monthlist", zone))/\(file)")
 }
 
-private func strings(_ j: J) -> [String] { j.array.map { $0.string! } }
-
-private func same(_ actual: [String], _ expected: [String], _ label: String) {
-    #expect(actual.map { Array($0.utf16) } == expected.map { Array($0.utf16) }, "\(label): \(actual) | \(expected)")
-}
-
-private func same(_ actual: String, _ expected: String, _ label: String) {
-    #expect(Array(actual.utf16) == Array(expected.utf16), "\(label): \(actual) | \(expected)")
-}
-
 // MARK: - The one view expression the helpers do not cover
 
 private enum ViewExpr {

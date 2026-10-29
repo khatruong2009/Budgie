@@ -11,23 +11,9 @@ private func fixture(_ zone: String) throws -> J {
     try Fixtures.json("\(Fixtures.zonePath("home", zone))/page.json")
 }
 
-private func bits(_ value: J) -> Double? {
-    value.string.flatMap { UInt64($0, radix: 16) }.map { Double(bitPattern: $0) }
-}
-
 private func hex(_ value: Double) -> String {
     let text = String(value.bitPattern, radix: 16)
     return String(repeating: "0", count: 16 - text.count) + text
-}
-
-private func strings(_ j: J) -> [String] { j.array.map { $0.string! } }
-
-private func same(_ actual: String, _ expected: String, _ label: String) {
-    #expect(Array(actual.utf16) == Array(expected.utf16), "\(label): \(actual) | \(expected)")
-}
-
-private func same(_ actual: [String], _ expected: [String], _ label: String) {
-    #expect(actual.map { Array($0.utf16) } == expected.map { Array($0.utf16) }, "\(label): \(actual) | \(expected)")
 }
 
 @Suite("Home page: hero, gauge, chips, safe to spend, budgets and recent activity copy match the Flutter page (Fixtures/home/tz)")

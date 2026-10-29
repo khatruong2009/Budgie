@@ -11,10 +11,6 @@ private func fixture(_ zone: String) throws -> J {
     try Fixtures.json("\(Fixtures.zonePath("voicerequest", zone))/request.json")
 }
 
-private func same(_ actual: String, _ expected: String, _ label: String) {
-    #expect(Array(actual.utf16) == Array(expected.utf16), "\(label): \(actual) | \(expected)")
-}
-
 private struct Part {
     let name: String?
     let filename: String?

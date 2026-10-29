@@ -11,10 +11,6 @@ private func fixture(_ zone: String) throws -> J {
     try Fixtures.json("\(Fixtures.zonePath("recurring_form", zone))/validation.json")
 }
 
-private func bits(_ value: J) -> Double? {
-    value.string.flatMap { UInt64($0, radix: 16) }.map { Double(bitPattern: $0) }
-}
-
 private func instant(_ j: J, _ tz: TimeZone) -> DartDateTime {
     DartDateTime(microsecondsSinceEpoch: Int64(j["us"].int!), timeZone: tz)
 }

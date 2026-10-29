@@ -7,10 +7,6 @@ private func fixture(_ name: String) throws -> J {
     try Fixtures.json("worth/\(name)")
 }
 
-private func bits(_ value: J) -> Double? {
-    value.string.flatMap { UInt64($0, radix: 16) }.map { Double(bitPattern: $0) }
-}
-
 private func hex(_ value: Double) -> String {
     let text = String(value.bitPattern, radix: 16)
     return String(repeating: "0", count: 16 - text.count) + text
