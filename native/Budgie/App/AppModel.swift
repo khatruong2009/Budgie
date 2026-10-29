@@ -724,15 +724,6 @@ final class AppModel {
         return await persist([Section.netWorthEntries])
     }
 
-    /// Dart `carryNetWorthMonthForward` (Flutter has no UI for it): false
-    /// without a write when no account needed a carried value.
-    @discardableResult
-    func carryNetWorthMonthForward(_ month: DartDateTime) async -> Bool {
-        guard data != nil, data!.carryNetWorthMonthForward(month, now: now) else { return false }
-        netWorthRevision &+= 1
-        return await persist([Section.netWorthEntries])
-    }
-
     // MARK: - Savings goals
 
     /// Dart's process-wide `SavingsGoal._idCounter`: advanced only by a
