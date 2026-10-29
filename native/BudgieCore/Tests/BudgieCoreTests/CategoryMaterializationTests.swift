@@ -9,15 +9,26 @@ private nonisolated(unsafe) let uuidTail = #/^(expense|income)-[0-9a-f]{8}-[0-9a
 struct CategoryMaterializationTests {
     /// The categories Dart holds after `_initializeApp` (sectionsAfterInit)
     /// equal the Swift ones after load, field by field and in order. Ids
-    /// that Dart drew from a UUID are compared by shape only.
+    /// that Dart drew from a UUID are compared by shape only. Not covered by
+    /// `assertDartSummary` (DomainParityTests), which never looks at category
+    /// definitions, so this stays a separate test.
     @Test("same definitions as Dart after launch, for every fixture", arguments: DomainParityTests.cases)
     func parity(_ path: String) async throws {
         let url = Fixtures.url(path)
         let scenario = try Scenario(url)
         let expected = try loadExpected(url)
-        guard let text = expected["sectionsAfterInit"]["json"].string else { return }
+        guard let text = expected["sectionsAfterInit"]["json"].string else {
+            // Dart wrote no sections after init: it could not launch (primary_is_directory) or
+            // the 10k-row dataset has no category expectations.
+            if !["store/primary_is_directory", "store/large_10k"].contains(path) {
+                Issue.record("\(path): no sectionsAfterInit in expected.json")
+            }
+            return
+        }
         let dart = J(try JSONParser.parse(text))["categories"].array
-        guard !dart.isEmpty, let data = try await launch(scenario) else { return }
+        #expect(!dart.isEmpty, "\(path): Dart holds no categories after init")
+        // Swift refuses to launch the blocked legacy scenarios Dart migrates partially.
+        guard let data = try await launch(scenario) else { return }
         let swift = data.categoryRows.compactMap(\.record)
         #expect(swift.count == dart.count, "\(path) count")
         for (s, d) in zip(swift, dart) {

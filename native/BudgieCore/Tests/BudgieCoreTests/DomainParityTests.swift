@@ -153,7 +153,11 @@ struct DomainParityTests {
         let scenario = try Scenario(url)
         let expected = try loadExpected(url)
         let dart = expected["appAfterGenerate"]
-        guard dart.value != nil else { return }  // Dart could not launch either (read error)
+        guard dart.value != nil else {
+            // Dart could not launch either (read error): only this scenario has no Dart data.
+            if path != "store/primary_is_directory" { Issue.record("\(path): no appAfterGenerate in expected.json") }
+            return
+        }
         if blockedLegacyScenarioNames.contains(url.lastPathComponent), path.hasPrefix("legacy/") {
             // Swift deliberately refuses the partial migration Dart performs.
             let before = scenario.preferences.all
