@@ -21,20 +21,11 @@ public struct CategoryInfo: Hashable, Sendable, Identifiable {
             case .some(let icon) = Read.optionalString(object, "iconIdentifier"),
             case .some(let color) = Read.optionalString(object, "colorToken")
         else { return nil }
-        let sortOrder: Int
-        switch object["sortOrder"] {
-        case nil, .null?: sortOrder = 0
-        case .number(let n)?: sortOrder = Int(DartNumbers.toInt(n.doubleValue, lexeme: n))
-        default: return nil
-        }
-        func optionalBool(_ key: String) -> Bool?? {
-            switch object[key] {
-            case nil, .null?: return .some(nil)
-            case .bool(let b)?: return .some(b)
-            default: return nil
-            }
-        }
-        guard case .some(let archived) = optionalBool("isArchived"), case .some(let builtIn) = optionalBool("isBuiltIn") else {
+        guard case .some(let storedSortOrder) = Read.optionalNumber(object, "sortOrder") else { return nil }
+        let sortOrder = storedSortOrder ?? 0
+        guard case .some(let archived) = Read.optionalBool(object, "isArchived"),
+            case .some(let builtIn) = Read.optionalBool(object, "isBuiltIn")
+        else {
             return nil
         }
         return CategoryInfo(

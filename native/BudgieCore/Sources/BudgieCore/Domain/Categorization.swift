@@ -59,34 +59,14 @@ public struct CategorizationRuleRecord: Identifiable, Hashable, Sendable {
         guard case .some(let id) = Read.optionalString(object, "id") else { return nil }
         guard case .some(let pattern) = Read.optionalString(object, "merchantPattern") else { return nil }
         guard case .some(let typeName) = Read.optionalString(object, "transactionType") else { return nil }
-        func optionalNumber(_ key: String) -> Double?? {
-            switch object[key] {
-            case nil, .null?: return .some(nil)
-            case .number(let n)?: return .some(n.doubleValue)
-            default: return nil
-            }
-        }
-        guard case .some(let minimum) = optionalNumber("minimumAmount") else { return nil }
-        guard case .some(let maximum) = optionalNumber("maximumAmount") else { return nil }
+        guard case .some(let minimum) = Read.optionalDouble(object, "minimumAmount") else { return nil }
+        guard case .some(let maximum) = Read.optionalDouble(object, "maximumAmount") else { return nil }
         guard case .some(let category) = Read.optionalString(object, "category") else { return nil }
-        var tagIds: [String] = []
-        switch object["tagIds"] {
-        case nil, .null?: break
-        case .array(let items)?: tagIds = items.compactMap(\.stringValue)
-        default: return nil
-        }
-        let priority: Int
-        switch object["priority"] {
-        case nil, .null?: priority = 0
-        case .number(let n)?: priority = Int(DartNumbers.toInt(n.doubleValue, lexeme: n))
-        default: return nil
-        }
-        let isEnabled: Bool
-        switch object["isEnabled"] {
-        case nil, .null?: isEnabled = true
-        case .bool(let b)?: isEnabled = b
-        default: return nil
-        }
+        guard let tagIds = Read.stringArray(object, "tagIds") else { return nil }
+        guard case .some(let storedPriority) = Read.optionalNumber(object, "priority") else { return nil }
+        let priority = storedPriority ?? 0
+        guard case .some(let enabledFlag) = Read.optionalBool(object, "isEnabled") else { return nil }
+        let isEnabled = enabledFlag ?? true
         let resolvedID = id ?? newID()
         if id == nil { object["id"] = .string(resolvedID) }
         // `matchType` accepts any JSON value; an unknown one is `contains`.

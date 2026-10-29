@@ -38,6 +38,58 @@ enum Read {
         object[key]?.numberValue?.doubleValue
     }
 
+    /// `x as bool?`: .some(nil) for missing/null, nil (failure) for another type.
+    static func optionalBool(_ object: JSONObject, _ key: String) -> Bool?? {
+        switch object[key] {
+        case nil, .null?: return .some(nil)
+        case .bool(let b)?: return .some(b)
+        default: return nil
+        }
+    }
+
+    /// `x as int?` (strict: a number with a fractional lexeme fails).
+    static func optionalInt(_ object: JSONObject, _ key: String) -> Int?? {
+        switch object[key] {
+        case nil, .null?: return .some(nil)
+        case .number(let n)? where n.isDartInt: return .some(n.intValue.map { Int($0) })
+        default: return nil
+        }
+    }
+
+    /// `(x as num?)?.toInt()`: any number, converted as Dart's `toInt`.
+    static func optionalNumber(_ object: JSONObject, _ key: String) -> Int?? {
+        switch object[key] {
+        case nil, .null?: return .some(nil)
+        case .number(let n)?: return .some(Int(DartNumbers.toInt(n.doubleValue, lexeme: n)))
+        default: return nil
+        }
+    }
+
+    /// `(x as num?)?.toDouble()`.
+    static func optionalDouble(_ object: JSONObject, _ key: String) -> Double?? {
+        switch object[key] {
+        case nil, .null?: return .some(nil)
+        case .number(let n)?: return .some(n.doubleValue)
+        default: return nil
+        }
+    }
+
+    /// A lenient date: nil for a missing, non-string, empty or unparseable value.
+    static func optionalDate(_ object: JSONObject, _ key: String, _ calendar: DartCalendar) -> DartDateTime? {
+        guard let text = object[key]?.stringValue, !text.isEmpty else { return nil }
+        return calendar.tryParse(text)
+    }
+
+    /// A list of strings (non-strings dropped): [] for missing/null, nil
+    /// (failure) for another type.
+    static func stringArray(_ object: JSONObject, _ key: String) -> [String]? {
+        switch object[key] {
+        case nil, .null?: return []
+        case .array(let items)?: return items.compactMap(\.stringValue)
+        default: return nil
+        }
+    }
+
     /// Dart `DateTime.parse(x)` where x must be a String.
     static func parsedDate(_ object: JSONObject, _ key: String, _ calendar: DartCalendar) -> DartDateTime? {
         guard let text = object[key]?.stringValue else { return nil }
@@ -72,18 +124,9 @@ public struct TransactionRecord: Identifiable, Hashable, Sendable {
         guard let amount = Read.num(object, "amount") else { return nil }
         guard let category = Read.requiredString(object, "category") else { return nil }
         guard case .some(let templateID) = Read.optionalString(object, "recurringTemplateId") else { return nil }
-        var tagIds: [String] = []
-        switch object["tagIds"] {
-        case nil, .null?: break
-        case .array(let items)?: tagIds = items.compactMap(\.stringValue)
-        default: return nil
-        }
-        func optionalDate(_ key: String) -> DartDateTime? {
-            guard let text = object[key]?.stringValue else { return nil }
-            return calendar.tryParse(text)
-        }
-        let createdAt = optionalDate("createdAt") ?? date
-        let updatedAt = optionalDate("updatedAt") ?? createdAt
+        guard let tagIds = Read.stringArray(object, "tagIds") else { return nil }
+        let createdAt = Read.optionalDate(object, "createdAt", calendar) ?? date
+        let updatedAt = Read.optionalDate(object, "updatedAt", calendar) ?? createdAt
         let validID = id.map { !DartString.trim($0).isEmpty } ?? false
         return TransactionRecord(
             id: validID ? id! : newID(),
@@ -249,21 +292,10 @@ public struct RecurringTemplate: Identifiable, Hashable, Sendable {
         guard let patternName = object["pattern"]?.stringValue, let pattern = RecurrencePattern(rawValue: patternName) else { return nil }
         guard let start = Read.parsedDate(object, "startDate", calendar) else { return nil }
         guard let next = Read.parsedDate(object, "nextOccurrence", calendar) else { return nil }
-        func optionalInt(_ key: String) -> Int?? {
-            switch object[key] {
-            case nil, .null?: return .some(nil)
-            case .number(let n)? where n.isDartInt: return .some(n.intValue.map { Int($0) })
-            default: return nil
-            }
-        }
-        guard case .some(let dayOfMonth) = optionalInt("dayOfMonth") else { return nil }
-        guard case .some(let dayOfWeek) = optionalInt("dayOfWeek") else { return nil }
-        let isActive: Bool
-        switch object["isActive"] {
-        case nil, .null?: isActive = true
-        case .bool(let b)?: isActive = b
-        default: return nil
-        }
+        guard case .some(let dayOfMonth) = Read.optionalInt(object, "dayOfMonth") else { return nil }
+        guard case .some(let dayOfWeek) = Read.optionalInt(object, "dayOfWeek") else { return nil }
+        guard case .some(let activeFlag) = Read.optionalBool(object, "isActive") else { return nil }
+        let isActive = activeFlag ?? true
         return RecurringTemplate(
             id: id ?? newID(), type: object["type"]?.stringValue == "expense" ? .expense : .income,
             description: description, amount: number.doubleValue, category: category, pattern: pattern,
@@ -538,10 +570,6 @@ public struct SavingsGoalRecord: Identifiable, Hashable, Sendable {
             default: return 0
             }
         }
-        func readDate(_ key: String) -> DartDateTime? {
-            guard let text = object[key]?.stringValue, !text.isEmpty else { return nil }
-            return calendar.tryParse(text)
-        }
         let trimmed = DartString.trim(rawName ?? "")
         let target = readDouble("targetAmount")
         let current = readDouble("currentAmount")
@@ -550,8 +578,9 @@ public struct SavingsGoalRecord: Identifiable, Hashable, Sendable {
         return SavingsGoalRecord(
             id: resolvedID, name: trimmed.isEmpty ? "Savings Goal" : trimmed,
             targetAmount: target < 0 ? 0 : target, currentAmount: current < 0 ? 0 : current,
-            targetDate: readDate("targetDate") ?? now, createdAt: readDate("createdAt") ?? now,
-            completedAt: readDate("completedAt"), raw: object)
+            targetDate: Read.optionalDate(object, "targetDate", calendar) ?? now,
+            createdAt: Read.optionalDate(object, "createdAt", calendar) ?? now,
+            completedAt: Read.optionalDate(object, "completedAt", calendar), raw: object)
     }
 
     public var remainingAmount: Double {
