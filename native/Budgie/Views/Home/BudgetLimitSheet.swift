@@ -65,7 +65,7 @@ struct BudgetLimitSheet: View {
         let canSave = !saving && limit != nil
         return VStack(alignment: .leading, spacing: 0) {
             header
-            field.padding(.top, 24)
+            field.padding(.top, Metrics.spacingL)
             VStack(spacing: 12) {
                 PillButton(title: "Save", filled: true, height: Metrics.pillButtonHeight, loading: saving, action: save)
                     .disabled(!canSave)
@@ -81,7 +81,7 @@ struct BudgetLimitSheet: View {
                     .accessibilityIdentifier("budgets.limit.remove")
                 }
             }
-            .padding(.top, 24)
+            .padding(.top, Metrics.spacingL)
         }
         // 12 + the chrome's 19pt handle inset.
         .padding(EdgeInsets(top: 12, leading: Metrics.pageHorizontal, bottom: 16, trailing: Metrics.pageHorizontal))
@@ -117,7 +117,7 @@ struct BudgetLimitSheet: View {
     private var header: some View {
         HStack(spacing: 14) {
             IconTile(category: model.categoryInfo(named: category, type: .expense), size: 44)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
                 Text(category)
                     .textStyle(.sheetTitle)
                     .foregroundStyle(BudgieColor.textPrimary)
@@ -147,7 +147,7 @@ struct BudgetLimitSheet: View {
             Text(Self.helper)
                 .textStyle(.rowSubtitle)
                 .foregroundStyle(BudgieColor.textSecondary)
-                .padding(.horizontal, 4)
+                .padding(.horizontal, Metrics.spacingXS)
         }
     }
 

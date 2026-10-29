@@ -218,12 +218,12 @@ private struct FlowChip: View {
                     .foregroundStyle(BudgieColor.textPrimary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.3)
-                    .padding(.top, 8)
+                    .padding(.top, Metrics.spacingS)
                 Text(HomeSummary.deltaLabel(delta: delta, previousMonthName: previousMonthName))
                     .textStyle(.rowSubtitle)
                     .foregroundStyle(deltaColor)
                     .singleLine()
-                    .padding(.top, 2)
+                    .padding(.top, Metrics.spacingXXS)
                 Sparkline(values: trend, color: line)
                     .frame(height: 28)
                     .padding(.top, 10)
@@ -282,7 +282,7 @@ private struct SafeToSpendCard: View {
             onTap()
         } label: {
             HStack(spacing: 14) {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: Metrics.spacingXS) {
                     Text(card.title)
                         .textStyle(Self.titleText)
                         .foregroundStyle(BudgieColor.featureSecondary)
@@ -338,15 +338,15 @@ private struct RecentActivityCard: View {
                     .font(.system(size: 22, weight: .medium))
                     .foregroundStyle(BudgieColor.accent)
                     .frame(width: 48, height: 48)
-                    .background(BudgieColor.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .background(BudgieColor.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: Metrics.radiusL, style: .continuous))
                     .accessibilityHidden(true)
                 Text("No transactions yet.")
                     .textStyle(Self.empty)
                     .foregroundStyle(BudgieColor.textSecondary)
                     .multilineTextAlignment(.center)
             }
-            .padding(.vertical, 24)
-            .padding(.horizontal, 24)
+            .padding(.vertical, Metrics.spacingL)
+            .padding(.horizontal, Metrics.spacingL)
             .frame(maxWidth: .infinity)
             .overlay(shape.strokeBorder(BudgieColor.textTertiary.opacity(0.6), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])))
             .accessibilityElement(children: .combine)

@@ -175,7 +175,7 @@ struct RecurringFormView: View {
         .frame(height: 90)
         .clipShape(shape)
         .background(BudgieColor.chipSurface, in: shape)
-        .overlay(shape.strokeBorder(BudgieColor.border, lineWidth: Metrics.borderMedium))
+        .overlay(shape.strokeBorder(BudgieColor.cardBorder, lineWidth: Metrics.borderMedium))
     }
 
     private var patternWheel: some View {

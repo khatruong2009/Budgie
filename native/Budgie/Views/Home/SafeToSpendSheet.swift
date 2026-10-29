@@ -53,10 +53,10 @@ struct SafeToSpendSheet: View {
                                     ? BudgieColor.textSecondary : index < 2 ? BudgieColor.income : BudgieColor.textPrimary)
                         }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 2)
+                    .padding(.horizontal, Metrics.spacingM)
+                    .padding(.vertical, Metrics.spacingXXS)
                 }
-                .padding(.top, 16)
+                .padding(.top, Metrics.spacingM)
                 Text(sheet.footer)
                     .textStyle(.rowSubtitle)
                     .foregroundStyle(BudgieColor.textSecondary)

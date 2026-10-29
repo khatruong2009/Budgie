@@ -257,7 +257,7 @@ private struct TransactionRow: View {
         Button(action: onTap) {
             HStack(spacing: 12) {
                 IconTile(category: info)
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
                     HStack(spacing: 6) {
                         Text(record.description)
                             .textStyle(.rowTitle)

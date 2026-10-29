@@ -62,7 +62,7 @@ struct AccountEditorDialog: View {
             // insets are inside the scroll view so the focused field's 2pt
             // ring is not clipped by it.
             DialogScroll {
-                VStack(spacing: 16) {
+                VStack(spacing: Metrics.spacingM) {
                     TypePills(type: $type) { typeTaps += 1 }
                     monthField
                     BudgieField(
@@ -108,7 +108,7 @@ struct AccountEditorDialog: View {
     private var banner: some View {
         HStack(spacing: 0) {
             IconTile(symbol: type == .asset ? "arrow.up.right" : "arrow.down.left", color: accent, size: 48, iconSize: 24)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
                 Text(isEditing ? "Edit account" : "Add account")
                     .textStyle(.sheetTitle)
                     .foregroundStyle(BudgieColor.textPrimary)
@@ -118,7 +118,7 @@ struct AccountEditorDialog: View {
                     .foregroundStyle(BudgieColor.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.leading, 16)
+            .padding(.leading, Metrics.spacingM)
             Button(action: dismiss) {
                 Image(systemName: "xmark")
                     .font(.system(size: 13, weight: .semibold))
@@ -148,7 +148,7 @@ struct AccountEditorDialog: View {
     // MARK: - Balance month
 
     private var monthField: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: Metrics.spacingS) {
             DateTile(label: "Balance month", value: DartDateFormat.yMMMM(entryMonth), trailingSymbol: "chevron.down") {
                 pickingMonth.toggle()
             }
@@ -252,7 +252,7 @@ private struct TypePills: View {
     let onTap: () -> Void
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: Metrics.spacingS) {
             pill(.asset, "Asset", symbol: "arrow.up.right", color: BudgieColor.income)
             pill(.liability, "Liability", symbol: "arrow.down.left", color: BudgieColor.danger)
         }
@@ -308,7 +308,7 @@ private struct BalanceMonthGrid: View {
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
-        VStack(spacing: 8) {
+        VStack(spacing: Metrics.spacingS) {
             HStack(spacing: 0) {
                 stepButton("chevron.left", label: "Previous year", enabled: year > 1970) { year -= 1 }
                 Text(DartDateFormat.y(calendar.date(year)))
@@ -319,7 +319,7 @@ private struct BalanceMonthGrid: View {
                     .accessibilityLabel("Year \(year)")
                 stepButton("chevron.right", label: "Next year", enabled: year < now.year) { year += 1 }
             }
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: Metrics.spacingS), count: 4), spacing: Metrics.spacingS) {
                 ForEach(1...12, id: \.self) { month in
                     monthButton(calendar.date(year, month))
                 }

@@ -139,7 +139,7 @@ final class ColorContrastTests: XCTestCase {
     /// value written as 0xRRGGBB would read its red byte as the alpha.
     func testTranslucentTokensAreVisible() {
         let tokens: [(String, Color)] = [
-            ("cardBorder", BudgieColor.cardBorder), ("hairline", BudgieColor.hairline), ("border", BudgieColor.border),
+            ("cardBorder", BudgieColor.cardBorder), ("hairline", BudgieColor.hairline),
             ("selectionFill", BudgieColor.selectionFill), ("selectionBorder", BudgieColor.selectionBorder),
             ("featureBorder", BudgieColor.featureBorder), ("featureControl", BudgieColor.featureControl),
             ("scrim", BudgieColor.scrim),

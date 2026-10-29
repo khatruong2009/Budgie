@@ -99,7 +99,7 @@ private struct NetCashFlowBarColumn: View {
                     .lineLimit(1)
                     .fixedSize()
                     .padding(.horizontal, 9)
-                    .padding(.vertical, 4)
+                    .padding(.vertical, Metrics.spacingXS)
                     .background(color, in: Capsule())
                     .frame(width: barWidth * 4)
                     .offset(x: -barWidth * 1.5, y: bar.badgeTop)

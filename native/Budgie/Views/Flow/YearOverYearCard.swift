@@ -31,12 +31,12 @@ struct YearOverYearCard: View {
                 YearOverYearRow(
                     label: "Expenses", row: yoy.expenses,
                     deltaColor: yoy.expenseDeltaIsBad ? BudgieColor.danger : BudgieColor.income)
-                    .padding(.top, 16)
+                    .padding(.top, Metrics.spacingM)
                 HStack(spacing: 14) {
                     LegendDot(color: BudgieColor.accent, label: "This year")
                     LegendDot(color: BudgieColor.trackSecondary, label: "Last year")
                 }
-                .padding(.top, 16)
+                .padding(.top, Metrics.spacingM)
                 .accessibilityHidden(true)
             }
         }
@@ -59,7 +59,7 @@ private struct YearOverYearRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 8) {
+            HStack(spacing: Metrics.spacingS) {
                 Text(label)
                     .textStyle(Self.labelStyle)
                     .foregroundStyle(BudgieColor.textSecondary)
@@ -71,7 +71,7 @@ private struct YearOverYearRow: View {
             GlowProgressBar(value: row.thisYearFraction, height: 12, color: BudgieColor.accent)
                 .padding(.top, 6)
             GlowProgressBar(value: row.lastYearFraction, height: 12, color: BudgieColor.trackSecondary, track: BudgieColor.track)
-                .padding(.top, 4)
+                .padding(.top, Metrics.spacingXS)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(label)

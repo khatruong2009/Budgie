@@ -142,7 +142,7 @@ private struct BudgetTile: View {
                         .singleLine()
                 }
             }
-            .padding(16)
+            .padding(Metrics.spacingM)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(BudgieColor.card, in: shape)
             .overlay(shape.strokeBorder(BudgieColor.cardBorder, lineWidth: 1))
@@ -181,7 +181,7 @@ private struct AddBudgetButton: View {
             taps += 1
             action()
         } label: {
-            HStack(spacing: 8) {
+            HStack(spacing: Metrics.spacingS) {
                 Image(systemName: "plus").font(.system(size: 15, weight: .semibold)).foregroundStyle(BudgieColor.accent)
                 Text("Add a budget").textStyle(.rowTitle).foregroundStyle(BudgieColor.textPrimary)
             }
@@ -346,7 +346,7 @@ private struct BudgetCategoryTile: View {
         } label: {
             HStack(spacing: 12) {
                 IconTile(category: info)
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
                     Text(info.name).textStyle(.rowTitle).foregroundStyle(BudgieColor.textPrimary).lineLimit(1)
                     if budgeted, let limit {
                         Text("\(formatter.format(limit, decimalDigits: 0)) limit")

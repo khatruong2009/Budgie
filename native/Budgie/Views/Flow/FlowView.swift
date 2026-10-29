@@ -27,14 +27,14 @@ struct FlowView: View {
 
                 MetricStrip(metrics: CashFlowMath.metrics(window), formatter: formatter)
                     .padding(.horizontal, Metrics.pageHorizontal)
-                    .padding(.top, 24)
-                    .padding(.bottom, 16)
+                    .padding(.top, Metrics.spacingL)
+                    .padding(.bottom, Metrics.spacingM)
 
                 // Flutter keeps a 16pt gap on each side of the slot, so an
                 // empty slot leaves 32pt between the strip and the chart.
                 FlowInsightsSlot()
 
-                VStack(spacing: 16) {
+                VStack(spacing: Metrics.spacingM) {
                     NetCashFlowCard(window: window, selectedMonth: month, formatter: formatter) { entry in
                         sheet = .month(CashFlowMath.MonthDetail(entry: entry))
                     }
@@ -42,7 +42,7 @@ struct FlowView: View {
                     TrendCard(series: CashFlowMath.trendSeries(model.ledger, selectedMonth: month), formatter: formatter)
                 }
                 .padding(.horizontal, Metrics.pageHorizontal)
-                .padding(.top, 16)
+                .padding(.top, Metrics.spacingM)
 
                 VStack(alignment: .leading, spacing: 12) {
                     SectionHeader(title: "Transactions", link: "See all", linkAccessibilityLabel: "See all transactions") {
@@ -51,7 +51,7 @@ struct FlowView: View {
                     TransactionsPreviewCard(rows: model.ledger.recent(3), formatter: formatter) { page = .transactions }
                 }
                 .padding(.horizontal, Metrics.pageHorizontal)
-                .padding(.top, 16)
+                .padding(.top, Metrics.spacingM)
             }
             .padding(.bottom, Metrics.spacingL)
         }
@@ -196,7 +196,7 @@ private struct MetricChip: View {
 
     var body: some View {
         GlowCard(padding: 16, radius: Metrics.statCardRadius) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: Metrics.spacingS) {
                 Text(label)
                     .textStyle(.monoMetricLabel)
                     .foregroundStyle(BudgieColor.textSecondary)

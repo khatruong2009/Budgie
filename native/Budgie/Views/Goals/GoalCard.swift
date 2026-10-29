@@ -25,8 +25,8 @@ struct GoalCard: View {
 
     private var titleLayout: AnyLayout {
         dynamicTypeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4))
-            : AnyLayout(HStackLayout(spacing: 8))
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Metrics.spacingXS))
+            : AnyLayout(HStackLayout(spacing: Metrics.spacingS))
     }
 
     /// The saved amount.
@@ -48,9 +48,9 @@ struct GoalCard: View {
                 : nil,
             border: complete ? BudgieColor.income.opacity(0.30) : nil
         ) {
-            VStack(spacing: 16) {
+            VStack(spacing: Metrics.spacingM) {
                 summary(status: status, color: color)
-                HStack(spacing: 8) {
+                HStack(spacing: Metrics.spacingS) {
                     if complete {
                         Spacer(minLength: 0)
                     } else {
@@ -91,7 +91,7 @@ struct GoalCard: View {
                 PillChip(label: status.label, color: color, style: .badgeSmall)
                     .fixedSize()
             }
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: Metrics.spacingS) {
                 (Text(saved).font(Self.amountText.font()).foregroundStyle(BudgieColor.textPrimary)
                     + Text(tail).font(Self.amountTail.font()).foregroundStyle(BudgieColor.textSecondary))
                     .lineLimit(1)

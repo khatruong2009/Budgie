@@ -84,7 +84,7 @@ struct GoalFormDialog: View {
                 )
                 .accessibilityIdentifier("goals.form.submit")
             }
-            .padding(.top, 24)
+            .padding(.top, Metrics.spacingL)
         }
         .disabled(busy)
         .sheet(isPresented: $showingDatePicker) {
@@ -111,7 +111,7 @@ struct GoalFormDialog: View {
             }
             DateTile(label: "Target date", value: DartDateFormat.yMMMd(resolvedDate)) { showingDatePicker = true }
                 .accessibilityIdentifier("goals.form.date")
-                .padding(.top, 4)
+                .padding(.top, Metrics.spacingXS)
         }
     }
 

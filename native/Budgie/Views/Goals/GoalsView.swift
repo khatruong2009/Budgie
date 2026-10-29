@@ -93,7 +93,7 @@ struct GoalsView: View {
         let now = model.now
         VStack(spacing: 0) {
             GoalsSummaryCard(summary: model.savingsGoalsSummary, formatter: formatter)
-                .padding(.top, 24)
+                .padding(.top, Metrics.spacingL)
             // Keyed by id (Flutter's cards are unkeyed, so a re-sort moved
             // ring state between goals); a repeated id gets its occurrence.
             ForEach(goals.uniqueKeys(id: \.id), id: \.key) { item in
@@ -105,7 +105,7 @@ struct GoalsView: View {
                     onEdit: { present(.edit(goal)) },
                     onDelete: { present(.delete(goal)) }
                 )
-                .padding(.top, 16)
+                .padding(.top, Metrics.spacingM)
             }
         }
         .padding(.horizontal, Metrics.pageHorizontal)
@@ -283,7 +283,7 @@ struct GoalsSummaryCard: View {
                 Text(SavingsGoalText.summaryCaption(summary, formatter: formatter))
                     .textStyle(GoalText.caption)
                     .foregroundStyle(BudgieColor.featureSecondary)
-                    .padding(.top, 2)
+                    .padding(.top, Metrics.spacingXXS)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }

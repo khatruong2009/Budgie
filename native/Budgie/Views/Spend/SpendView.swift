@@ -181,13 +181,13 @@ extension SpendPaletteSlot {
     var color: Color {
         switch self {
         case .accent: BudgieColor.chartAccent
-        case .income: BudgieColor.chartIncome
-        case .danger: BudgieColor.chartDanger
-        case .warning: BudgieColor.chartWarning
+        case .income: BudgieColor.income
+        case .danger: BudgieColor.danger
+        case .warning: BudgieColor.warning
         case .info: BudgieColor.info
         case .pink: BudgieColor.pink
         case .chart(let index): BudgieColor.chartPalette[index % BudgieColor.chartPalette.count]
-        case .remainder: BudgieColor.donutRemainder
+        case .remainder: BudgieColor.trackSecondary
         }
     }
 }

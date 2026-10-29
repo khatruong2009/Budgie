@@ -112,7 +112,7 @@ struct RuleEditorDialog: View {
                     .opacity(canSubmit ? 1 : Metrics.opacityDisabled)
                     .accessibilityIdentifier("rules.editor.submit")
             }
-            .padding(.top, 24)
+            .padding(.top, Metrics.spacingL)
         }
         .disabled(busy)
         .budgieDialogDismissDisabled(busy)
@@ -165,7 +165,7 @@ struct RuleEditorDialog: View {
                         .textStyle(.caption)
                         .foregroundStyle(BudgieColor.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
-                        .padding(.horizontal, 4)
+                        .padding(.horizontal, Metrics.spacingXS)
                         .accessibilityIdentifier("rules.editor.anyTypeNote")
                 }
             }
@@ -193,7 +193,7 @@ struct RuleEditorDialog: View {
             Text("Tags")
                 .textStyle(.captionStrong)
                 .foregroundStyle(BudgieColor.textSecondary)
-                .padding(.leading, 4)
+                .padding(.leading, Metrics.spacingXS)
                 .accessibilityAddTraits(.isHeader)
             FlowLayout(spacing: Metrics.spacingS) {
                 // By position: foreign data can repeat a tag id.
@@ -416,7 +416,7 @@ private struct MenuField: View {
             Text(title)
                 .textStyle(.captionStrong)
                 .foregroundStyle(BudgieColor.textSecondary)
-                .padding(.leading, 4)
+                .padding(.leading, Metrics.spacingXS)
                 .accessibilityHidden(true)
             Button(action: tap) {
                 HStack(spacing: 10) {
@@ -488,7 +488,7 @@ private struct MenuField: View {
                                     .foregroundStyle(BudgieColor.textPrimary)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
-                            .padding(.horizontal, 16)
+                            .padding(.horizontal, Metrics.spacingM)
                             .frame(minHeight: rowHeight)
                             .contentShape(Rectangle())
                         }

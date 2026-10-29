@@ -119,13 +119,13 @@ struct WorthView: View {
                 WorthGrowthCard(
                     history: Array(model.netWorthHistory.reversed()), range: $range, calendar: calendar, formatter: formatter)
                     .padding(.horizontal, Metrics.pageHorizontal)
-                    .padding(.top, 24)
+                    .padding(.top, Metrics.spacingL)
                 WorthSplitCard(assets: assets, liabilities: liabilities, formatter: formatter)
                     .padding(.horizontal, Metrics.pageHorizontal)
-                    .padding(.top, 16)
+                    .padding(.top, Metrics.spacingM)
                 AccountsToggle(isAssetsTab: $isAssetsTab)
                     .padding(.horizontal, Metrics.pageHorizontal)
-                    .padding(.top, 24)
+                    .padding(.top, Metrics.spacingL)
                 WorthAccountsList(
                     entries: entries, month: month, isAssetsTab: isAssetsTab, formatter: formatter,
                     rowStats: { $0.rowStats(forMonth: month, categoryTotal: total, calendar: calendar) },
@@ -133,7 +133,7 @@ struct WorthView: View {
                     onEdit: { openEditor(entry: $0, type: $0.type) },
                     onDelete: { pendingDelete = $0 })
                     .padding(.horizontal, Metrics.pageHorizontal)
-                    .padding(.top, 16)
+                    .padding(.top, Metrics.spacingM)
             }
         }
     }
@@ -247,7 +247,7 @@ private struct DeltaPill: View {
         }
         .foregroundStyle(color)
         .padding(.horizontal, 14)
-        .padding(.vertical, 8)
+        .padding(.vertical, Metrics.spacingS)
         .background(color.opacity(0.12), in: Capsule())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(label.replacingOccurrences(of: " \u{00B7} ", with: ", "))
@@ -287,7 +287,7 @@ struct WorthSplitCard: View {
     }
 
     private func legend(_ label: String, _ amount: String, dot: Color, alignment: HorizontalAlignment) -> some View {
-        VStack(alignment: alignment, spacing: 4) {
+        VStack(alignment: alignment, spacing: Metrics.spacingXS) {
             HStack(spacing: 6) {
                 Circle().fill(dot).frame(width: 7, height: 7)
                 Text(label).textStyle(WorthStyle.label).foregroundStyle(BudgieColor.textSecondary)

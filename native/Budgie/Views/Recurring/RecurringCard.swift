@@ -70,7 +70,7 @@ struct RecurringCard: View {
             .fixedSize()
         return HStack(alignment: stacked ? .top : .center, spacing: 12) {
             tile
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
                 HStack(spacing: 6) {
                     Text(template.description)
                         .textStyle(.rowTitle)

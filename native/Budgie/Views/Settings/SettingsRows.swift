@@ -10,12 +10,12 @@ struct SettingsBrandCard: View {
     private static let taglineText = TextSpec(face: .gabaritoRegular, size: 13, height: 1.25, relativeTo: .footnote)
 
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: Metrics.spacingM) {
             Image("logo")
                 .resizable().scaledToFill()
                 .frame(width: 52, height: 52)
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            VStack(alignment: .leading, spacing: 2) {
+                .clipShape(RoundedRectangle(cornerRadius: Metrics.radiusL, style: .continuous))
+            VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
                 Text("Budgie")
                     .textStyle(Self.titleText)
                     .foregroundStyle(BudgieColor.featureText)
@@ -237,7 +237,7 @@ private struct SettingsRowText: View {
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
             Text(title)
                 .textStyle(.rowTitle)
                 .foregroundStyle(BudgieColor.textPrimary)

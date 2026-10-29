@@ -45,7 +45,7 @@ private struct FlowTransactionRow: View {
         } label: {
             HStack(spacing: 12) {
                 FlowCategoryTile(info: info, isIncome: isIncome)
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
                     HStack(spacing: 6) {
                         // Flutter shows a blank line for an empty description.
                         Text(record.description.isEmpty ? " " : record.description)

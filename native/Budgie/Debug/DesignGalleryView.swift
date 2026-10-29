@@ -123,7 +123,7 @@ struct DesignGalleryView: View {
                 ("accent", BudgieColor.accent), ("income", BudgieColor.income), ("danger", BudgieColor.danger),
                 ("warning", BudgieColor.warning), ("info", BudgieColor.info), ("pink", BudgieColor.pink),
                 ("cyan", BudgieColor.cyan), ("card", BudgieColor.card), ("chip", BudgieColor.chipSurface),
-                ("track", BudgieColor.track), ("track2", BudgieColor.trackSecondary), ("donut", BudgieColor.donutRemainder),
+                ("track", BudgieColor.track), ("track2", BudgieColor.trackSecondary),
             ]
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 6), spacing: 8) {
                 ForEach(swatches, id: \.0) { name, color in

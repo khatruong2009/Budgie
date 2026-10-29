@@ -17,10 +17,8 @@ enum BudgieColor {
     static let pillBorder = overlay(dark: 0.08, light: 0.08)
     static let cardBorder = dynamic(light: 0xFFDC_D4C4, dark: 0x12FF_FFFF, alpha: true)
     static let hairline = dynamic(light: 0xFFE6_DFD1, dark: 0x0FFF_FFFF, alpha: true)
-    static let border = dynamic(light: 0xFFDC_D4C4, dark: 0x12FF_FFFF, alpha: true)
     static let track = dynamic(light: 0xE4DDCE, dark: 0x161B24)
     static let trackSecondary = dynamic(light: 0xCFC6B4, dark: 0x2A3140)
-    static let donutRemainder = dynamic(light: 0xCFC6B4, dark: 0x2A3140)
     /// Text fields, form rows and the date tile, on a card or sheet.
     static let fieldFill = dynamic(light: 0xF3EFE6, dark: 0x0B0E14)
     /// The dimmed backdrop behind a dialog: ink 38% light, black 55% dark.
@@ -118,9 +116,6 @@ enum BudgieColor {
 
     // The Spend donut's rank palette: the slices are graphics, not text.
     static let chartAccent = purple
-    static let chartIncome = income
-    static let chartDanger = danger
-    static let chartWarning = warning
 
     /// A category `colorToken` (`category_settings_page.dart` `_tokenColor`);
     /// unknown tokens use the accent.

@@ -31,7 +31,7 @@ struct HomeMonthPanel: View {
                 Hairline().padding(.horizontal, Metrics.spacingM)
                 MonthWheel()
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, Metrics.spacingS)
         }
         .padding(EdgeInsets(top: 12, leading: Metrics.pageHorizontal, bottom: 0, trailing: Metrics.pageHorizontal))
     }
@@ -55,7 +55,7 @@ private struct YearStepper: View {
                 .accessibilityIdentifier("home.monthPanel.year")
             button("chevron.right", label: "Next year", identifier: "home.monthPanel.nextYear") { step(month, by: 1) }
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, Metrics.spacingS)
         .sensoryFeedback(.impact(weight: .light), trigger: taps)
     }
 

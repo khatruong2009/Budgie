@@ -65,7 +65,7 @@ private struct MonthChip: View {
                 .padding(.horizontal, 16)
                 .frame(minHeight: 44)
                 .background(isSelected ? BudgieColor.selectionFill : .clear, in: Capsule())
-                .overlay(Capsule().strokeBorder(isSelected ? BudgieColor.selectionBorder : BudgieColor.border, lineWidth: 1))
+                .overlay(Capsule().strokeBorder(isSelected ? BudgieColor.selectionBorder : BudgieColor.cardBorder, lineWidth: 1))
                 .contentShape(Capsule())
         }
         .buttonStyle(.plain)

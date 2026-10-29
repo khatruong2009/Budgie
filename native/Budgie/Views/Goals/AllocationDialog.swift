@@ -44,7 +44,7 @@ struct AllocationDialog: View {
                         title: "Allocation amount", text: $text, prompt: "0.00",
                         symbol: AmountInput.currencySymbolName(formatter), keyboard: .decimalPad,
                         error: error, autofocus: true)
-                    FlowLayout(spacing: 8) {
+                    FlowLayout(spacing: Metrics.spacingS) {
                         chip(formatter.format(25), spoken: "Fill amount \(formatter.format(25))", fill: 25, identifier: "goals.allocate.chip.25")
                         chip(formatter.format(100), spoken: "Fill amount \(formatter.format(100))", fill: 100, identifier: "goals.allocate.chip.100")
                         if goal.remainingAmount > 0 {
@@ -60,7 +60,7 @@ struct AllocationDialog: View {
                 PillButton(title: "Add money", symbol: "plus", filled: true, height: 44, action: submit)
                     .accessibilityIdentifier("goals.allocate.submit")
             }
-            .padding(.top, 24)
+            .padding(.top, Metrics.spacingL)
         }
         .disabled(busy)
         .sensoryFeedback(.selection, trigger: chipTaps)

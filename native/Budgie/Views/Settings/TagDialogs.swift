@@ -113,7 +113,7 @@ struct DeleteTagDialog: View {
                 PillButton(title: "Delete", color: BudgieColor.danger, filled: true, height: 44, action: delete)
                     .accessibilityIdentifier("tags.delete.confirm")
             }
-            .padding(.top, 24)
+            .padding(.top, Metrics.spacingL)
         }
         .disabled(busy)
         .budgieDialogDismissDisabled(busy)

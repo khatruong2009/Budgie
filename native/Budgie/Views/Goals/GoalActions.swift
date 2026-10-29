@@ -27,7 +27,7 @@ struct GoalActionsSheet: View {
             GoalActionTile(title: "Delete goal", symbol: "trash", color: BudgieColor.danger, action: onDelete)
                 .accessibilityIdentifier("goals.actions.delete")
         }
-        .padding(8)
+        .padding(Metrics.spacingS)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("goals.actions")
     }
@@ -95,7 +95,7 @@ struct DeleteGoalDialog: View {
                     .accessibilityIdentifier("goals.delete.confirm")
             }
             .disabled(busy)
-            .padding(.top, 24)
+            .padding(.top, Metrics.spacingL)
         }
     }
 }

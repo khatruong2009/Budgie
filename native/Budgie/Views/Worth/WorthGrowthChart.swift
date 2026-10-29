@@ -23,9 +23,9 @@ struct WorthGrowthCard: View {
                 // for both (the largest text sizes).
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: 0) { growthTitle.frame(maxWidth: .infinity, alignment: .leading); growthRange }
-                    VStack(alignment: .leading, spacing: 8) { growthTitle; growthRange }
+                    VStack(alignment: .leading, spacing: Metrics.spacingS) { growthTitle; growthRange }
                 }
-                .padding(.horizontal, 4)
+                .padding(.horizontal, Metrics.spacingXS)
                 if points.isEmpty {
                     Text("Add balance updates to build your growth chart.")
                         .textStyle(WorthStyle.note)
@@ -86,7 +86,7 @@ struct WorthGrowthCard: View {
                     .lineLimit(1)
             }
         }
-        .padding(.horizontal, 4)
+        .padding(.horizontal, Metrics.spacingXS)
         .accessibilityHidden(true)
     }
 }
@@ -295,15 +295,15 @@ private struct HoverCard: View {
     private static let snapshot = TextSpec(face: .monoMedium, size: 9, tracking: 1, relativeTo: .caption2)
 
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: 16, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: Metrics.radiusL, style: .continuous)
         VStack(alignment: .leading, spacing: 0) {
             Text(NetWorthText.hoverTitle(point)).textStyle(Self.title).foregroundStyle(BudgieColor.textSecondary)
             Text(formatter.formatSigned(point.netWorth))
                 .textStyle(.amount)
                 .foregroundStyle(point.netWorth >= 0 ? BudgieColor.income : BudgieColor.danger)
-                .padding(.top, 4)
+                .padding(.top, Metrics.spacingXS)
             row("Assets", point.assets, dot: BudgieColor.income).padding(.top, 6)
-            row("Liabilities", point.liabilities, dot: BudgieColor.danger).padding(.top, 2)
+            row("Liabilities", point.liabilities, dot: BudgieColor.danger).padding(.top, Metrics.spacingXXS)
             if point.granularity == .month {
                 Text("Monthly snapshot")
                     .textStyle(Self.snapshot)

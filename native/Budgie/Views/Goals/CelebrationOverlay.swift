@@ -71,7 +71,7 @@ struct CelebrationOverlay: View {
                     .textStyle(.sheetTitle)
                     .foregroundStyle(BudgieColor.textPrimary)
                     .multilineTextAlignment(.center)
-                    .padding(.top, 16)
+                    .padding(.top, Metrics.spacingM)
                 Text(name)
                     .textStyle(GoalText.caption)
                     .foregroundStyle(BudgieColor.textSecondary)

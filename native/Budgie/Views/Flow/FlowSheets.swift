@@ -19,7 +19,7 @@ struct RangeSheet: View {
                 .textStyle(.eyebrow)
                 .foregroundStyle(BudgieColor.textSecondary)
                 .accessibilityAddTraits(.isHeader)
-                .padding(.horizontal, 4)
+                .padding(.horizontal, Metrics.spacingXS)
             OptionListCard(count: options.count) { index in
                 OptionRow(
                     title: CashFlowMath.rangeLabel(options[index]), selected: options[index] == selected,

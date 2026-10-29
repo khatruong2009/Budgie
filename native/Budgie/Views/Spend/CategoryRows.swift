@@ -70,7 +70,7 @@ private struct CategoryRow: View {
             in: RoundedRectangle(cornerRadius: 18, style: .continuous)
         )
         .motion(Motion.easeOut(0.2), value: highlighted)
-        .padding(2)
+        .padding(Metrics.spacingXXS)
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(record.name), \(amount), \(subtitle)")
@@ -92,7 +92,7 @@ private struct TailRow: View {
             SpendRowLine(
                 tile: IconTile(symbol: "ellipsis", color: BudgieColor.textSecondary, background: BudgieColor.hairline),
                 title: tail.title, subtitle: tail.subtitle, amount: amount)
-            GlowProgressBar(value: tail.barFraction, height: 6, color: BudgieColor.donutRemainder)
+            GlowProgressBar(value: tail.barFraction, height: 6, color: BudgieColor.trackSecondary)
                 .padding(.leading, SpendRowLine.textInset)
                 .accessibilityHidden(true)
         }
@@ -108,7 +108,7 @@ private struct TailRow: View {
 /// `_buildCollapseRow` (:465-497): centred accent "Show less" and a chevron.
 private struct CollapseRow: View {
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: Metrics.spacingXS) {
             Text("Show less").textStyle(.monoLink)
             Image(systemName: "chevron.up")
                 .font(.system(size: 12, weight: .semibold))
@@ -138,7 +138,7 @@ private struct SpendRowLine: View {
     var body: some View {
         HStack(spacing: 0) {
             tile
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
                 Text(title)
                     .textStyle(.rowTitle)
                     .foregroundStyle(BudgieColor.textPrimary)
@@ -150,7 +150,7 @@ private struct SpendRowLine: View {
             }
             .frame(minWidth: 56, maxWidth: .infinity, alignment: .leading)
             .padding(.leading, 12)
-            .padding(.trailing, 8)
+            .padding(.trailing, Metrics.spacingS)
             // First pick of the row's width, so an ordinary amount is never
             // cut; one wider than the row truncates instead of widening the
             // page (Flutter overflows the screen there).

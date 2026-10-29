@@ -195,7 +195,7 @@ struct FlowTransactionsView: View {
     private func resultsHeader(_ results: FilterResults, total: Int, formatter: MoneyFormatter) -> some View {
         let summary = results.summary
         return VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: Metrics.spacingS) {
                 Text("Results")
                     .textStyle(.sectionHeader)
                     .foregroundStyle(BudgieColor.textPrimary)
@@ -206,8 +206,8 @@ struct FlowTransactionsView: View {
                     .foregroundStyle(BudgieColor.textSecondary)
                     .accessibilityIdentifier("flow.all.count")
             }
-            .padding(.horizontal, 4)
-            ChipWrap(spacing: 8) {
+            .padding(.horizontal, Metrics.spacingXS)
+            ChipWrap(spacing: Metrics.spacingS) {
                 PillChip(label: summary.incomeText(formatter), color: BudgieColor.income)
                 PillChip(label: summary.expensesText(formatter), color: BudgieColor.danger)
                 PillChip(label: summary.netText(formatter), color: summary.netIsPositive ? BudgieColor.income : BudgieColor.danger)
@@ -254,7 +254,7 @@ struct FlowTransactionsView: View {
                 .padding(.top, isFirst ? Metrics.spacingM : 0)
             }
             if pagination.hasMore(count) {
-                VStack(spacing: 8) {
+                VStack(spacing: Metrics.spacingS) {
                     Text(TransactionFilter.showingText(visible: visible.count, matches: count))
                         .textStyle(Self.smallText)
                         .foregroundStyle(BudgieColor.textSecondary)
@@ -327,7 +327,7 @@ private struct FiltersCard: View {
     var body: some View {
         GlowCard {
             VStack(alignment: .leading, spacing: 0) {
-                HStack(spacing: 8) {
+                HStack(spacing: Metrics.spacingS) {
                     Text("Filters")
                         .textStyle(.cardTitle)
                         .foregroundStyle(BudgieColor.textPrimary)
@@ -399,7 +399,7 @@ private struct FiltersCard: View {
     /// 'All tags' then one chip per tag in provider order; a selected tag's
     /// chip clears the filter when tapped again. No haptic (Flutter).
     private var tagChips: some View {
-        ChipWrap(spacing: 8) {
+        ChipWrap(spacing: Metrics.spacingS) {
             tagChip("All tags", selected: filter.tagId == nil) { filter.tagId = nil }
             ForEach(tags) { tag in
                 let selected = filter.tagId.map { $0.utf16.elementsEqual(tag.id.utf16) } ?? false
@@ -420,7 +420,7 @@ private struct FiltersCard: View {
             }
             .foregroundStyle(selected ? BudgieColor.selectionText : BudgieColor.textSecondary)
             .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.vertical, Metrics.spacingS)
             .background(selected ? BudgieColor.selectionFill : Color.clear, in: Capsule())
             .overlay(Capsule().strokeBorder(selected ? BudgieColor.selectionBorder : BudgieColor.cardBorder, lineWidth: 1))
             // The chip draws about 34pt tall; the tap area is 44.
@@ -534,7 +534,7 @@ private struct FilterButton: View {
                     .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(BudgieColor.textSecondary)
                     .frame(width: 18)
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
                     Text(label).textStyle(Self.labelText).foregroundStyle(BudgieColor.textSecondary)
                     Text(value)
                         .textStyle(.rowTitle)
@@ -543,11 +543,11 @@ private struct FilterButton: View {
                         .truncationMode(.tail)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.leading, 8)
+                .padding(.leading, Metrics.spacingS)
                 Image(systemName: "chevron.down")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(BudgieColor.textSecondary)
-                    .padding(.leading, 4)
+                    .padding(.leading, Metrics.spacingXS)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
@@ -583,7 +583,7 @@ private struct AmountField: View {
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: Metrics.radiusL, style: .continuous)
         let floated = focused || !text.isEmpty
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
             if floated {
                 Text(label)
                     .textStyle(Self.floatingLabel)
@@ -617,7 +617,7 @@ private struct AmountField: View {
             }
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.vertical, Metrics.spacingS)
         .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
         .background(FocusArea(shape: shape) { focused = true })
         .overlay(
@@ -703,7 +703,7 @@ private struct ResultRow: View {
         Button(action: action) {
             HStack(spacing: 12) {
                 FlowCategoryTile(info: info, isIncome: isIncome)
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
                     HStack(spacing: 6) {
                         // A blank description keeps its line, as in Flutter.
                         Text(record.description.isEmpty ? " " : record.description)

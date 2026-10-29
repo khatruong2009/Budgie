@@ -56,7 +56,7 @@ struct DataImportDialog: View {
                         .accessibilityIdentifier("\(identifier).confirm")
                 }
             }
-            .padding(.top, 24)
+            .padding(.top, Metrics.spacingL)
         }
         .budgieDialogDismissDisabled(busy)
     }

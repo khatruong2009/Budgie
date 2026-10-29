@@ -65,7 +65,7 @@ struct CategoryEditorDialog: View {
                 PillButton(title: isNew ? "Add" : "Save", filled: true, height: 44, action: submit)
                     .accessibilityIdentifier("categories.editor.submit")
             }
-            .padding(.top, 24)
+            .padding(.top, Metrics.spacingL)
         }
         .disabled(busy)
         // The scrim (and its VoiceOver Dismiss) is inert while saving.
@@ -137,7 +137,7 @@ struct CategoryEditorDialog: View {
         Text(text)
             .textStyle(.captionStrong)
             .foregroundStyle(BudgieColor.textSecondary)
-            .padding(.leading, 4)
+            .padding(.leading, Metrics.spacingXS)
             .accessibilityAddTraits(.isHeader)
     }
 

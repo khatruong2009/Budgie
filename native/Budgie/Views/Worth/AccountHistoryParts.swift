@@ -41,8 +41,8 @@ struct AccountHistoryHeroCard: View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(spacing: 0) {
                     IconTile(symbol: isAsset ? "arrow.up.right" : "arrow.down.left", color: color, size: 48, iconSize: 24)
-                        .padding(.trailing, 16)
-                    VStack(alignment: .leading, spacing: 2) {
+                        .padding(.trailing, Metrics.spacingM)
+                    VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
                         Text("Balance history")
                             .textStyle(.cardTitle)
                             .foregroundStyle(BudgieColor.textPrimary)
@@ -58,7 +58,7 @@ struct AccountHistoryHeroCard: View {
                 Text("CURRENT BALANCE")
                     .textStyle(.eyebrow)
                     .foregroundStyle(BudgieColor.textSecondary)
-                    .padding(.top, 24)
+                    .padding(.top, Metrics.spacingL)
                 // `FittedBox(scaleDown)`: one line, shrunk to fit.
                 Text(balance)
                     .textStyle(.heroSmall)
@@ -68,14 +68,14 @@ struct AccountHistoryHeroCard: View {
                     .padding(.top, 6)
                 // `Wrap(spacing: 8, runSpacing: 8)` of at most three chips.
                 ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 8) { chipViews(chips[...]) }
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(spacing: 8) { chipViews(chips.prefix(2)) }
+                    HStack(spacing: Metrics.spacingS) { chipViews(chips[...]) }
+                    VStack(alignment: .leading, spacing: Metrics.spacingS) {
+                        HStack(spacing: Metrics.spacingS) { chipViews(chips.prefix(2)) }
                         chipViews(chips.dropFirst(2))
                     }
-                    VStack(alignment: .leading, spacing: 8) { chipViews(chips[...]) }
+                    VStack(alignment: .leading, spacing: Metrics.spacingS) { chipViews(chips[...]) }
                 }
-                .padding(.top, 16)
+                .padding(.top, Metrics.spacingM)
             }
         }
         .accessibilityElement(children: .ignore)
@@ -140,7 +140,7 @@ struct AccountHistoryStatCard: View {
 
     var body: some View {
         GlowCard(padding: 16, radius: Metrics.statCardRadius) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: Metrics.spacingS) {
                 Text(label)
                     .textStyle(.monoMetricLabel)
                     .foregroundStyle(BudgieColor.textSecondary)
@@ -172,9 +172,9 @@ struct AccountTrendChart: View {
     var body: some View {
         if let last = history.last {
             GlowCard(padding: 0) {
-                VStack(alignment: .leading, spacing: 16) {
-                    HStack(spacing: 8) {
-                        VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Metrics.spacingM) {
+                    HStack(spacing: Metrics.spacingS) {
+                        VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
                             Text("Trend")
                                 .textStyle(.cardTitle)
                                 .foregroundStyle(BudgieColor.textPrimary)
@@ -349,8 +349,8 @@ struct AccountTrendPlot: View {
                 .foregroundStyle(BudgieColor.textPrimary)
         }
         .multilineTextAlignment(.center)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.horizontal, Metrics.spacingM)
+        .padding(.vertical, Metrics.spacingS)
         .background(BudgieColor.chipSurface, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
     }
 
@@ -523,7 +523,7 @@ struct AccountTimelineRow: View {
             HStack(spacing: 0) {
                 IconTile(symbol: "calendar", color: color)
                     .padding(.trailing, 12)
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
                     Text(date)
                         .textStyle(.rowTitle)
                         .foregroundStyle(BudgieColor.textPrimary)
@@ -532,7 +532,7 @@ struct AccountTimelineRow: View {
                         .foregroundStyle(BudgieColor.textSecondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                VStack(alignment: .trailing, spacing: 2) {
+                VStack(alignment: .trailing, spacing: Metrics.spacingXXS) {
                     Text(amount)
                         .textStyle(.amountSmall)
                         .foregroundStyle(BudgieColor.textPrimary)
@@ -545,7 +545,7 @@ struct AccountTimelineRow: View {
                             .lineLimit(1)
                     }
                 }
-                .padding(.leading, 8)
+                .padding(.leading, Metrics.spacingS)
                 .layoutPriority(1)
             }
             .accessibilityElement(children: .ignore)
@@ -564,7 +564,7 @@ struct AccountTimelineRow: View {
             }
             .buttonStyle(.plain)
             .disabled(!canDelete)
-            .padding(.leading, 4)
+            .padding(.leading, Metrics.spacingXS)
             .help(canDelete ? "Delete this balance update" : "Keep at least one balance update")
             .accessibilityLabel(canDelete ? "Delete this balance update" : "Keep at least one balance update")
             .accessibilityIdentifier("worth.history.timeline.delete")

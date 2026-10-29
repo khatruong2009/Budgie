@@ -10,11 +10,11 @@ struct AccountsToggle: View {
     @Binding var isAssetsTab: Bool
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: Metrics.spacingXS) {
             chip("Assets", assets: true)
             chip("Liabilities", assets: false)
         }
-        .padding(4)
+        .padding(Metrics.spacingXS)
         .background(BudgieColor.track, in: Capsule())
         .sensoryFeedback(.selection, trigger: isAssetsTab)
     }
@@ -62,7 +62,7 @@ struct WorthAccountsList: View {
                     .foregroundStyle(BudgieColor.textSecondary)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
+                    .padding(.vertical, Metrics.spacingM)
             }
             .accessibilityIdentifier("worth.accounts.empty")
         } else {
@@ -109,7 +109,7 @@ struct AccountRow: View {
             VStack(spacing: 10) {
                 HStack(spacing: 0) {
                     IconTile(symbol: NetWorthAccountIcon(name: entry.name, type: entry.type).symbol, color: tint, size: 44)
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
                         Text(entry.name)
                             .textStyle(.rowTitle)
                             .foregroundStyle(BudgieColor.textPrimary)
@@ -120,11 +120,11 @@ struct AccountRow: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.leading, 12)
-                    VStack(alignment: .trailing, spacing: 2) {
+                    VStack(alignment: .trailing, spacing: Metrics.spacingXXS) {
                         Text(amount).textStyle(.amount).foregroundStyle(BudgieColor.textPrimary)
                         Text(change).textStyle(.badge).foregroundStyle(changeColor)
                     }
-                    .padding(.leading, 8)
+                    .padding(.leading, Metrics.spacingS)
                 }
                 GlowProgressBar(value: stats.share, height: 6, color: tint)
             }

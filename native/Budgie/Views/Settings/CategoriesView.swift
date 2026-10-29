@@ -221,7 +221,7 @@ private struct CategoryRow: View {
         let subtitle = CategoryRowAction.subtitle(for: category)
         HStack(spacing: 12) {
             IconTile(category: category)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
                 Text(category.name)
                     .textStyle(.rowTitle)
                     .foregroundStyle(BudgieColor.textPrimary)
@@ -261,6 +261,6 @@ private struct CategoryRow: View {
         .padding(.vertical, 12)
         .padding(.leading, 12)
         // The menu's 44pt box already insets its dots.
-        .padding(.trailing, 2)
+        .padding(.trailing, Metrics.spacingXXS)
     }
 }

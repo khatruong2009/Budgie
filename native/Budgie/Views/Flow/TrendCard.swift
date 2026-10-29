@@ -22,7 +22,7 @@ struct TrendCard: View {
                         .foregroundStyle(BudgieColor.textTertiary)
                         .accessibilityHidden(true)
                 }
-                .padding(.horizontal, 4)
+                .padding(.horizontal, Metrics.spacingXS)
                 TrendLine(nets: series.map(\.net))
                     .frame(height: 120)
                     .accessibilityElement()

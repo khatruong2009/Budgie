@@ -31,7 +31,7 @@ struct HomeHero: View {
             ZStack {
                 CashFlowRing(income: income, expenses: expenses, thickness: 16)
                     .frame(width: size, height: size)
-                VStack(spacing: 4) {
+                VStack(spacing: Metrics.spacingXS) {
                     Text("CASH FLOW")
                         .textStyle(.eyebrow)
                         .foregroundStyle(BudgieColor.textSecondary)

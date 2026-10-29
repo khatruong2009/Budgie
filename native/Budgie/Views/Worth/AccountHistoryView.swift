@@ -121,7 +121,7 @@ struct AccountHistoryView: View {
         return ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 AccountHistoryHeroCard(type: entry.type, color: color, history: history, formatter: formatter)
-                HStack(alignment: .top, spacing: 8) {
+                HStack(alignment: .top, spacing: Metrics.spacingS) {
                     AccountHistoryStatCard(label: "CURRENT", value: formatter.formatCompact(history.latestAmount), color: color)
                         .accessibilityIdentifier("worth.history.stat.current")
                     AccountHistoryStatCard(
@@ -132,10 +132,10 @@ struct AccountHistoryView: View {
                         color: BudgieColor.textPrimary)
                         .accessibilityIdentifier("worth.history.stat.low")
                 }
-                .padding(.top, 16)
+                .padding(.top, Metrics.spacingM)
                 AccountTrendChart(name: entry.name, history: history.chart, color: color, formatter: formatter)
-                    .padding(.top, 16)
-                HStack(spacing: 8) {
+                    .padding(.top, Metrics.spacingM)
+                HStack(spacing: Metrics.spacingS) {
                     Text("Timeline")
                         .textStyle(.sectionHeader)
                         .foregroundStyle(BudgieColor.textPrimary)
@@ -146,8 +146,8 @@ struct AccountHistoryView: View {
                         .foregroundStyle(BudgieColor.textSecondary)
                         .accessibilityIdentifier("worth.history.timeline.count")
                 }
-                .padding(.horizontal, 4)
-                .padding(.top, 24)
+                .padding(.horizontal, Metrics.spacingXS)
+                .padding(.top, Metrics.spacingL)
                 timeline(history, name: entry.name, color: color, formatter: formatter)
                     .padding(.top, 12)
             }

@@ -199,7 +199,7 @@ private struct SectionTitle: View {
             .accessibilityLabel(addLabel)
             .accessibilityIdentifier(identifier)
         }
-        .padding(.horizontal, 4)
+        .padding(.horizontal, Metrics.spacingXS)
     }
 }
 
@@ -265,7 +265,7 @@ private struct TagRow: View {
         }
         .padding(.vertical, 12)
         .padding(.leading, 12)
-        .padding(.trailing, 2)
+        .padding(.trailing, Metrics.spacingXXS)
     }
 }
 
@@ -288,11 +288,11 @@ private struct RuleRow: View {
     let onDelete: () -> Void
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: Metrics.spacingS) {
             Button(action: onEdit) {
                 HStack(spacing: 12) {
                     IconTile(symbol: "sparkles", color: BudgieColor.info)
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
                         Text(rule.merchantPattern)
                             .textStyle(.rowTitle)
                             .foregroundStyle(BudgieColor.textPrimary)
@@ -324,6 +324,6 @@ private struct RuleRow: View {
         }
         .padding(.vertical, 12)
         .padding(.leading, 12)
-        .padding(.trailing, 2)
+        .padding(.trailing, Metrics.spacingXXS)
     }
 }

@@ -161,8 +161,8 @@ private struct SummaryCard: View {
                         .minimumScaleFactor(0.3)
                         .padding(.top, 10)
                     ViewThatFits(in: .horizontal) {
-                        HStack(spacing: 8) { pills(monthText, countText) }
-                        VStack(alignment: .leading, spacing: 8) { pills(monthText, countText) }
+                        HStack(spacing: Metrics.spacingS) { pills(monthText, countText) }
+                        VStack(alignment: .leading, spacing: Metrics.spacingS) { pills(monthText, countText) }
                     }
                     .padding(.top, 12)
                 }
@@ -198,7 +198,7 @@ private struct ExpenseRow: View {
         Button(action: onTap) {
             HStack(spacing: 12) {
                 IconTile(symbol: symbol, color: color)
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
                     HStack(spacing: 6) {
                         Text(record.description)
                             .textStyle(.rowTitle)
