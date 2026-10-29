@@ -16,8 +16,6 @@ struct HomeHero: View {
 
     /// The ring's figure.
     static let amountText = TextSpec(face: .gabaritoExtraBold, size: 44, tracking: -1.6, height: 1.0, tabular: true, relativeTo: .largeTitle)
-    private static let statusText = TextSpec(face: .gabaritoSemiBold, size: 13, height: 1.25, relativeTo: .footnote)
-    private static let legendLabel = TextSpec(face: .gabaritoRegular, size: 13, height: 1.25, relativeTo: .footnote)
     private static let legendAmount = TextSpec(face: .monoMedium, size: 13, height: 1.25, tabular: true, relativeTo: .footnote)
 
     var body: some View {
@@ -52,7 +50,7 @@ struct HomeHero: View {
                         }
                     }
                     Text(status(cashFlow: cashFlow))
-                        .textStyle(Self.statusText)
+                        .textStyle(.noteStrong)
                         .foregroundStyle(
                             isNegative ? BudgieColor.danger : cashFlow > 0 ? BudgieColor.income : BudgieColor.textSecondary)
                         .singleLine()
@@ -88,7 +86,7 @@ struct HomeHero: View {
     private func legendItem(_ label: String, _ amount: String, dot: Color) -> some View {
         HStack(spacing: 6) {
             Circle().fill(dot).frame(width: 8, height: 8).accessibilityHidden(true)
-            Text(label).textStyle(Self.legendLabel).foregroundStyle(BudgieColor.textSecondary)
+            Text(label).textStyle(.note).foregroundStyle(BudgieColor.textSecondary)
             Text(amount).textStyle(Self.legendAmount).foregroundStyle(BudgieColor.textPrimary)
         }
         .fixedSize()

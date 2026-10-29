@@ -255,7 +255,6 @@ private struct BudgetPickerSheet: View {
     @State private var headerHeight: CGFloat = 0
     @State private var listHeight: CGFloat = 0
 
-    private static let blurb = TextSpec(face: .gabaritoRegular, size: 14, height: 1.3, relativeTo: .subheadline)
 
     var body: some View {
         let categories = kind == .edit ? overview.budgeted : overview.unbudgeted
@@ -269,7 +268,7 @@ private struct BudgetPickerSheet: View {
                     .foregroundStyle(BudgieColor.textPrimary)
                     .accessibilityAddTraits(.isHeader)
                 Text(subtitle(hasBudgets: !categories.isEmpty))
-                    .textStyle(Self.blurb)
+                    .textStyle(.sheetBlurb)
                     .foregroundStyle(BudgieColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 6)

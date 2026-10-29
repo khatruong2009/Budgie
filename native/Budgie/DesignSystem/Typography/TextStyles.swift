@@ -29,6 +29,11 @@ extension TextSpec {
     /// A section's text link ("See all", "Edit").
     static let textLink = TextSpec(face: .gabaritoSemiBold, size: 15, relativeTo: .subheadline)
     static let cardTitle = TextSpec(face: .gabaritoBold, size: 17, height: 1.25, relativeTo: .headline)
+    /// A note under or beside content (Regular 13).
+    static let note = TextSpec(face: .gabaritoRegular, size: 13, height: 1.25, relativeTo: .footnote)
+    static let noteStrong = TextSpec(face: .gabaritoSemiBold, size: 13, height: 1.25, relativeTo: .footnote)
+    /// The explanatory paragraph under a sheet's title.
+    static let sheetBlurb = TextSpec(face: .gabaritoRegular, size: 14, height: 1.3, relativeTo: .subheadline)
     static let goalTitle = TextSpec(face: .gabaritoBold, size: 18, tracking: -0.3, height: 1.25, relativeTo: .headline)
     static let rowTitle = TextSpec(face: .gabaritoSemiBold, size: 15, height: 1.25, relativeTo: .body)
     static let rowSubtitle = TextSpec(face: .gabaritoRegular, size: 12, height: 1.25, relativeTo: .caption)

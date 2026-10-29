@@ -25,7 +25,6 @@ struct BudgetLimitSheet: View {
     @State private var keyboardSlack: CGFloat = 0
 
     private static let helper = "Set a positive amount for this category."
-    private static let blurb = TextSpec(face: .gabaritoRegular, size: 14, height: 1.3, relativeTo: .subheadline)
 
     init(category: String, currentLimit: Double?, formatter: MoneyFormatter) {
         self.category = category
@@ -125,7 +124,7 @@ struct BudgetLimitSheet: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
                 Text("Monthly spending limit")
-                    .textStyle(Self.blurb)
+                    .textStyle(.sheetBlurb)
                     .foregroundStyle(BudgieColor.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
