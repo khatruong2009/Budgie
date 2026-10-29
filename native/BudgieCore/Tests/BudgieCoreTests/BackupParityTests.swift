@@ -191,11 +191,6 @@ func base64Bytes(_ value: J) -> [UInt8] {
     [UInt8](Data(base64Encoded: value.string ?? "") ?? Data())
 }
 
-/// Rows as compact canonical JSON (Dart `jsonEncode(list.map(toJson))`).
-func compactRows(_ rows: [JSONObject]?) -> String {
-    DartJSON.encodeString(.array((rows ?? []).map { .object($0) }))
-}
-
 @Suite("Backup: decode matches Flutter's decodeBackup, check by check (Fixtures/backup)")
 struct BackupDecodeParityTests {
     /// Where Swift differs on purpose (PARITY_GAPS, D10 list).

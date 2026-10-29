@@ -803,21 +803,19 @@ final class AccessibilityAuditUITests: XCTestCase {
     func testOnboardingPages() throws {
         launch()
         rememberTheme()
-        for theme in ["Light"] {
-            chooseTheme(theme)
-            app.terminate()
-            app.launchEnvironment["BUDGIE_SKIP_ONBOARDING"] = "0"
-            app.launch()
-            runner = AuditRunner(app: app, pass: theme.lowercased(), types: Self.defaultSizeTypes)
-            for page in 1...3 {
-                guard expect(app.element("onboarding.page.\(page)"), "onboarding page \(page)", timeout: 20) else { break }
-                runner.audit("Onboarding page \(page)")
-                if page < 3 { app.buttons["onboarding.next"].tapSettled() }
-            }
-            app.buttons["onboarding.skip"].firstMatch.tapSettled()
-            app.launchEnvironment["BUDGIE_SKIP_ONBOARDING"] = "1"
-            XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 10))
+        chooseTheme("Light")
+        app.terminate()
+        app.launchEnvironment["BUDGIE_SKIP_ONBOARDING"] = "0"
+        app.launch()
+        runner = AuditRunner(app: app, pass: "Light".lowercased(), types: Self.defaultSizeTypes)
+        for page in 1...3 {
+            guard expect(app.element("onboarding.page.\(page)"), "onboarding page \(page)", timeout: 20) else { break }
+            runner.audit("Onboarding page \(page)")
+            if page < 3 { app.buttons["onboarding.next"].tapSettled() }
         }
+        app.buttons["onboarding.skip"].firstMatch.tapSettled()
+        app.launchEnvironment["BUDGIE_SKIP_ONBOARDING"] = "1"
+        XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 10))
     }
 
     /// The lock screen (the DEBUG hook locks the app in
@@ -825,19 +823,17 @@ final class AccessibilityAuditUITests: XCTestCase {
     func testLockScreen() throws {
         launch()
         rememberTheme()
-        for theme in ["Light"] {
-            chooseTheme(theme)
-            extraEnvironment = ["BUDGIE_UITEST_APP_LOCK": "3600", "BUDGIE_UITEST_AUTH_SUCCESSES": "0"]
-            launch(waitForHome: false)
-            runner = AuditRunner(app: app, pass: theme.lowercased(), types: Self.defaultSizeTypes)
-            if expect(app.staticTexts["Budgie is locked"], "the lock screen", timeout: 20) {
-                runner.audit("Lock screen")
-            }
-            extraEnvironment = [:]
-            app.launchEnvironment.removeValue(forKey: "BUDGIE_UITEST_APP_LOCK")
-            app.launchEnvironment.removeValue(forKey: "BUDGIE_UITEST_AUTH_SUCCESSES")
-            launch()
+        chooseTheme("Light")
+        extraEnvironment = ["BUDGIE_UITEST_APP_LOCK": "3600", "BUDGIE_UITEST_AUTH_SUCCESSES": "0"]
+        launch(waitForHome: false)
+        runner = AuditRunner(app: app, pass: "Light".lowercased(), types: Self.defaultSizeTypes)
+        if expect(app.staticTexts["Budgie is locked"], "the lock screen", timeout: 20) {
+            runner.audit("Lock screen")
         }
+        extraEnvironment = [:]
+        app.launchEnvironment.removeValue(forKey: "BUDGIE_UITEST_APP_LOCK")
+        app.launchEnvironment.removeValue(forKey: "BUDGIE_UITEST_AUTH_SUCCESSES")
+        launch()
     }
 
     /// The voice sheet with the microphone denied: its error state, with
@@ -845,20 +841,18 @@ final class AccessibilityAuditUITests: XCTestCase {
     func testVoiceSheetMicrophoneDenied() throws {
         launch()
         rememberTheme()
-        for theme in ["Light"] {
-            chooseTheme(theme)
-            extraEnvironment = ["BUDGIE_VOICE_MIC_DENIED": "1"]
-            launch()
-            runner = AuditRunner(app: app, pass: theme.lowercased(), types: Self.defaultSizeTypes)
-            app.buttons["home.voice"].tapSettled()
-            if expect(app.staticTexts["voice.message"], "the voice error", timeout: 15) {
-                runner.audit("Voice sheet, microphone denied")
-                app.buttons["voice.cancel"].tapSettled()
-                _ = app.staticTexts["voice.message"].waitForNonExistence(timeout: 5)
-            }
-            extraEnvironment = [:]
-            app.launchEnvironment.removeValue(forKey: "BUDGIE_VOICE_MIC_DENIED")
-            launch()
+        chooseTheme("Light")
+        extraEnvironment = ["BUDGIE_VOICE_MIC_DENIED": "1"]
+        launch()
+        runner = AuditRunner(app: app, pass: "Light".lowercased(), types: Self.defaultSizeTypes)
+        app.buttons["home.voice"].tapSettled()
+        if expect(app.staticTexts["voice.message"], "the voice error", timeout: 15) {
+            runner.audit("Voice sheet, microphone denied")
+            app.buttons["voice.cancel"].tapSettled()
+            _ = app.staticTexts["voice.message"].waitForNonExistence(timeout: 5)
         }
+        extraEnvironment = [:]
+        app.launchEnvironment.removeValue(forKey: "BUDGIE_VOICE_MIC_DENIED")
+        launch()
     }
 }

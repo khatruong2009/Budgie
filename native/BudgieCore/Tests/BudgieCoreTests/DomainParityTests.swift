@@ -258,13 +258,12 @@ struct LogicParityTests {
         let transactions = fixture["transactions"].array.map { TransactionRecord.parse($0.value!, calendar: calendar, newID: { "x" })! }
         let templates = fixture["recurring"].array.map { RecurringTemplate.parse($0.value!, calendar: calendar, newID: { "x" })! }
         let limits = fixture["limits"].keys.map { ($0, fixture["limits"][$0].double!) }
-        for result in fixture["results"].array {
+        for (index, result) in fixture["results"].array.enumerated() {
             let asOfText = result["asOf"].string!
-            _ = asOfText
             // The harness pinned the wall clock to asOf before building goals
             // and calculating; asOf itself is the unclamped value it passed.
             let month = try calendar.parse(result["month"].string!)
-            let original = LogicParityTests.asOfInputs[fixture["results"].array.firstIndex { $0.value == result.value }!]
+            let original = LogicParityTests.asOfInputs[index]
             let asOf = try calendar.parse(original)
             let goals = fixture["goals"].array.map { SavingsGoalRecord.parse($0.value!, calendar: calendar, now: asOf, newID: { "g" })! }
             let b = SafeToSpend.calculate(
