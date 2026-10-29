@@ -40,6 +40,7 @@
 		2F9E364C956E96BD3268C417 /* VoiceEntryModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61FCF1D192D298B8708D268F /* VoiceEntryModelTests.swift */; };
 		300EDAE2DDB4850700D173A7 /* InsightsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82B39926BC8858254C52100 /* InsightsUITests.swift */; };
 		310FFC1574711FF99182A14F /* Motion.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC281C7ED6BA5AFCAAEF93D5 /* Motion.swift */; };
+		3119DFC86172C5046B0A7866 /* BudgetPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FE844021B793DE945E62837 /* BudgetPickerSheet.swift */; };
 		33FADE138E786DFE0D77DE0D /* AppModel+Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF16CFFE8DA5D3E14133773 /* AppModel+Settings.swift */; };
 		3670039B1B91546C7355A767 /* RuleEditorDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC9A6C45595FA738A4CA3C83 /* RuleEditorDialog.swift */; };
 		36EDA6577D620F00185EF515 /* VoiceTestHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DB5CCEBA896C753606691E9 /* VoiceTestHooks.swift */; };
@@ -286,6 +287,7 @@
 		768D07F36F5FF6B04D4A8F95 /* VoiceRecordingSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceRecordingSheet.swift; sourceTree = "<group>"; };
 		797B05365FF25E2F1D89F5B1 /* AppLockUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockUITests.swift; sourceTree = "<group>"; };
 		7BC61ABBB0C4A64D43AC2FB2 /* CelebrationOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CelebrationOverlay.swift; sourceTree = "<group>"; };
+		7FE844021B793DE945E62837 /* BudgetPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetPickerSheet.swift; sourceTree = "<group>"; };
 		800FA2FCB6FBC4E3D3E72E06 /* TextLineHeightTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextLineHeightTests.swift; sourceTree = "<group>"; };
 		84B3671771B9C0DC8DD24724 /* FlowSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowSheets.swift; sourceTree = "<group>"; };
 		85A7F03EBB3F2E8A5DBEAEF3 /* CategoryRows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryRows.swift; sourceTree = "<group>"; };
@@ -505,6 +507,7 @@
 			isa = PBXGroup;
 			children = (
 				A68B7F4E5776878A1B4E5DF5 /* BudgetLimitSheet.swift */,
+				7FE844021B793DE945E62837 /* BudgetPickerSheet.swift */,
 				F75251F37466F9FEAEBF3294 /* BudgetsSection.swift */,
 				24BBECA9461EC73C2910FA4A /* HomeCards.swift */,
 				21D98BE7CAA32047DC8ED7BB /* HomeHero.swift */,
@@ -1019,6 +1022,7 @@
 				25510BEC61B1A34228AA2554 /* AppModel.swift in Sources */,
 				A6A09702E0F2DAEF9D06EC1B /* AppModelTypes.swift in Sources */,
 				B714CE63FA132A02FE2E4890 /* BudgetLimitSheet.swift in Sources */,
+				3119DFC86172C5046B0A7866 /* BudgetPickerSheet.swift in Sources */,
 				D92EB23D1CA2485689CF5FBB /* BudgetsSection.swift in Sources */,
 				065E436387B2E9B2EA0A50EA /* BudgieApp.swift in Sources */,
 				5C9906BF143C4B6C61F3E2DE /* Cards.swift in Sources */,
