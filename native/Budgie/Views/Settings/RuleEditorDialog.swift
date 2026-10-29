@@ -182,11 +182,7 @@ struct RuleEditorDialog: View {
     /// "Tags" caption.
     private var tagChips: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Tags")
-                .textStyle(.captionStrong)
-                .foregroundStyle(BudgieColor.textSecondary)
-                .padding(.leading, Metrics.spacingXS)
-                .accessibilityAddTraits(.isHeader)
+            FieldCaption("Tags", isHeader: true)
             FlowLayout(spacing: Metrics.spacingS) {
                 // By position: foreign data can repeat a tag id.
                 ForEach(Array(model.tags.enumerated()), id: \.offset) { _, tag in
@@ -384,11 +380,7 @@ private struct MenuField: View {
         let value = options.indices.contains(selection) ? options[selection] : ""
         let shape = RoundedRectangle(cornerRadius: Metrics.fieldRadius, style: .continuous)
         VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .textStyle(.captionStrong)
-                .foregroundStyle(BudgieColor.textSecondary)
-                .padding(.leading, Metrics.spacingXS)
-                .accessibilityHidden(true)
+            FieldCaption(title, hidden: true)
             Button(action: tap) {
                 HStack(spacing: 10) {
                     Text(value)

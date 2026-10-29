@@ -125,11 +125,7 @@ struct CategoryEditorDialog: View {
     /// "Icon" / "Color", as the field's label (caption w600, secondary,
     /// inset 4).
     private func caption(_ text: String) -> some View {
-        Text(text)
-            .textStyle(.captionStrong)
-            .foregroundStyle(BudgieColor.textSecondary)
-            .padding(.leading, Metrics.spacingXS)
-            .accessibilityAddTraits(.isHeader)
+        FieldCaption(text, isHeader: true)
     }
 
     // MARK: - Save
