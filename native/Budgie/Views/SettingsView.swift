@@ -149,7 +149,7 @@ struct SettingsView: View {
     private func dataRows(_ data: FinancialData) -> [AnyView] {
         // What the export writes (Flutter `transactions.length`), current
         // as soon as a row is added (the ledger index rebuilds later).
-        let transactionCount = data.transactions.count
+        let transactionCount = data.readableTransactionCount
         func unlessBusy(_ action: @escaping () -> Void) -> (() -> Void)? { dataTask == nil ? action : nil }
         return [
             AnyView(SettingsRow(

@@ -35,7 +35,7 @@ extension FinancialData {
 
     /// `netWorthEntries.firstWhere((e) => e.id == id)`.
     public func netWorthEntry(id: String) -> NetWorthEntryRecord? {
-        netWorthEntries.first { DartString.equal($0.id, id) }
+        netWorthRows.lazy.compactMap(\.record).first { DartString.equal($0.id, id) }
     }
 
     /// `getNetWorthEntryHistory`: the entry's snapshots, ascending by

@@ -54,7 +54,9 @@ public struct FinancialData: Sendable {
     public var rules: [CategorizationRuleRecord] { ruleRows.compactMap(\.record) }
     /// The definitions in use: stored rows, or the seeds when none are readable.
     public var categories: [CategoryInfo] { CategoryCatalog.effective(categoryRows) }
-    public var unreadableTransactionCount: Int { transactionRows.count - transactions.count }
+    /// `transactions.count` without building the array: readable rows only.
+    public var readableTransactionCount: Int { transactionRows.reduce(0) { $0 + ($1.record == nil ? 0 : 1) } }
+    public var unreadableTransactionCount: Int { transactionRows.count - readableTransactionCount }
 
     /// `categoryBudgetLimits` as Dart loads it: numeric values > 0, in
     /// stored key order. Derived from the stored object on every read, so it
