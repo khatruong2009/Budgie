@@ -1,3 +1,5 @@
+> Archived; paths refer to the `flutter-final` tag.
+
 # B. Legacy / SharedPreferences migration research
 
 Scope: everything the Flutter app persists outside the v2 financial file, how legacy

@@ -3,20 +3,20 @@
 Goal: take the SwiftUI MVP to a full replacement of the Flutter app. That means every feature, a look that closely matches the Flutter app, and the store format kept byte-compatible so users can downgrade.
 
 Sources:
-- Seven per-area analyses of both codebases, saved in [`full-app/`](full-app).
+- Seven per-area analyses of both codebases, saved in [`archive/full-app/`](archive/full-app).
 - The existing MIGRATION_SPEC, UI_SPEC and PARITY_GAPS.
 
 Each area file holds the exact copy, formulas, layout metrics, Core/AppModel API sketches and parity-test lists. Implementers should work from those files; this document is the order of work and the decisions.
 
 | Area spec | Covers |
 |---|---|
-| [01-design-system-and-shell](full-app/01-design-system-and-shell.md) | Tokens, fonts, motion, every shared component. Its custom-dock shell sections are superseded by D2 (native tab bar). |
-| [02-home-and-transaction-entry](full-app/02-home-and-transaction-entry.md) | Home tab, budgets, transaction form, SEE ALL list, quick-expense sheet |
-| [03-goals](full-app/03-goals.md) | Savings goals tab, allocation, celebration |
-| [04-spend-flow-and-transaction-lists](full-app/04-spend-flow-and-transaction-lists.md) | Spend (donut) tab, Flow (cash flow) tab, filterable transactions page, LedgerIndex |
-| [05-net-worth](full-app/05-net-worth.md) | Worth tab editing, account history, growth chart |
-| [06-settings-categories-data](full-app/06-settings-categories-data.md) | More tab, categories, tags and rules, CSV import, backup export/restore |
-| [07-insights-onboarding-recurring-voice](full-app/07-insights-onboarding-recurring-voice.md) | Insight engine, onboarding, recurring parity, voice options, routing and lock fixes |
+| [01-design-system-and-shell](archive/full-app/01-design-system-and-shell.md) | Tokens, fonts, motion, every shared component. Its custom-dock shell sections are superseded by D2 (native tab bar). |
+| [02-home-and-transaction-entry](archive/full-app/02-home-and-transaction-entry.md) | Home tab, budgets, transaction form, SEE ALL list, quick-expense sheet |
+| [03-goals](archive/full-app/03-goals.md) | Savings goals tab, allocation, celebration |
+| [04-spend-flow-and-transaction-lists](archive/full-app/04-spend-flow-and-transaction-lists.md) | Spend (donut) tab, Flow (cash flow) tab, filterable transactions page, LedgerIndex |
+| [05-net-worth](archive/full-app/05-net-worth.md) | Worth tab editing, account history, growth chart |
+| [06-settings-categories-data](archive/full-app/06-settings-categories-data.md) | More tab, categories, tags and rules, CSV import, backup export/restore |
+| [07-insights-onboarding-recurring-voice](archive/full-app/07-insights-onboarding-recurring-voice.md) | Insight engine, onboarding, recurring parity, voice options, routing and lock fixes |
 
 ## 1. What the analysis changed
 
@@ -155,7 +155,7 @@ Effort: S is up to a day, M a few days, L a week or more. Phases 2 and 3 split i
    - GlowProgressBar, SplitGlowBar, ProgressRing
    - GlowFab (with the tap burst), BudgieField, DateTile, EmptyStateView
    - Sheet chrome, a centred dialog presenter, RecurrenceGlyph, a swipe-to-delete card row
-5. A DEBUG design gallery for screenshot comparison against `docs/research/screenshots`.
+5. A DEBUG design gallery for screenshot comparison against `native/docs/archive/research/screenshots`.
 
 **1C. Shell** (M; spec 01 section 2, adjusted for D2)
 1. Native `TabView` with 5 tabs, each root in its own `NavigationStack`: Home (`dollarsign.circle`), Worth, Goals (`flag`), Spend (`chart.pie`), Flow (`chart.bar`).

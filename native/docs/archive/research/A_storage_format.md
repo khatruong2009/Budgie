@@ -1,3 +1,5 @@
+> Archived; paths refer to the `flutter-final` tag.
+
 # A. Storage format of AtomicFinancialStore (byte-compatibility spec for the Swift port)
 
 Scope: `budget_app/lib/storage/atomic_financial_store.dart` (call it ASF; 728 lines), plus `persistence_status.dart`, `protected_data_gate.dart`, `storage_keys.dart`, every caller, and `test/atomic_financial_store_test.dart`.

@@ -1,3 +1,5 @@
+> Archived; paths refer to the `flutter-final` tag.
+
 # Home tab + transaction entry: analysis for the Swift full-replacement plan
 
 Paths are relative to W (the worktree root). `F:` means `W/budget_app/lib/`, `N:` means `W/native/`. I read every file you listed in full, plus `design_system.dart`, the theme files, and the glow_*, pill_chip, budgie_header, modern_transaction_list_item, modern_text_field, recurring_form (head), categorization_rule, transaction_tag and main.dart (init/theme/deep links) sources. I also looked at the Flutter screenshots in `N:docs/research/screenshots/` (05, 05b, 11, 12, 13, 16) and the MVP screenshot `N:docs/screens/spending-1.png`.

@@ -37,7 +37,7 @@ removing files (commit `project.pbxproj`).
 | `native/BudgetWidgets/` | Home screen widgets (same `kind`s as Flutter) |
 | `native/BudgieUITests/`, `native/BudgieAppTests/` | XCUITests per tab, accessibility audit, app unit tests |
 | `native/ParityHarness/`, `native/Fixtures/` | Dart tests that run the real Flutter code (exported from the `flutter-final` tag) to produce the committed fixtures, and verify Swift-written stores load in Flutter |
-| `native/docs/` | `FULL_APP_PLAN.md` (decisions, cross-cutting rules), `MIGRATION_SPEC.md` (store format, migration), `UI_SPEC.md`, `PARITY_GAPS.md` (every difference from Flutter), `PERFORMANCE.md`, `REAL_DEVICE_CHECKLISTS.md`, `full-app/` per-area specs |
+| `native/docs/` | `FULL_APP_PLAN.md` (decisions, cross-cutting rules), `MIGRATION_SPEC.md` (store format, migration), `UI_SPEC.md`, `PARITY_GAPS.md` (every difference from Flutter), `PERFORMANCE.md`, `REAL_DEVICE_CHECKLISTS.md`, `archive/` (archived per-area specs in `archive/full-app/`, research notes, redesign plan) |
 
 Shell: a native `TabView` with five tabs — **Home, Worth, Goals, Spend,
 Flow** — each in its own `NavigationStack`. Settings is pushed from a gear in

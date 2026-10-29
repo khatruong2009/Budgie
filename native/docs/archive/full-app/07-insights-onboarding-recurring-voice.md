@@ -1,3 +1,5 @@
+> Archived; paths refer to the `flutter-final` tag.
+
 # Analyst report: Insights, Onboarding, Recurring UI, Voice and Integrations
 
 W = /Users/khatruong/Documents/GitHub/flutter-budget/.claude/worktrees/swiftui-mvp-migration-71aa05. All paths are relative to W. Read-only; nothing was changed. No API key value was read or printed.

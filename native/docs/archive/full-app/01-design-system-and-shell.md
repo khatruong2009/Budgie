@@ -1,3 +1,5 @@
+> Archived; paths refer to the `flutter-final` tag.
+
 # Design system, typography, shell, shared components: analysis for the Swift replacement
 
 All paths relative to W = `.../swiftui-mvp-migration-71aa05`. Flutter paths are under `budget_app/lib` unless noted. Nothing was edited. `native/docs/research/G_ui_inventory.md` already covers much of this; I re-verified it against source and add the SwiftUI plan. The screenshots in `native/docs/research/screenshots/` (05_home_data_dark, 10_more_dark) confirm the look.

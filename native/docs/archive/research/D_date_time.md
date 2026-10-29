@@ -1,3 +1,5 @@
+> Archived; paths refer to the `flutter-final` tag.
+
 # D. Date and time semantics (Flutter -> SwiftUI parity)
 
 Scope: `budget_app/lib` at commit b69008d (branch claude/swiftui-mvp-migration-71aa05).

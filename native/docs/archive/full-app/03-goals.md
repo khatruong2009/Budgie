@@ -1,3 +1,5 @@
+> Archived; paths refer to the `flutter-final` tag.
+
 # Goals tab (savings goals): analyst report
 
 Paths: F = `W/budget_app/lib` (W = `.claude/worktrees/swiftui-mvp-migration-71aa05`), N = `W/native`. Citations are `file:line`.

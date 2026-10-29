@@ -1,3 +1,5 @@
+> Archived; paths refer to the `flutter-final` tag.
+
 # Analyst report: More tab (Settings) and everything reachable except Recurring
 
 Paths: `F` = `W/budget_app/lib`, `S` = `W/native`. Line refs are Flutter unless prefixed `S:`.

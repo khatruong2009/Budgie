@@ -1,3 +1,5 @@
+> Archived; paths refer to the `flutter-final` tag.
+
 # E. Business logic (Flutter source of truth for the SwiftUI port)
 
 All paths are relative to `budget_app/` unless prefixed. "VERIFIED" = read in source, or reproduced by running the real Dart code (scratch scripts run with `dart --packages=budget_app/.dart_tool/package_config.json`, TZ=America/New_York and UTC). "INFERRED" = follows from code but not executed or depends on stored data / runtime I could not observe.

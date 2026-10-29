@@ -1,3 +1,5 @@
+> Archived; paths refer to the `flutter-final` tag.
+
 # Worth tab (net worth): analysis for the Swift full-replacement plan
 
 Paths: `F/` = W/budget_app/lib, `N/` = W/native, `NW.dart` = `F/net_worth_page.dart`, `TM.dart` = `F/transaction_model.dart`, `NE.dart` = `F/net_worth_entry.dart`. Everything below was read from source. I ran no builds or tests.

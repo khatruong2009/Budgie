@@ -1,3 +1,5 @@
+> Archived; paths refer to the `flutter-final` tag.
+
 You are implementing the full native SwiftUI replacement of the Budgie Flutter app.
 
 ## Where to work

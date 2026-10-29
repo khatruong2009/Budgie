@@ -1,3 +1,5 @@
+> Archived; paths refer to the `flutter-final` tag.
+
 # G. UI Inventory of the Flutter app (budget_app) for the SwiftUI port
 
 Scope: every screen, sheet and dialog in `budget_app/lib`, the design tokens, the reusable widgets, and screenshots.

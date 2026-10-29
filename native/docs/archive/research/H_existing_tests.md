@@ -1,3 +1,5 @@
+> Archived; paths refer to the `flutter-final` tag.
+
 # H. Existing Flutter tests: catalogue, classification, parity oracles, gaps
 
 Source: `budget_app/test/` (37 files, 9170 lines, 390 test cases). Read-only research; nothing under `budget_app/` was modified.

@@ -1,3 +1,5 @@
+> Archived; paths refer to the `flutter-final` tag.
+
 # F. Native iOS surface of the Flutter app (research for SwiftUI migration)
 
 Scope: everything the Flutter app exposes to iOS that a native replacement, installed OVER it with the same bundle ID, must preserve or consciously drop. All paths relative to `budget_app/` unless noted. Tags: VERIFIED = read directly in the cited file/line; INFERRED = deduced from code/plugin behavior, not directly observed.

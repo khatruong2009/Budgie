@@ -98,7 +98,7 @@ full-screen cover. A scrim tap closes the dialog unless its content sets
 showing, hiding or changing height: the keyboard moves the card, so such a
 tap was aimed at the card (e.g. its Add button) and is ignored.
 
-## Home (spec full-app/02; Flutter `spending_page.dart`)
+## Home (spec archive/full-app/02; Flutter `spending_page.dart`)
 
 - Header: logo, month pill (`DartDateFormat.yMMMM(model.selectedMonth)`),
   Settings gear. The pill opens a panel with a year stepper (D13) and a
@@ -167,7 +167,7 @@ record's). The title stays "Add Expense" / "Add Income", the type toggle
 stays, "Make this recurring" is hidden, and the sheet cannot be swiped away
 (Flutter: `barrierDismissible: false`); Cancel and Add still close it.
 
-Layout (redesign, REDESIGN_PLAN 4.1). Everything through "Make this
+Layout (redesign, archive/REDESIGN_PLAN 4.1). Everything through "Make this
 recurring" fits above the decimal pad on a 874pt-tall phone (iPhone 17
 Pro) at the default text size, without scrolling; shorter phones and large
 text scroll, with a 44pt fade at the bottom of the scroll area while more
@@ -236,7 +236,7 @@ monthly summary card, rows of the selected month grouped under pinned
 in `textPrimary`). Tap to edit (D7), swipe left to delete with a
 "Delete Transaction" confirmation. Reads `model.ledger` only.
 
-## Spend (spec full-app/04 section 1.1; Flutter `category_page.dart`)
+## Spend (spec archive/full-app/04 section 1.1; Flutter `category_page.dart`)
 
 `SpendView` (`Views/Spend/`), titled "Categories". Its month is local to the
 tab (never `model.selectedMonth`): the newest month with any transaction,
@@ -283,7 +283,7 @@ ledger's month summaries (no transaction scan).
   `spend.month.<yyyy-MM>`, `spend.donut`, `spend.row.<rank>`,
   `spend.tail`, `spend.showLess`, `spend.empty`, `spend.drillIn.summary`,
   `spend.drillIn.row`.
-## Flow (spec full-app/04; Flutter `history_page.dart` `HistoryPage`)
+## Flow (spec archive/full-app/04; Flutter `history_page.dart` `HistoryPage`)
 
 `Views/Flow/`. Every figure comes from `model.ledger` through
 `CashFlowMath` (no transaction scans); money through `model.moneyFormatter`
@@ -429,7 +429,7 @@ newest first, filtered by `TransactionFilter` (all conditions ANDed).
   `flow.all.empty`, `flow.all.row`, `flow.all.showing`,
   `flow.all.loadMore`, `flow.all.option` (sheet rows).
 
-## Worth (spec full-app/05; Flutter `net_worth_page.dart` `NetWorthPage`)
+## Worth (spec archive/full-app/05; Flutter `net_worth_page.dart` `NetWorthPage`)
 
 `Views/Worth/`. Totals, rows and history come from the Core net worth
 queries on `model.data`; every mutation is an awaited `AppModel` call
@@ -557,7 +557,7 @@ selected month.
   `worth.history.timeline.empty`, `worth.history.edit`,
   `worth.history.deleteAccount`, `worth.history.missing`.
 
-## Goals (spec full-app/03; Flutter `savings_goals_page.dart`)
+## Goals (spec archive/full-app/03; Flutter `savings_goals_page.dart`)
 
 `Views/Goals/`. Reads `model.savingsGoals` (incomplete first, then target
 date, stable) and `model.savingsGoalsSummary`; copy from `SavingsGoalText`;
@@ -607,7 +607,7 @@ form's prefilled amounts).
   `goals.celebration`. Fields by label: "Goal name", "Target amount",
   "Saved so far", "Allocation amount".
 
-## Categories (spec full-app/06 section 1.5; Flutter `category_settings_page.dart`)
+## Categories (spec archive/full-app/06 section 1.5; Flutter `category_settings_page.dart`)
 
 `Views/Settings/CategoriesView.swift`, pushed from Settings >
 PERSONALIZATION > Categories (system back; "Categories" in cardTitle in
@@ -664,7 +664,7 @@ every mutation is an awaited `AppModel` call returning `CategoryOutcome`.
   `categories.editor.color.<token>`, `categories.editor.submit`,
   `categories.editor.cancel`; the field is the text field "Name".
 
-## Tags & rules (spec full-app/06 section 1.6; Flutter `categorization_settings_page.dart`)
+## Tags & rules (spec archive/full-app/06 section 1.6; Flutter `categorization_settings_page.dart`)
 
 `Views/Settings/TagsRulesView.swift`, pushed from Settings >
 PERSONALIZATION > Tags & rules (system back; "Tags & rules" in cardTitle
@@ -872,7 +872,7 @@ ALL, Flow preview, Flow SEE ALL, Spend category drill-in), and adds
   Light | Dark | Auto pills container), `settings.tagsRules`,
   `settings.diagnostics`, `settings.licences`.
 
-### Settings > DATA (spec full-app/06 sections 1.7-1.8; Flutter `settings_page.dart`)
+### Settings > DATA (spec archive/full-app/06 sections 1.7-1.8; Flutter `settings_page.dart`)
 
 - Rows: Recurring transactions, Export as CSV ("All N transactions"),
   Import from CSV, Export backup, Import backup (identifiers
@@ -930,7 +930,7 @@ ALL, Flow preview, Flow SEE ALL, Spend category drill-in), and adds
   refused file shows "Could not import: Not a valid transactions CSV
   export" (danger).
 
-## Onboarding (spec full-app/07 section B; Flutter `onboarding_tutorial.dart`)
+## Onboarding (spec archive/full-app/07 section B; Flutter `onboarding_tutorial.dart`)
 
 Shown once, when `flutter.onboarding_completed` is not true
 (`model.showsOnboarding`, read at bootstrap): `MainView` shows

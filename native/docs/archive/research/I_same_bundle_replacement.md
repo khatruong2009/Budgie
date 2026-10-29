@@ -1,3 +1,5 @@
+> Archived; paths refer to the `flutter-final` tag.
+
 # I. Same-bundle-ID replacement: Flutter -> native SwiftUI (com.khatruong.budgetbuddy)
 
 Research date: 2026-09-28. Host: macOS 27 / Xcode with Swift 6.4, iOS 26.5 and 27.0 simulator runtimes. Dart: from /Users/khatruong/Documents/flutter.

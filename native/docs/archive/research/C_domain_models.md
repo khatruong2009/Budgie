@@ -1,3 +1,5 @@
+> Archived; paths refer to the `flutter-final` tag.
+
 # C. Domain models: persisted shapes for the SwiftUI migration
 
 Scope: every model in `budget_app/lib` that is serialized, and every `FinancialSections` section. Paths are relative to `budget_app/lib/` unless stated. Each claim is tagged VERIFIED (read in code/test at the cited line) or INFERRED (deduced from library behavior, not visible in this repo).

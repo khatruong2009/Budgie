@@ -6,7 +6,7 @@ Q7 = option (a). See 14.0.
 Source of truth: the Flutter app (`budget_app/`), removed from the tree and kept
 at the `flutter-final` git tag (commit `a3641f5`). The research notes cite
 `budget_app/` as it was at `b69008d` (3.4.0). Research notes backing every
-claim are in `native/docs/research/` (A-I). Where this spec and a research note
+claim are in `native/docs/archive/research/` (A-I). Where this spec and a research note
 disagree, this spec wins; the disagreements are listed in section 15.
 
 Notation: `MUST` is a hard compatibility requirement with a test in the risk
