@@ -16,7 +16,7 @@ struct TextSpec: Sendable {
 }
 
 extension TextSpec {
-    // MARK: Redesign (lines 14-216)
+    // MARK: Redesign
 
     static let hero = TextSpec(face: .gabaritoExtraBold, size: 58, tracking: -2, height: 1.0, tabular: true, relativeTo: .largeTitle)
     static let heroDecimals = TextSpec(face: .gabaritoBold, size: 32, height: 1.0, tabular: true, relativeTo: .largeTitle)
@@ -46,33 +46,19 @@ extension TextSpec {
     static let monoAxis = TextSpec(face: .monoMedium, size: 10, relativeTo: .caption2)
     static let monoMonth = TextSpec(face: .monoMedium, size: 11, relativeTo: .caption2)
 
-    // MARK: Legacy (lines 218-366), still used by forms, dialogs and the lock screen
+    // MARK: Legacy
 
-    static let displayLarge = TextSpec(face: .gabaritoBold, size: 34, tracking: -0.5, relativeTo: .largeTitle)
-    static let displayMedium = TextSpec(face: .gabaritoBold, size: 28, tracking: -0.3, relativeTo: .title)
-    static let displaySmall = TextSpec(face: .gabaritoBold, size: 24, tracking: -0.2, height: 1.3, relativeTo: .title2)
     static let headingLarge = TextSpec(face: .gabaritoBold, size: 28, tracking: -0.3, relativeTo: .title)
-    static let headingMedium = TextSpec(face: .gabaritoSemiBold, size: 22, tracking: -0.2, height: 1.3, relativeTo: .title2)
     static let headingSmall = TextSpec(face: .gabaritoSemiBold, size: 20, tracking: -0.1, height: 1.3, relativeTo: .title3)
     static let bodyLarge = TextSpec(face: .gabaritoRegular, size: 17, tracking: -0.4, height: 1.5, relativeTo: .body)
     static let bodyMedium = TextSpec(face: .gabaritoRegular, size: 15, tracking: -0.2, height: 1.5, relativeTo: .subheadline)
     static let bodySmall = TextSpec(face: .gabaritoRegular, size: 13, tracking: -0.1, height: 1.4, relativeTo: .footnote)
-    static let labelLarge = TextSpec(face: .gabaritoSemiBold, size: 17, tracking: -0.4, height: 1.3, relativeTo: .body)
-    static let labelMedium = TextSpec(face: .gabaritoSemiBold, size: 15, tracking: -0.2, height: 1.3, relativeTo: .subheadline)
     static let labelSmall = TextSpec(face: .gabaritoSemiBold, size: 13, tracking: -0.1, height: 1.3, relativeTo: .footnote)
-    static let buttonLarge = TextSpec(face: .gabaritoSemiBold, size: 17, tracking: -0.4, relativeTo: .body)
-    static let buttonMedium = TextSpec(face: .gabaritoSemiBold, size: 15, tracking: -0.2, relativeTo: .subheadline)
-    static let buttonSmall = TextSpec(face: .gabaritoSemiBold, size: 13, tracking: -0.1, relativeTo: .footnote)
     static let caption = TextSpec(face: .gabaritoRegular, size: 13, tracking: -0.1, height: 1.4, relativeTo: .footnote)
     /// `caption` at w600: form field labels (`ModernTextField`, the forms'
     /// wheel captions) and the recurring card's detail labels.
     static let captionStrong = TextSpec(face: .gabaritoSemiBold, size: 13, tracking: -0.1, height: 1.4, relativeTo: .footnote)
-    static let captionSmall = TextSpec(face: .gabaritoRegular, size: 11, height: 1.3, relativeTo: .caption2)
-    static let numericLarge = TextSpec(face: .gabaritoBold, size: 34, tracking: -0.5, tabular: true, relativeTo: .largeTitle)
     static let numericMedium = TextSpec(face: .gabaritoSemiBold, size: 22, tracking: -0.2, height: 1.3, tabular: true, relativeTo: .title2)
-    /// `headingMedium` at bold with tabular figures: the recurring card's amount.
-    static let numericMediumBold = TextSpec(face: .gabaritoBold, size: 22, tracking: -0.2, height: 1.3, tabular: true, relativeTo: .title2)
-    static let numericSmall = TextSpec(face: .gabaritoSemiBold, size: 17, tracking: -0.4, height: 1.3, tabular: true, relativeTo: .body)
 
     /// The text style the size scales with. `.caption2` is the one style that
     /// is 11pt from the smallest size up to Large, so the Dynamic Type audit
