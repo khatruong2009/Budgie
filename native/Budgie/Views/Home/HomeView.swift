@@ -33,7 +33,7 @@ struct HomeView: View {
         .background(BudgieColor.background)
         .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(item: $page) { _ in TransactionsView() }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+        .floatingActionInset {
             // The mic over the add button, centred on it (Flutter's Column).
             // An inset follows the tab bar on any edge and clears the scroll.
             VStack(spacing: 12) {
@@ -47,9 +47,6 @@ struct HomeView: View {
                     sheet = .quickExpense
                 }
             }
-            .padding(.trailing, Metrics.fabInset)
-            .padding(.bottom, Metrics.fabInset)
-            .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .sheet(item: $sheet, onDismiss: openPendingQuickCategory) { item in
             switch item {

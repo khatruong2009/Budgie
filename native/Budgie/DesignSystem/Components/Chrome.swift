@@ -95,6 +95,22 @@ private struct PushedTitleText: View {
     }
 }
 
+// MARK: - Floating action button inset
+
+extension View {
+    /// A bottom-trailing floating action button in a bottom safe-area inset
+    /// (it follows the tab bar and clears the scroll content), `fabInset`
+    /// from the trailing and bottom edges.
+    func floatingActionInset<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        safeAreaInset(edge: .bottom, spacing: 0) {
+            content()
+                .padding(.trailing, Metrics.fabInset)
+                .padding(.bottom, Metrics.fabInset)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+        }
+    }
+}
+
 // MARK: - Sheet host
 
 extension EnvironmentValues {
