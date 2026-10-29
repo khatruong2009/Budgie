@@ -77,6 +77,7 @@
 		7BB7CCEDB7106CD947FF5022 /* SettingsRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = B90721EC861BCA0309EBE86D /* SettingsRows.swift */; };
 		7DED1DB6FFB1EEE16F46577F /* AmountInputTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEECB109BAD3F282232EAC05 /* AmountInputTests.swift */; };
 		7F0043E5208FE859AD441807 /* CategoryRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85A7F03EBB3F2E8A5DBEAEF3 /* CategoryRows.swift */; };
+		8098E2DA04D6FB0BF41D5C33 /* AccountTrendChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2777802F707F8DCF2A2D7C8B /* AccountTrendChart.swift */; };
 		81DFE4BB0C9874BFF79A6FB0 /* GoalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21E66291B8433CB5179F0E37 /* GoalsView.swift */; };
 		847A524749C84D4CCC56914B /* GoalCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC2520D7EA4306F24110F195 /* GoalCard.swift */; };
 		8ADD0777977928235CF3B44A /* GoalForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D446321DA383AD1E6B29197 /* GoalForm.swift */; };
@@ -227,6 +228,7 @@
 		23E4855FE7D1DCE3F6ADC11D /* AppModel+Transactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+Transactions.swift"; sourceTree = "<group>"; };
 		25E73CB60439653B98043F5C /* AppModel+Insights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+Insights.swift"; sourceTree = "<group>"; };
 		26BB2E615765EF1D846843C2 /* Gabarito-ExtraBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Gabarito-ExtraBold.ttf"; sourceTree = "<group>"; };
+		2777802F707F8DCF2A2D7C8B /* AccountTrendChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountTrendChart.swift; sourceTree = "<group>"; };
 		2DF1B6BD45CD3611914BF395 /* FlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowView.swift; sourceTree = "<group>"; };
 		30903279E7AD171EFDE4B3AB /* OFL-SplineSansMono.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "OFL-SplineSansMono.txt"; sourceTree = "<group>"; };
 		30909C3F10B6B69B9FE7DE2C /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
@@ -584,6 +586,7 @@
 				6A46CEDEB2213F49AA7A4A0E /* AccountEditorDialog.swift */,
 				6374B750C512A64B33B98F8C /* AccountHistoryParts.swift */,
 				3140229293B68DC80B29695D /* AccountHistoryView.swift */,
+				2777802F707F8DCF2A2D7C8B /* AccountTrendChart.swift */,
 				C79F27E51B0E62243A661E93 /* WorthAccounts.swift */,
 				60A226D2ABA030175D1E550B /* WorthGrowthChart.swift */,
 				443443C6EEDFDF525F2487BE /* WorthView.swift */,
@@ -996,6 +999,7 @@
 				CCA2CC50FAB9F170B8939EC4 /* AccountEditorDialog.swift in Sources */,
 				FE84E9BA453CBA39BCF0B4B5 /* AccountHistoryParts.swift in Sources */,
 				4C1789440031F779E6550164 /* AccountHistoryView.swift in Sources */,
+				8098E2DA04D6FB0BF41D5C33 /* AccountTrendChart.swift in Sources */,
 				CBA2719C7FCA371933164D04 /* AddFormPresenter.swift in Sources */,
 				92C347F5E42211337D69F8AD /* AllocationDialog.swift in Sources */,
 				A33249F54E8B2B0DE95E1C20 /* AmountInput.swift in Sources */,
