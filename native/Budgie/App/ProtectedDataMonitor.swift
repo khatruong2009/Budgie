@@ -18,7 +18,7 @@ final class ProtectedDataMonitor: ProtectedDataAvailability, @unchecked Sendable
     init() {
         available = UIApplication.shared.isProtectedDataAvailable
         #if DEBUG
-        // Rehearsal hook (UPGRADE_TEST_PLAN.md): simulate a prewarmed,
+        // Rehearsal hook (UPGRADE_VERIFICATION.md): simulate a prewarmed,
         // locked launch for N seconds. Debug builds only.
         if let seconds = ProcessInfo.processInfo.environment["BUDGIE_SIMULATE_LOCKED_SECONDS"].flatMap(Double.init) {
             available = false

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Upgrade rehearsal on a dedicated iOS simulator (UPGRADE_TEST_PLAN.md).
+"""Upgrade rehearsal on a dedicated iOS simulator (UPGRADE_VERIFICATION.md).
 
 Installs the Flutter build and the Swift build over each other (same bundle
 ID, never uninstalling), seeds synthetic data produced by the real Flutter

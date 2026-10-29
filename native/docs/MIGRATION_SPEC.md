@@ -686,7 +686,7 @@ builds without XcodeGen. Confirm.
 
 ## 16. Before shipping to real users (not part of the MVP build)
 
-Migration safety audit, 2026-09-30: see `MIGRATION_SAFETY_AUDIT.md`.
+Migration safety audit, 2026-09-30: see `UPGRADE_VERIFICATION.md` (Migration safety audit).
 Safety takes precedence over reproducing Flutter's destructive corruption
 fallback. Unacknowledged corrupt files always block, even with settings or
 stale legacy keys. Unrecoverable legacy sections and envelopes also block

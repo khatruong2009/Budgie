@@ -11,8 +11,7 @@ This file lists every place where it behaves differently, and why:
 
 In every case the data is preserved: anything the Swift app does not edit
 is written back exactly as read, and the Flutter build can be reinstalled
-over the Swift app at any time (verified, see UPGRADE_TEST_RESULTS.md and
-MIGRATION_SAFETY_AUDIT.md). Calculations and copy are checked against the
+over the Swift app at any time (verified, see UPGRADE_VERIFICATION.md). Calculations and copy are checked against the
 real Flutter code by native/ParityHarness (README there).
 
 ## Features added after the MVP (data preserved)

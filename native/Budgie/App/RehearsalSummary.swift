@@ -2,7 +2,7 @@
 import BudgieCore
 import Foundation
 
-/// Upgrade rehearsal support (UPGRADE_TEST_PLAN.md), debug builds only:
+/// Upgrade rehearsal support (UPGRADE_VERIFICATION.md), debug builds only:
 /// when launched with BUDGIE_REHEARSAL_SUMMARY=1, writes what the app shows
 /// to Library/Caches/budgie-rehearsal.json so the script can compare it with
 /// the numbers the Flutter models compute from the same files.

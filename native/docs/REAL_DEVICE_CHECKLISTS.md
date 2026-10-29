@@ -5,9 +5,9 @@ and a **spare** physical iPhone with synthetic data only. Never run them on
 the phone that holds real data; if a phone has any real Budgie data, export
 a backup (Settings > Export backup) and keep it off the device first.
 
-Simulator counterparts: UPGRADE_TEST_PLAN.md (S1-S5) and
-`native/scripts/upgrade_rehearsal.py`. Results go in UPGRADE_TEST_RESULTS.md
-under a "Real device" heading, with the device model, iOS version, the two
+Simulator counterparts: UPGRADE_VERIFICATION.md (Test plan, S1-S6) and
+`native/scripts/upgrade_rehearsal.py`. Results go in UPGRADE_VERIFICATION.md
+(Results part) under a "Real device" heading, with the device model, iOS version, the two
 build numbers and the date.
 
 ## Common setup (both checklists)
@@ -165,4 +165,4 @@ Steps:
 11. [ ] Launch Swift again. A second `pre-native-migration/<stamp>/` is
     taken (the store was written by Flutter since Swift's last commit).
     The data is intact.
-12. [ ] Record the results in UPGRADE_TEST_RESULTS.md ("Real device").
+12. [ ] Record the results in UPGRADE_VERIFICATION.md ("Real device").
