@@ -158,13 +158,12 @@ private struct CashFlowRing: View {
 /// the row eases to its new width. Rolls the rounded label (Flutter's
 /// widget truncates the fraction, so its digits can be 0.01 off the
 /// semantics). Scales down as a whole when it is wider than the space.
-/// Reduce Motion shows the digits without rolling. `style` and `alignment`
-/// default to Home's hero; the Worth hero rolls `heroMedium`, leading.
+/// Reduce Motion shows the digits without rolling. `style` defaults to
+/// Home's hero; the Worth hero passes `heroMedium`.
 struct RollingAmount: View {
     let text: String
     let color: Color
     let style: TextSpec
-    let alignment: Alignment
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ScaledMetric private var fontSize: CGFloat
@@ -172,13 +171,10 @@ struct RollingAmount: View {
     @State private var available: CGFloat = 0
     @State private var rowWidth: CGFloat?
 
-    init(
-        text: String, color: Color, style: TextSpec = .hero, alignment: Alignment = .center
-    ) {
+    init(text: String, color: Color, style: TextSpec = .hero) {
         self.text = text
         self.color = color
         self.style = style
-        self.alignment = alignment
         _fontSize = ScaledMetric(wrappedValue: style.size, relativeTo: style.relativeTo)
     }
 
@@ -230,7 +226,7 @@ struct RollingAmount: View {
             .onGeometryChangeCompat { natural = $0 }
             .scaleEffect(scale)
             .frame(width: measured ? natural.width * scale : nil, height: measured ? natural.height * scale : nil)
-            .frame(minWidth: 0, maxWidth: .infinity, alignment: alignment)
+            .frame(minWidth: 0, maxWidth: .infinity)
         }
         // Each reel is an 11-row strip that `clipped()` hides but does not
         // stop from hit-testing: offset by its digit, a strip reaches up over
