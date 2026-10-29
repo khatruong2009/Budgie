@@ -43,6 +43,8 @@ final class AppModel {
     /// Bumped by every change of `data`: work built from a copy off the
     /// main thread (a CSV import) checks that nothing changed meanwhile.
     @ObservationIgnored var dataRevision = 0
+    /// `categoryInfo(named:type:)`'s lookup, built for one `dataRevision`.
+    @ObservationIgnored var categoryInfoIndex: CategoryInfoIndex?
     private(set) var loadReport: FinancialStore.LoadReport?
     private(set) var backupOutcome: PreNativeMigrationBackup.Outcome?
     /// A quick action, widget or deep link waiting to open the add form.

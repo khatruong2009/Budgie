@@ -184,7 +184,34 @@ extension AppModel {
             activeCategoryNames: categories(for: type).map(\.name))
     }
 
+    /// `FinancialData.categoryInfo(named:type:)` through a dictionary built
+    /// once per `dataRevision` (`categories` is derived on every read): the
+    /// same match (type, then the lowercased names equal as UTF-16) and the
+    /// first definition in `categories` order wins on a duplicate.
     func categoryInfo(named name: String, type: TransactionType) -> CategoryInfo? {
-        data?.categoryInfo(named: name, type: type)
+        guard let data else { return nil }
+        let index: CategoryInfoIndex
+        if let current = categoryInfoIndex, current.revision == dataRevision {
+            index = current
+        } else {
+            var byKey: [CategoryInfoIndex.Key: CategoryInfo] = [:]
+            for info in data.categories {
+                let key = CategoryInfoIndex.Key(type: info.type, name: Array(DartString.lowercase(info.name).utf16))
+                if byKey[key] == nil { byKey[key] = info }
+            }
+            index = CategoryInfoIndex(revision: dataRevision, byKey: byKey)
+            categoryInfoIndex = index
+        }
+        return index.byKey[CategoryInfoIndex.Key(type: type, name: Array(DartString.lowercase(name).utf16))]
     }
+}
+
+struct CategoryInfoIndex {
+    struct Key: Hashable {
+        let type: TransactionType
+        let name: [UInt16]
+    }
+
+    let revision: Int
+    let byKey: [Key: CategoryInfo]
 }
