@@ -699,7 +699,7 @@ extension View {
 
 extension Binding where Value == Bool {
     /// True while `item` holds a value; setting it false clears the item.
-    init<Item>(isPresent item: Binding<Item?>) {
+    init<Item: Sendable>(isPresent item: Binding<Item?>) {
         self.init(get: { item.wrappedValue != nil }, set: { if !$0 { item.wrappedValue = nil } })
     }
 }
