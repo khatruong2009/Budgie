@@ -74,6 +74,9 @@ struct PillButton: View {
     /// Instead of a fixed height: at least this tall, growing with the
     /// label at large Dynamic Type sizes.
     var minHeight: CGFloat? = nil
+    /// A write is awaited: a spinner over a capsule in `color`. The caller
+    /// disables the button.
+    var loading = false
     let action: () -> Void
 
     @State private var taps = 0
@@ -105,6 +108,12 @@ struct PillButton: View {
         }
         .buttonStyle(PressScaleStyle(scale: 0.96))
         .sensoryFeedback(.impact(weight: .light), trigger: taps)
+        .overlay {
+            if loading {
+                Capsule().fill(color)
+                ProgressView().tint(BudgieColor.onAccent)
+            }
+        }
     }
 }
 

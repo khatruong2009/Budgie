@@ -68,14 +68,8 @@ struct BudgetLimitSheet: View {
             header
             field.padding(.top, 24)
             VStack(spacing: 12) {
-                PillButton(title: "Save", filled: true, height: Metrics.pillButtonHeight, action: save)
+                PillButton(title: "Save", filled: true, height: Metrics.pillButtonHeight, loading: saving, action: save)
                     .disabled(!canSave)
-                    .overlay {
-                        if saving {
-                            Capsule().fill(BudgieColor.accent)
-                            ProgressView().tint(BudgieColor.onAccent)
-                        }
-                    }
                     .opacity(canSave ? 1 : Metrics.opacityDisabled)
                     .accessibilityIdentifier("budgets.limit.save")
                 if currentLimit != nil {

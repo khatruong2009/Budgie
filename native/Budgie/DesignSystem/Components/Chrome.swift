@@ -368,14 +368,18 @@ struct DialogButtons: View {
     let submitId: String
     var color: Color = BudgieColor.accent
     var symbol: String? = nil
+    /// The write is awaited: both buttons are inert and the submit spins.
+    var busy = false
     let cancel: () -> Void
     let submit: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
             PillButton(title: "Cancel", color: BudgieColor.textPrimary, height: 44, action: cancel)
+                .disabled(busy)
                 .accessibilityIdentifier(cancelId)
-            PillButton(title: submitTitle, symbol: symbol, color: color, filled: true, height: 44, action: submit)
+            PillButton(title: submitTitle, symbol: symbol, color: color, filled: true, height: 44, loading: busy, action: submit)
+                .disabled(busy)
                 .accessibilityIdentifier(submitId)
         }
         .padding(.top, 24)
