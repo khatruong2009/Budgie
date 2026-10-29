@@ -24,3 +24,23 @@ func dartClamp(_ value: Double, _ lower: Double, _ upper: Double) -> Double {
     if value > upper { return upper }
     return value
 }
+
+/// Dart `double.compareTo`: -0.0 before 0.0, NaN after everything.
+func dartCompare(_ a: Double, _ b: Double) -> Int {
+    if a < b { return -1 }
+    if a > b { return 1 }
+    if a == b {
+        if a == 0 && a.sign != b.sign { return a.sign == .minus ? -1 : 1 }
+        return 0
+    }
+    if a.isNaN { return b.isNaN ? 0 : 1 }
+    return -1
+}
+
+/// Dart `num.clamp` on doubles: `compareTo` order, so -0.0 clamps up to a
+/// 0.0 lower bound and NaN clamps to the upper bound.
+func dartClampExact(_ value: Double, _ lower: Double, _ upper: Double) -> Double {
+    if dartCompare(value, lower) < 0 { return lower }
+    if dartCompare(value, upper) > 0 { return upper }
+    return value
+}

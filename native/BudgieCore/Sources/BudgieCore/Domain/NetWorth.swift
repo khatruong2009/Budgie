@@ -23,7 +23,7 @@ extension FinancialData {
             return (amount, Array(DartString.lowercase(entry.name).utf16), entry)
         }
         return keyed.enumerated().sorted { a, b in
-            let byAmount = FinancialData.dartCompare(b.element.amount, a.element.amount)
+            let byAmount = dartCompare(b.element.amount, a.element.amount)
             if byAmount != 0 { return byAmount < 0 }
             if a.element.name != b.element.name { return a.element.name.lexicographicallyPrecedes(b.element.name) }
             return a.offset < b.offset

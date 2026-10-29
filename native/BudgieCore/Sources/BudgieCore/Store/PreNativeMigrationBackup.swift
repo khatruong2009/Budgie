@@ -146,7 +146,7 @@ public struct PreNativeMigrationBackup: Sendable {
                 try fm.copyItem(at: item, to: destination)
                 let original = try Data(contentsOf: item)
                 let copy = try Data(contentsOf: destination)
-                guard original == copy else { throw BackupError.copyMismatch(item.lastPathComponent) }
+                guard original == copy else { throw CopyError.copyMismatch(item.lastPathComponent) }
                 try flush(destination)
                 files.append(["name": item.lastPathComponent, "size": original.count, "sha256": sha256Hex(original)])
             }
@@ -172,13 +172,15 @@ public struct PreNativeMigrationBackup: Sendable {
         return folder
     }
 
-    public enum BackupError: Error, Equatable {
+    /// A staged copy that does not read back identical (not the backup-file
+    /// `BackupError` of the Data export/import).
+    public enum CopyError: Error, Equatable {
         case copyMismatch(String)
     }
 
     private func write(_ data: Data, to url: URL) throws {
         try data.write(to: url, options: [.atomic])
-        guard try Data(contentsOf: url) == data else { throw BackupError.copyMismatch(url.lastPathComponent) }
+        guard try Data(contentsOf: url) == data else { throw CopyError.copyMismatch(url.lastPathComponent) }
         try flush(url)
     }
 

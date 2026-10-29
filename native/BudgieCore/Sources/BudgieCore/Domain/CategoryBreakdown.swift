@@ -228,7 +228,7 @@ public struct CategoryBreakdown: Sendable {
         // List.sort is an insertion sort (stable) up to 33 elements and a
         // quicksort above; this is stable at every size (PARITY_GAPS).
         let order = entries.indices.sorted { a, b in
-            let c = FinancialData.dartCompare(entries[b].amount, entries[a].amount)
+            let c = dartCompare(entries[b].amount, entries[a].amount)
             return c != 0 ? c < 0 : a < b
         }
         let largest = order.first.map { entries[$0].amount } ?? 0.0

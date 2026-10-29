@@ -169,16 +169,4 @@ extension FinancialData {
     public func unbudgetedCategories() -> [CategoryInfo] {
         expenseCategoryKeys().filter { budgetLimit(for: $0.name) == nil }
     }
-
-    /// Dart `double.compareTo`: -0.0 before 0.0, NaN after everything.
-    static func dartCompare(_ a: Double, _ b: Double) -> Int {
-        if a < b { return -1 }
-        if a > b { return 1 }
-        if a == b {
-            if a == 0 && a.sign != b.sign { return a.sign == .minus ? -1 : 1 }
-            return 0
-        }
-        if a.isNaN { return b.isNaN ? 0 : 1 }
-        return -1
-    }
 }

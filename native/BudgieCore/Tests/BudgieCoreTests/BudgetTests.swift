@@ -178,11 +178,11 @@ struct BudgetTests {
 
     @Test("Dart double.compareTo")
     func compare() {
-        #expect(FinancialData.dartCompare(-0.0, 0.0) == -1)
-        #expect(FinancialData.dartCompare(0.0, -0.0) == 1)
-        #expect(FinancialData.dartCompare(.nan, 1e308) == 1)
-        #expect(FinancialData.dartCompare(.nan, .nan) == 0)
-        #expect(FinancialData.dartCompare(1, .nan) == -1)
-        #expect(FinancialData.dartCompare(2, 2) == 0)
+        #expect(dartCompare(-0.0, 0.0) == -1)
+        #expect(dartCompare(0.0, -0.0) == 1)
+        #expect(dartCompare(.nan, 1e308) == 1)
+        #expect(dartCompare(.nan, .nan) == 0)
+        #expect(dartCompare(1, .nan) == -1)
+        #expect(dartCompare(2, 2) == 0)
     }
 }

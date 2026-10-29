@@ -36,14 +36,6 @@ public enum SavingsGoalStatus: String, Sendable, Hashable, CaseIterable {
     }
 }
 
-/// Dart `num.clamp` on doubles: `compareTo` order, so -0.0 clamps up to a
-/// 0.0 lower bound and NaN clamps to the upper bound.
-func dartClampExact(_ value: Double, _ lower: Double, _ upper: Double) -> Double {
-    if FinancialData.dartCompare(value, lower) < 0 { return lower }
-    if FinancialData.dartCompare(value, upper) > 0 { return upper }
-    return value
-}
-
 extension SavingsGoalRecord {
     // MARK: - Construction
 
