@@ -160,7 +160,7 @@ struct CategoryEditorDialog: View {
         error = nil
         busy = true
         Task {
-            let outcome: AppModel.CategoryOutcome
+            let outcome: AppModel.EditOutcome<CategoryEditError>
             if let category = request.category {
                 outcome = await model.updateCategory(
                     id: category.id, name: name, iconIdentifier: iconIdentifier, colorToken: colorToken)

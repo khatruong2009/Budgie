@@ -996,14 +996,33 @@ final class AppModel {
 
     // MARK: - Categories (category management)
 
-    /// What a category edit did: written and verified; changed in memory
-    /// but not written (the unsaved banner and Retry take over, the caller
-    /// shows `Toast.saveFailed`); nothing to do (a Flutter no-op: unknown
-    /// id, unchanged state, a move to the same slot); or refused with
-    /// nothing changed, carrying Flutter's copy (`error.message`).
-    enum CategoryOutcome: Equatable {
+    /// What a category, tag or rule edit did: written and verified; changed
+    /// in memory but not written (the unsaved banner and Retry take over,
+    /// the caller shows `Toast.saveFailed`); nothing to do (a Flutter no-op:
+    /// unknown id, unchanged state, a move to the same slot); or refused
+    /// with nothing changed, carrying the copy to show (`error.message`).
+    enum EditOutcome<E: Error> {
         case saved, failed, unchanged
-        case rejected(CategoryEditError)
+        case rejected(E)
+    }
+
+    /// Runs one edit on a copy (a refused edit leaves `data` untouched),
+    /// then memory first and one awaited commit of the sections it returns.
+    /// A change to the transactions rebuilds the ledger.
+    private func editCopy<E: Error>(
+        _ edit: (inout FinancialData) throws(E) -> [String]
+    ) async -> EditOutcome<E> {
+        guard var copy = data else { return .unchanged }
+        let sections: [String]
+        do throws(E) {
+            sections = try edit(&copy)
+        } catch {
+            return .rejected(error)
+        }
+        guard !sections.isEmpty else { return .unchanged }
+        data = copy
+        if sections.contains(Section.transactions) { transactionsChanged() }
+        return await persist(sections) ? .saved : .failed
     }
 
     /// Dart `categoriesFor(type, includeArchived:)`: the management list.
@@ -1025,7 +1044,7 @@ final class AppModel {
 
     /// Dart `addCategory` (the type is the page's selected segment).
     @discardableResult
-    func addCategory(type: TransactionType, name: String, iconIdentifier: String, colorToken: String) async -> CategoryOutcome {
+    func addCategory(type: TransactionType, name: String, iconIdentifier: String, colorToken: String) async -> EditOutcome<CategoryEditError> {
         await editCategories { data throws(CategoryEditError) in
             try data.addCategory(type: type, name: name, iconIdentifier: iconIdentifier, colorToken: colorToken, newID: newID)
         }
@@ -1035,7 +1054,7 @@ final class AppModel {
     /// the expense budget key, templates, rules of the same type or none),
     /// all in one commit.
     @discardableResult
-    func updateCategory(id: String, name: String, iconIdentifier: String, colorToken: String) async -> CategoryOutcome {
+    func updateCategory(id: String, name: String, iconIdentifier: String, colorToken: String) async -> EditOutcome<CategoryEditError> {
         let now = self.now
         return await editCategories { data throws(CategoryEditError) in
             try data.updateCategory(id: id, name: name, iconIdentifier: iconIdentifier, colorToken: colorToken, now: now)
@@ -1044,35 +1063,24 @@ final class AppModel {
 
     /// Dart `setArchived` (Archive / Restore).
     @discardableResult
-    func setCategoryArchived(id: String, _ archived: Bool) async -> CategoryOutcome {
+    func setCategoryArchived(id: String, _ archived: Bool) async -> EditOutcome<CategoryEditError> {
         await editCategories { data throws(CategoryEditError) in try data.setCategoryArchived(id: id, archived) }
     }
 
     /// Dart `moveCategory`: `offset` in the type's whole list (use
     /// `categoryMoveOffset` for Move up / Move down).
     @discardableResult
-    func moveCategory(id: String, offset: Int) async -> CategoryOutcome {
+    func moveCategory(id: String, offset: Int) async -> EditOutcome<CategoryEditError> {
         await editCategories { data in data.moveCategory(id: id, offset: offset) }
     }
 
-    /// Runs one category edit on a copy (a refused edit leaves `data`
-    /// untouched), then memory first and one awaited commit of every
-    /// changed section. A rename that touched transactions rebuilds the
-    /// ledger, which keys totals by category name.
+    /// One category edit through `editCopy` (every changed section in one
+    /// commit). A rename that touched transactions rebuilds the ledger,
+    /// which keys totals by category name.
     private func editCategories(
         _ edit: (inout FinancialData) throws(CategoryEditError) -> CategoryEditResult
-    ) async -> CategoryOutcome {
-        guard var copy = data else { return .unchanged }
-        let result: CategoryEditResult
-        do {
-            result = try edit(&copy)
-        } catch {
-            return .rejected(error)
-        }
-        guard !result.changedSections.isEmpty else { return .unchanged }
-        data = copy
-        if result.changedSections.contains(Section.transactions) { transactionsChanged() }
-        return await persist(result.changedSections) ? .saved : .failed
+    ) async -> EditOutcome<CategoryEditError> {
+        await editCopy { (data: inout FinancialData) throws(CategoryEditError) in try edit(&data).changedSections }
     }
 
     func categories(for type: TransactionType) -> [CategoryInfo] {
@@ -1080,16 +1088,6 @@ final class AppModel {
     }
 
     // MARK: - Tags and rules
-
-    /// What a tag or rule edit did: written and verified; changed in memory
-    /// but not written (the unsaved banner and Retry take over, the caller
-    /// shows `Toast.saveFailed`; Flutter is silent); nothing to do (an
-    /// unknown id, where Flutter rewrites the unchanged list); or refused
-    /// with nothing changed, carrying the copy to show (`error.message`).
-    enum TagRuleOutcome: Equatable {
-        case saved, failed, unchanged
-        case rejected(CategorizationEditError)
-    }
 
     /// Transaction tags (`transactionTags`), in stored order (Flutter's
     /// `tags`: the page, the form chips and the Flow filter chips).
@@ -1107,7 +1105,7 @@ final class AppModel {
     /// Dart `addTag`: the trimmed name, "accent" colour. Writes
     /// `transactionTags`.
     @discardableResult
-    func addTag(name: String, colorToken: String = "accent") async -> TagRuleOutcome {
+    func addTag(name: String, colorToken: String = "accent") async -> EditOutcome<CategorizationEditError> {
         let id = newID()
         return await editTagsAndRules { data throws(CategorizationEditError) in
             try data.addTag(name: name, colorToken: colorToken, id: id)
@@ -1119,7 +1117,7 @@ final class AppModel {
     /// keep the id (D9). One commit of `transactionTags` and
     /// `categorizationRules` (Flutter makes two).
     @discardableResult
-    func deleteTag(id: String) async -> TagRuleOutcome {
+    func deleteTag(id: String) async -> EditOutcome<CategorizationEditError> {
         await editTagsAndRules { data in data.deleteTag(id: id) }
     }
 
@@ -1127,7 +1125,7 @@ final class AppModel {
     /// the pattern, match, type, category and tags (`RuleDraft` defaults
     /// for the rest). Writes `categorizationRules`.
     @discardableResult
-    func addRule(_ draft: RuleDraft) async -> TagRuleOutcome {
+    func addRule(_ draft: RuleDraft) async -> EditOutcome<CategorizationEditError> {
         let id = newID()
         return await editTagsAndRules { data throws(CategorizationEditError) in
             try data.addRule(draft, id: id)
@@ -1137,7 +1135,7 @@ final class AppModel {
 
     /// Dart `deleteRule`. Writes `categorizationRules`.
     @discardableResult
-    func deleteRule(id: String) async -> TagRuleOutcome {
+    func deleteRule(id: String) async -> EditOutcome<CategorizationEditError> {
         await editTagsAndRules { data in data.deleteRule(id: id) ? [Section.categorizationRules] : [] }
     }
 
@@ -1145,7 +1143,7 @@ final class AppModel {
     /// the changed keys patched. Writes `categorizationRules`;
     /// `.unchanged` when the draft matches the rule.
     @discardableResult
-    func updateRule(id: String, _ draft: RuleDraft) async -> TagRuleOutcome {
+    func updateRule(id: String, _ draft: RuleDraft) async -> EditOutcome<CategorizationEditError> {
         await editTagsAndRules { data throws(CategorizationEditError) in
             try data.updateRule(id: id, draft) ? [Section.categorizationRules] : []
         }
@@ -1154,26 +1152,16 @@ final class AppModel {
     /// Swift-only enable switch (`isEnabled`). Writes `categorizationRules`;
     /// `.unchanged` when the rule is unknown or already so.
     @discardableResult
-    func setRuleEnabled(id: String, _ enabled: Bool) async -> TagRuleOutcome {
+    func setRuleEnabled(id: String, _ enabled: Bool) async -> EditOutcome<CategorizationEditError> {
         await editTagsAndRules { data in data.setRuleEnabled(id: id, enabled) ? [Section.categorizationRules] : [] }
     }
 
-    /// Runs one tag or rule edit on a copy (a refused edit leaves `data`
-    /// untouched), then memory first and one awaited commit of the sections
-    /// it returns.
+    /// One tag or rule edit through `editCopy` (the sections it returns in
+    /// one commit; Flutter is silent on a failed write, the callers toast).
     private func editTagsAndRules(
         _ edit: (inout FinancialData) throws(CategorizationEditError) -> [String]
-    ) async -> TagRuleOutcome {
-        guard var copy = data else { return .unchanged }
-        let sections: [String]
-        do {
-            sections = try edit(&copy)
-        } catch {
-            return .rejected(error)
-        }
-        guard !sections.isEmpty else { return .unchanged }
-        data = copy
-        return await persist(sections) ? .saved : .failed
+    ) async -> EditOutcome<CategorizationEditError> {
+        await editCopy(edit)
     }
 
     /// The form's auto-categorisation (`applySuggestion`,
@@ -1612,3 +1600,5 @@ private final class BackgroundWork {
         identifier = .invalid
     }
 }
+
+extension AppModel.EditOutcome: Equatable where E: Equatable {}

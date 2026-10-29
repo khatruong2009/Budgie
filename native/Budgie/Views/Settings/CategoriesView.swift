@@ -134,7 +134,7 @@ struct CategoriesView: View {
     /// Awaits the edit; silent when saved or a no-op (as Flutter), the
     /// save-failed toast when only memory changed, Flutter's message in the
     /// neutral toast when refused.
-    private func run(_ edit: @escaping () async -> AppModel.CategoryOutcome) {
+    private func run(_ edit: @escaping () async -> AppModel.EditOutcome<CategoryEditError>) {
         Task {
             switch await edit() {
             case .saved, .unchanged: break

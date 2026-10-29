@@ -35,7 +35,7 @@ final class CategoryModelTests: XCTestCase {
 
     /// The outcome carries Flutter's copy for the caller's message.
     func testRejectedOutcomeCarriesFlutterCopy() {
-        let outcome = AppModel.CategoryOutcome.rejected(.lastActive)
+        let outcome = AppModel.EditOutcome<CategoryEditError>.rejected(.lastActive)
         guard case .rejected(let error) = outcome else { return XCTFail() }
         XCTAssertEqual(error.message, "At least one category must remain active")
     }

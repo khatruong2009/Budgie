@@ -30,7 +30,7 @@ final class TagRuleModelTests: XCTestCase {
 
     /// The outcome carries Flutter's copy for the caller's message.
     func testRejectedOutcomeCarriesFlutterCopy() {
-        let outcome = AppModel.TagRuleOutcome.rejected(.duplicateTagName)
+        let outcome = AppModel.EditOutcome<CategorizationEditError>.rejected(.duplicateTagName)
         guard case .rejected(let error) = outcome else { return XCTFail() }
         XCTAssertEqual(error.message, "A tag with this name already exists")
         XCTAssertEqual(CategorizationEditError.tagNameRequired.message, "Tag name is required")
