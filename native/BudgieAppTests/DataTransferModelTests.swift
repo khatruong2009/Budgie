@@ -658,7 +658,15 @@ final class CSVImportModelTests: XCTestCase {
                 last = now
             }
         }
-        while stall.ticks < 2 { try await Task.sleep(for: .milliseconds(5)) }
+        let tickDeadline = ContinuousClock.now.advanced(by: .seconds(5))
+        while stall.ticks < 2 {
+            if ContinuousClock.now >= tickDeadline {
+                stall.running = false
+                XCTFail("timed out: the ticker never ticked")
+                return
+            }
+            try await Task.sleep(for: .milliseconds(5))
+        }
         stall.longest = 0
         let started = Date()
         let saved = await model.importCSV(summary)

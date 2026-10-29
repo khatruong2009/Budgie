@@ -96,9 +96,10 @@ final class InsightModelTests: XCTestCase {
     private func waitUntil(
         _ condition: () -> Bool, _ message: String, file: StaticString = #filePath, line: UInt = #line
     ) async throws {
-        for _ in 0..<500 {
+        let deadline = ContinuousClock.now.advanced(by: .seconds(5))
+        while ContinuousClock.now < deadline {
             if condition() { return }
-            try await Task.sleep(for: .milliseconds(10))
+            try await Task.sleep(for: .milliseconds(5))
         }
         XCTFail("timed out: \(message)", file: file, line: line)
     }
