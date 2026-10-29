@@ -42,7 +42,7 @@ enum Canonical {
     /// that string (trimmed, if `trimmed`) is `value`.
     static func string(_ value: String, raw: JSONObject, key: String, trimmed: Bool = false) -> JSONValue {
         if case .string(let source)? = raw[key] {
-            let units = trimmed ? trim(source.codeUnits) : source.codeUnits
+            let units = trimmed ? DartString.trimUnits(source.codeUnits) : source.codeUnits
             if String(decoding: units, as: UTF16.self).utf16.elementsEqual(value.utf16) {
                 return .string(JSONString(lexeme: DartJSON.escape(codeUnits: units)))
             }
@@ -70,17 +70,6 @@ enum Canonical {
         return .array(values.map { .string($0) })
     }
 
-    /// Dart `String.trim` on code units (every trimmed character is a
-    /// single BMP unit, never a surrogate).
-    static func trim(_ units: [UInt16]) -> [UInt16] {
-        func isSpace(_ unit: UInt16) -> Bool {
-            guard let scalar = Unicode.Scalar(unit) else { return false }
-            return DartString.isWhitespace(scalar)
-        }
-        guard let start = units.firstIndex(where: { !isSpace($0) }) else { return [] }
-        let end = units.lastIndex(where: { !isSpace($0) })!
-        return Array(units[start...end])
-    }
 }
 
 extension TransactionRecord {

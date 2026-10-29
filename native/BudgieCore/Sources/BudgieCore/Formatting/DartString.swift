@@ -16,6 +16,15 @@ public enum DartString {
         return String(scalars[start...end])
     }
 
+    /// Dart `String.trim` on UTF-16 code units (every character in the set is
+    /// one BMP unit; a surrogate is never whitespace).
+    public static func trimUnits(_ units: [UInt16]) -> [UInt16] {
+        func space(_ unit: UInt16) -> Bool { Unicode.Scalar(unit).map(isWhitespace) ?? false }
+        guard let start = units.firstIndex(where: { !space($0) }) else { return [] }
+        let end = units.lastIndex(where: { !space($0) })!
+        return Array(units[start...end])
+    }
+
     /// Dart's `trim` whitespace set (`String.trim` docs).
     public static func isWhitespace(_ scalar: Unicode.Scalar) -> Bool {
         switch scalar.value {

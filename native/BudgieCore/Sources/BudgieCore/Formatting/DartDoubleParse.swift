@@ -9,14 +9,11 @@ extension DartDouble {
     /// Out-of-range values round to infinity or zero. Verified against Dart,
     /// see Fixtures/home/try_parse.json.
     public static func tryParse(_ text: String) -> Double? {
-        let units = Array(text.utf16)
-        var start = 0
-        var end = units.count
-        while start < end && isSpace(units[start]) { start += 1 }
-        while end > start && isSpace(units[end - 1]) { end -= 1 }
-        guard start < end else { return nil }
+        let units = DartString.trimUnits(Array(text.utf16))
+        let end = units.count
+        guard end > 0 else { return nil }
 
-        var i = start
+        var i = 0
         var negative = false
         if units[i] == 0x2B || units[i] == 0x2D {  // + -
             negative = units[i] == 0x2D
@@ -60,10 +57,5 @@ extension DartDouble {
         // A plain numeral that strtod rounds correctly.
         let numeral = (negative ? "-" : "") + (integer.isEmpty ? "0" : integer) + "." + (fraction.isEmpty ? "0" : fraction) + exponent
         return Double(numeral)
-    }
-
-    private static func isSpace(_ unit: UInt16) -> Bool {
-        guard let scalar = Unicode.Scalar(unit) else { return false }
-        return DartString.isWhitespace(scalar)
     }
 }

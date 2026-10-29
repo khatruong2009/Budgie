@@ -219,20 +219,11 @@ public enum CSVImport {
         _ date: DartDateTime, _ type: TransactionType, _ category: [UInt16], _ description: [UInt16], _ amount: Double
     ) -> [UInt16] {
         var key = Array(DartDateFormat.yyyyMMdd(date).utf16)
-        for part in [Array(type.rawValue.utf16), trim(category), trim(description), Array(DartFixed.toStringAsFixed(amount, 2).utf16)] {
+        for part in [Array(type.rawValue.utf16), DartString.trimUnits(category), DartString.trimUnits(description), Array(DartFixed.toStringAsFixed(amount, 2).utf16)] {
             key.append(0x7C)
             key.append(contentsOf: part)
         }
         return key
-    }
-
-    /// Dart `trim` over code units (every character in its set is one
-    /// UTF-16 unit; a surrogate is never whitespace).
-    static func trim(_ units: [UInt16]) -> [UInt16] {
-        func space(_ unit: UInt16) -> Bool { Unicode.Scalar(unit).map(DartString.isWhitespace) ?? false }
-        guard let start = units.firstIndex(where: { !space($0) }) else { return [] }
-        let end = units.lastIndex(where: { !space($0) })!
-        return Array(units[start...end])
     }
 
     // MARK: - Copy
