@@ -43,18 +43,11 @@ public enum CSVExport {
 
     /// "transactions_yyyyMMdd_HHmmss.csv" from the local fields of `now`.
     public static func fileName(now: DartDateTime) -> String {
-        let f = now.fields
-        return "transactions_\(pad(f.year, 4))\(pad(f.month, 2))\(pad(f.day, 2))_\(pad(f.hour, 2))\(pad(f.minute, 2))\(pad(f.second, 2)).csv"
+        "transactions_\(DartDateFormat.yyyyMMdd_HHmmss(now)).csv"
     }
 
     /// `DateFormat('yyyy-MM-dd')` (a negative year prints without its sign).
     private static func dateText(_ date: DartDateTime) -> String { DartDateFormat.yyyyMMdd(date) }
-
-    private static func pad(_ value: Int, _ width: Int) -> String {
-        let digits = String(value.magnitude)
-        let padding = String(repeating: "0", count: max(0, width - digits.count))
-        return (value < 0 ? "-" : "") + padding + digits
-    }
 
     /// Quote iff the field contains `,` `"` CR or LF; embedded `"` are doubled.
     /// Works on unicode scalars because "\r\n" is a single Character in Swift.

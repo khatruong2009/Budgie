@@ -1,4 +1,3 @@
-import CryptoKit
 import Foundation
 
 /// The safety copy taken before a backup is restored (D10): every file of
@@ -69,7 +68,7 @@ public struct PreRestoreBackup: Sendable {
                 try copy.writeStaged(name, bytes)
                 try copy.commitStaged(name)
                 guard try copy.read(name) == bytes else { throw Failure.copyMismatch(name) }
-                files.append(["name": name, "size": bytes.count, "sha256": sha256(bytes)])
+                files.append(["name": name, "size": bytes.count, "sha256": sha256Hex(bytes)])
                 if name == StoreFile.primaryName { primaryChecksum = StoreFile.verify(bytes)?.payloadChecksum }
             }
             let preferences = [UInt8](try exportPreferences())
@@ -83,7 +82,7 @@ public struct PreRestoreBackup: Sendable {
                 "appVersion": appVersion,
                 "primaryChecksum": primaryChecksum ?? NSNull(),
                 "files": files,
-                "preferencesSha256": sha256(preferences),
+                "preferencesSha256": sha256Hex(preferences),
             ]
             let manifestData = try JSONSerialization.data(withJSONObject: manifest, options: [.prettyPrinted, .sortedKeys])
             try write(meta, PreRestoreBackup.manifestName, [UInt8](manifestData))
@@ -158,9 +157,5 @@ public struct PreRestoreBackup: Sendable {
     private func write(_ directory: DirectoryFileSystem, _ name: String, _ bytes: [UInt8]) throws {
         try directory.writeStaged(name, bytes)
         try directory.commitStaged(name)
-    }
-
-    private func sha256<D: DataProtocol>(_ data: D) -> String {
-        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 }

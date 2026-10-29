@@ -81,6 +81,13 @@ public enum DartDateFormat {
         return "\(pad(abs(f.year), 4))-\(pad(f.month, 2))-\(pad(f.day, 2))"
     }
 
+    /// `DateFormat('yyyyMMdd_HHmmss')` (file names): the signed year, as
+    /// `DartCalendar.pad` writes it.
+    public static func yyyyMMdd_HHmmss(_ d: DartDateTime) -> String {
+        let f = d.fields
+        return "\(pad(f.year, 4))\(pad(f.month, 2))\(pad(f.day, 2))_\(pad(f.hour, 2))\(pad(f.minute, 2))\(pad(f.second, 2))"
+    }
+
     /// `DateFormat('yyyy-MM')`.
     public static func yyyyMM(_ d: DartDateTime) -> String {
         let f = d.fields

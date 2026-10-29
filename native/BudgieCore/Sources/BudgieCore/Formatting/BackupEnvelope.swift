@@ -70,13 +70,7 @@ public enum BackupEnvelope {
     /// `budgie_backup_${DateFormat('yyyyMMdd_HHmmss').format(now)}.json`,
     /// from the local fields of `now`.
     public static func fileName(now: DartDateTime) -> String {
-        let f = now.fields
-        func pad(_ value: Int, _ width: Int) -> String {
-            let digits = String(value.magnitude)
-            return (value < 0 ? "-" : "") + String(repeating: "0", count: max(0, width - digits.count)) + digits
-        }
-        return "budgie_backup_\(pad(f.year, 4))\(pad(f.month, 2))\(pad(f.day, 2))_"
-            + "\(pad(f.hour, 2))\(pad(f.minute, 2))\(pad(f.second, 2)).json"
+        "budgie_backup_\(DartDateFormat.yyyyMMdd_HHmmss(now)).json"
     }
 
     /// Dart `CategorizationProvider.rules`: a copy sorted by priority,

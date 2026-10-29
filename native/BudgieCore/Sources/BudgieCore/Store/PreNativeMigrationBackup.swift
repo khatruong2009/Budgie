@@ -1,4 +1,3 @@
-import CryptoKit
 import Foundation
 
 /// Rule 1 of the migration: before the Swift app reads or writes any
@@ -82,7 +81,7 @@ public struct PreNativeMigrationBackup: Sendable {
         let primary = sources.storeDirectory.appendingPathComponent(StoreFile.primaryName)
         guard FileManager.default.fileExists(atPath: primary.path) else { return nil }
         let bytes = [UInt8](try Data(contentsOf: primary))
-        return StoreFile.verify(bytes)?.payloadChecksum ?? "unverified:" + sha256(Data(bytes))
+        return StoreFile.verify(bytes)?.payloadChecksum ?? "unverified:" + sha256Hex(Data(bytes))
     }
 
     private func recordedPrimaryChecksum(_ snapshot: URL) throws -> String? {
@@ -101,13 +100,13 @@ public struct PreNativeMigrationBackup: Sendable {
         for file in files {
             guard let name = file["name"] as? String, let hash = file["sha256"] as? String,
                 let data = try? Data(contentsOf: snapshot.appendingPathComponent(StoreFile.directoryName).appendingPathComponent(name)),
-                sha256(data) == hash
+                sha256Hex(data) == hash
             else { return false }
         }
         guard let prefs = try? Data(contentsOf: snapshot.appendingPathComponent("preferences.plist")),
             let group = try? Data(contentsOf: snapshot.appendingPathComponent("app-group.plist"))
         else { return false }
-        return sha256(prefs) == preferencesHash && sha256(group) == appGroupHash
+        return sha256Hex(prefs) == preferencesHash && sha256Hex(group) == appGroupHash
     }
 
     private func matchesSources(_ snapshot: URL) throws -> Bool {
@@ -149,7 +148,7 @@ public struct PreNativeMigrationBackup: Sendable {
                 let copy = try Data(contentsOf: destination)
                 guard original == copy else { throw BackupError.copyMismatch(item.lastPathComponent) }
                 try flush(destination)
-                files.append(["name": item.lastPathComponent, "size": original.count, "sha256": sha256(original)])
+                files.append(["name": item.lastPathComponent, "size": original.count, "sha256": sha256Hex(original)])
             }
         }
         let preferences = try sources.exportPreferences()
@@ -163,8 +162,8 @@ public struct PreNativeMigrationBackup: Sendable {
             "osVersion": ProcessInfo.processInfo.operatingSystemVersionString,
             "primaryChecksum": try currentPrimaryChecksum() ?? NSNull(),
             "files": files,
-            "preferencesSha256": sha256(preferences),
-            "appGroupSha256": sha256(appGroup),
+            "preferencesSha256": sha256Hex(preferences),
+            "appGroupSha256": sha256Hex(appGroup),
         ]
         let manifestData = try JSONSerialization.data(withJSONObject: manifest, options: [.prettyPrinted, .sortedKeys])
         try write(manifestData, to: folder.appendingPathComponent(PreNativeMigrationBackup.manifestName))
@@ -192,9 +191,5 @@ public struct PreNativeMigrationBackup: Sendable {
         if fcntl(fd, F_FULLFSYNC) != 0 && fsync(fd) != 0 {
             throw StoreFileSystemError.posix(operation: "fsync", name: url.lastPathComponent, errno: errno)
         }
-    }
-
-    private func sha256(_ data: Data) -> String {
-        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 }
