@@ -387,21 +387,31 @@ private struct Placed: ViewModifier {
 }
 
 /// A dialog's centred title (`sheetTitle`, as the category editor).
+/// `centersLines: false` leaves a wrapped title's lines leading-aligned
+/// (still centred as a block).
 struct DialogTitle: View {
     let text: String
+    var centersLines = true
 
     var body: some View {
-        Text(text)
+        let title = Text(text)
             .textStyle(.sheetTitle)
             .foregroundStyle(BudgieColor.textPrimary)
-            .multilineTextAlignment(.center)
-            .frame(maxWidth: .infinity)
-            .accessibilityAddTraits(.isHeader)
+        Group {
+            if centersLines {
+                title.multilineTextAlignment(.center)
+            } else {
+                title
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityAddTraits(.isHeader)
     }
 }
 
 /// A dialog's button pair: outlined Cancel, and the filled submit in
-/// `color`, both 44 tall, 24 below the content above.
+/// `color`, both 44 tall, 24 below the content above. `submitEnabled`, when
+/// given, disables the submit and dims it (`opacityDisabled`) while false.
 struct DialogButtons: View {
     let cancelId: String
     let submitTitle: String
@@ -410,6 +420,7 @@ struct DialogButtons: View {
     var symbol: String? = nil
     /// The write is awaited: both buttons are inert and the submit spins.
     var busy = false
+    var submitEnabled: Bool? = nil
     let cancel: () -> Void
     let submit: () -> Void
 
@@ -418,11 +429,40 @@ struct DialogButtons: View {
             PillButton(title: "Cancel", color: BudgieColor.textPrimary, height: 44, action: cancel)
                 .disabled(busy)
                 .accessibilityIdentifier(cancelId)
-            PillButton(title: submitTitle, symbol: symbol, color: color, filled: true, height: 44, loading: busy, action: submit)
+            submitButton
+        }
+        .padding(.top, 24)
+    }
+
+    @ViewBuilder private var submitButton: some View {
+        let pill = PillButton(
+            title: submitTitle, symbol: symbol, color: color, filled: true, height: 44, loading: busy, action: submit)
+        if let submitEnabled {
+            pill
+                .disabled(busy || !submitEnabled)
+                .opacity(submitEnabled ? 1 : Metrics.opacityDisabled)
+                .accessibilityIdentifier(submitId)
+        } else {
+            pill
                 .disabled(busy)
                 .accessibilityIdentifier(submitId)
         }
-        .padding(.top, 24)
+    }
+}
+
+extension AppModel.EditOutcome {
+    /// What a category, tag or rule dialog does with its edit's outcome:
+    /// saved or unchanged closes it, a failed write closes it with the
+    /// save-failed toast, a rejection goes to `rejected` as the error copy.
+    @MainActor
+    func handle(on model: AppModel, message: (E) -> String, close: () -> Void, rejected: (String) -> Void) {
+        switch self {
+        case .saved, .unchanged: close()
+        case .failed:
+            close()
+            model.showToast(.saveFailed)
+        case .rejected(let rejection): rejected(message(rejection))
+        }
     }
 }
 

@@ -51,21 +51,12 @@ struct CategoryEditorDialog: View {
     var body: some View {
         let isNew = request.category == nil
         VStack(spacing: 0) {
-            Text(isNew ? "New category" : "Edit category")
-                .textStyle(.sheetTitle)
-                .foregroundStyle(BudgieColor.textPrimary)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
-                .accessibilityAddTraits(.isHeader)
+            DialogTitle(text: isNew ? "New category" : "Edit category")
             DialogScroll { fields }
                 .padding(.top, 20)
-            HStack(spacing: 12) {
-                PillButton(title: "Cancel", color: BudgieColor.textPrimary, height: 44, action: onClose)
-                    .accessibilityIdentifier("categories.editor.cancel")
-                PillButton(title: isNew ? "Add" : "Save", filled: true, height: 44, action: submit)
-                    .accessibilityIdentifier("categories.editor.submit")
-            }
-            .padding(.top, Metrics.spacingL)
+            DialogButtons(
+                cancelId: "categories.editor.cancel", submitTitle: isNew ? "Add" : "Save",
+                submitId: "categories.editor.submit", cancel: onClose, submit: submit)
         }
         .disabled(busy)
         // The scrim (and its VoiceOver Dismiss) is inert while saving.
@@ -169,13 +160,7 @@ struct CategoryEditorDialog: View {
                     type: request.type, name: name, iconIdentifier: iconIdentifier, colorToken: colorToken)
             }
             busy = false
-            switch outcome {
-            case .saved, .unchanged: onClose()
-            case .failed:
-                onClose()
-                model.showToast(.saveFailed)
-            case .rejected(let rejection): show(rejection.message)
-            }
+            outcome.handle(on: model, message: { $0.message }, close: onClose, rejected: show)
         }
     }
 

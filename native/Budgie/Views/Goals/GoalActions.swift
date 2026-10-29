@@ -73,12 +73,7 @@ struct DeleteGoalDialog: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Text("Delete savings goal?")
-                .textStyle(.sheetTitle)
-                .foregroundStyle(BudgieColor.textPrimary)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
-                .accessibilityAddTraits(.isHeader)
+            DialogTitle(text: "Delete savings goal?")
             DialogScroll {
                 Text("This removes \"\(goal.name)\" and its saved progress from your goals.")
                     .textStyle(GoalText.body)
@@ -88,14 +83,10 @@ struct DeleteGoalDialog: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.top, 12)
-            HStack(spacing: 12) {
-                PillButton(title: "Cancel", color: BudgieColor.textPrimary, height: 44, action: onCancel)
-                    .accessibilityIdentifier("goals.delete.cancel")
-                PillButton(title: "Delete", color: BudgieColor.danger, filled: true, height: 44, action: onDelete)
-                    .accessibilityIdentifier("goals.delete.confirm")
-            }
-            .disabled(busy)
-            .padding(.top, Metrics.spacingL)
+            DialogButtons(
+                cancelId: "goals.delete.cancel", submitTitle: "Delete", submitId: "goals.delete.confirm",
+                color: BudgieColor.danger, cancel: onCancel, submit: onDelete)
+                .disabled(busy)
         }
     }
 }

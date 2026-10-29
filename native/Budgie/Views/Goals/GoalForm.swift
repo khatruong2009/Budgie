@@ -67,24 +67,12 @@ struct GoalFormDialog: View {
     var body: some View {
         let amountSymbol = AmountInput.currencySymbolName(formatter)
         VStack(spacing: 0) {
-            Text(goal == nil ? "Add savings goal" : "Edit savings goal")
-                .textStyle(.sheetTitle)
-                .foregroundStyle(BudgieColor.textPrimary)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
-                .accessibilityAddTraits(.isHeader)
+            DialogTitle(text: goal == nil ? "Add savings goal" : "Edit savings goal")
             DialogScroll { fields(amountSymbol: amountSymbol) }
                 .padding(.top, 20)
-            HStack(spacing: 12) {
-                PillButton(title: "Cancel", color: BudgieColor.textPrimary, height: 44, action: onCancel)
-                    .accessibilityIdentifier("goals.form.cancel")
-                PillButton(
-                    title: goal == nil ? "Add" : "Update", symbol: goal == nil ? "plus" : "checkmark", filled: true, height: 44,
-                    action: submit
-                )
-                .accessibilityIdentifier("goals.form.submit")
-            }
-            .padding(.top, Metrics.spacingL)
+            DialogButtons(
+                cancelId: "goals.form.cancel", submitTitle: goal == nil ? "Add" : "Update", submitId: "goals.form.submit",
+                symbol: goal == nil ? "plus" : "checkmark", cancel: onCancel, submit: submit)
         }
         .disabled(busy)
         .sheet(isPresented: $showingDatePicker) {

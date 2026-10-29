@@ -27,11 +27,7 @@ struct AllocationDialog: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Text("Add money")
-                .textStyle(.sheetTitle)
-                .foregroundStyle(BudgieColor.textPrimary)
-                .frame(maxWidth: .infinity)
-                .accessibilityAddTraits(.isHeader)
+            DialogTitle(text: "Add money", centersLines: false)
             Text(goal.name)
                 .textStyle(GoalText.caption)
                 .foregroundStyle(BudgieColor.textSecondary)
@@ -54,13 +50,9 @@ struct AllocationDialog: View {
                 }
             }
             .padding(.top, 20)
-            HStack(spacing: 12) {
-                PillButton(title: "Cancel", color: BudgieColor.textPrimary, height: 44, action: onCancel)
-                    .accessibilityIdentifier("goals.allocate.cancel")
-                PillButton(title: "Add money", symbol: "plus", filled: true, height: 44, action: submit)
-                    .accessibilityIdentifier("goals.allocate.submit")
-            }
-            .padding(.top, Metrics.spacingL)
+            DialogButtons(
+                cancelId: "goals.allocate.cancel", submitTitle: "Add money", submitId: "goals.allocate.submit",
+                symbol: "plus", cancel: onCancel, submit: submit)
         }
         .disabled(busy)
         .sensoryFeedback(.selection, trigger: chipTaps)

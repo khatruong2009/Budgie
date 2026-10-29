@@ -76,7 +76,7 @@ struct AccountEditorDialog: View {
                 .padding(EdgeInsets(top: 24, leading: 24, bottom: 0, trailing: 24))
             }
             buttons
-                .padding(EdgeInsets(top: 24, leading: 24, bottom: 20, trailing: 24))
+                .padding(EdgeInsets(top: 0, leading: 24, bottom: 20, trailing: 24))
         }
         .onChange(of: amountText) { old, new in
             if let replacement = Self.sanitizedAmount(old: old, new: new, prefill: prefill.text) { amountText = replacement }
@@ -177,21 +177,11 @@ struct AccountEditorDialog: View {
     /// filled in the type colour, spinning while the write is awaited. Both
     /// play the pill's light impact.
     private var buttons: some View {
-        HStack(spacing: 12) {
-            PillButton(title: "Cancel", color: BudgieColor.textPrimary, height: 44, action: dismiss)
-                .disabled(saving)
-                .accessibilityIdentifier("worth.editor.cancel")
-            PillButton(title: isEditing ? "Save" : "Add", color: accent, filled: true, height: 44) {
-                Task { await save() }
-            }
-            .overlay {
-                if saving {
-                    Capsule().fill(accent)
-                    ProgressView().tint(BudgieColor.onAccent)
-                }
-            }
-            .disabled(saving)
-            .accessibilityIdentifier("worth.editor.save")
+        DialogButtons(
+            cancelId: "worth.editor.cancel", submitTitle: isEditing ? "Save" : "Add", submitId: "worth.editor.save",
+            color: accent, busy: saving, cancel: dismiss
+        ) {
+            Task { await save() }
         }
     }
 

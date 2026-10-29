@@ -67,13 +67,7 @@ struct NewTagDialog: View {
         Task {
             let outcome = await model.addTag(name: name)
             busy = false
-            switch outcome {
-            case .saved, .unchanged: onClose()
-            case .failed:
-                onClose()
-                model.showToast(.saveFailed)
-            case .rejected(let rejection): show(rejection.message)
-            }
+            outcome.handle(on: model, message: { $0.message }, close: onClose, rejected: show)
         }
     }
 
@@ -107,13 +101,9 @@ struct DeleteTagDialog: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.top, 12)
-            HStack(spacing: 12) {
-                PillButton(title: "Cancel", color: BudgieColor.textPrimary, height: 44, action: onClose)
-                    .accessibilityIdentifier("tags.delete.cancel")
-                PillButton(title: "Delete", color: BudgieColor.danger, filled: true, height: 44, action: delete)
-                    .accessibilityIdentifier("tags.delete.confirm")
-            }
-            .padding(.top, Metrics.spacingL)
+            DialogButtons(
+                cancelId: "tags.delete.cancel", submitTitle: "Delete", submitId: "tags.delete.confirm",
+                color: BudgieColor.danger, cancel: onClose, submit: delete)
         }
         .disabled(busy)
         .budgieDialogDismissDisabled(busy)

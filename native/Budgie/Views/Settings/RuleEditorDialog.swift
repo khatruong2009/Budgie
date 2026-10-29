@@ -104,15 +104,10 @@ struct RuleEditorDialog: View {
                     .frame(maxWidth: .infinity)
                     .padding(.top, Metrics.spacingM)
             }
-            HStack(spacing: 12) {
-                PillButton(title: "Cancel", color: BudgieColor.textPrimary, height: 44, action: onClose)
-                    .accessibilityIdentifier("rules.editor.cancel")
-                PillButton(title: rule == nil ? "Add" : "Save", filled: true, height: 44) { submit(category: selectedCategory) }
-                    .disabled(!canSubmit)
-                    .opacity(canSubmit ? 1 : Metrics.opacityDisabled)
-                    .accessibilityIdentifier("rules.editor.submit")
-            }
-            .padding(.top, Metrics.spacingL)
+            DialogButtons(
+                cancelId: "rules.editor.cancel", submitTitle: rule == nil ? "Add" : "Save", submitId: "rules.editor.submit",
+                submitEnabled: canSubmit, cancel: onClose
+            ) { submit(category: selectedCategory) }
         }
         .disabled(busy)
         .budgieDialogDismissDisabled(busy)
@@ -271,14 +266,9 @@ struct RuleEditorDialog: View {
         Task {
             let outcome = if let rule { await model.updateRule(id: rule.id, draft) } else { await model.addRule(draft) }
             busy = false
-            switch outcome {
-            case .saved, .unchanged: onClose()
-            case .failed:
-                onClose()
-                model.showToast(.saveFailed)
-            case .rejected(let rejection):
-                error = rejection.message
-                AccessibilityNotification.Announcement(rejection.message).post()
+            outcome.handle(on: model, message: { $0.message }, close: onClose) {
+                error = $0
+                AccessibilityNotification.Announcement($0).post()
             }
         }
     }
