@@ -108,8 +108,8 @@ final class SettingsUITests: XCTestCase {
 
         chooseNumberFormat("German (Germany)")
 
-        // Home's cash-flow legend reads "Spent, 0,00 $, Kept, 0,00 $": the
-        // symbol follows the number after a no-break space.
+        // Home's cash-flow legend reads "Spent, 920,00 $, ..." whatever the
+        // amounts: the symbol follows the number after a no-break space.
         app.goToHomeRoot()
         let gauge = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Spent,'")).firstMatch
         XCTAssertTrue(gauge.waitForExistence(timeout: 5))
@@ -118,7 +118,10 @@ final class SettingsUITests: XCTestCase {
         app.openSettings()
         chooseNumberFormat("English (United States)")
         app.goToHomeRoot()
-        XCTAssertTrue(gauge.waitUntil("label CONTAINS %@", ["$0"]), "US amounts put $ first: \(gauge.label)")
+        // "Spent, $920.00, ...": the symbol leads the digits, and the store
+        // may hold any amounts, so match the shape rather than "$0".
+        XCTAssertTrue(gauge.waitUntil("label MATCHES %@ AND NOT label CONTAINS %@", [#".*\$\d.*"#, "\u{00A0}$"]),
+                      "US amounts put $ first: \(gauge.label)")
 
         app.openSettings()
         chooseNumberFormat(original)
