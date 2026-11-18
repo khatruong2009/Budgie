@@ -1,10 +1,13 @@
 import XCTest
 
-/// Flow's Insights section end to end on a store with no transactions:
-/// three expenses each added twice today give three "Possible duplicate
-/// transaction" cards (ids sorted: A, B, C). The first is snoozed and the
-/// next dismissed from the "Insight options" menu; both stay hidden after a
-/// relaunch while the third still shows. The rows are deleted at the end.
+/// Flow's Insights section end to end: three expenses each added twice
+/// today give three "Possible duplicate transaction" cards. A is snoozed and
+/// B dismissed from their "Insight options" menus; both stay hidden after a
+/// relaunch while C still shows. The rows are deleted at the end.
+///
+/// The store may already hold data (BackupUITests and CSVImportUITests
+/// leave fixture rows and a budget that bring cards of their own), so the
+/// test only counts and acts on cards for this run's rows.
 ///
 /// The snooze and the dismissal stay in the app's preferences (there is no
 /// way to undo either in the app). The descriptions carry a per-run suffix,
@@ -34,8 +37,10 @@ final class InsightsUITests: XCTestCase {
             format: "identifier == 'flow.insight.card' AND label CONTAINS %@", "\(description) appears more than once")).firstMatch
     }
 
+    /// The cards for this run's rows.
     private var cards: XCUIElementQuery {
-        app.descendants(matching: .any).matching(identifier: "flow.insight.card")
+        app.descendants(matching: .any).matching(NSPredicate(
+            format: "identifier == 'flow.insight.card' AND label CONTAINS %@", run))
     }
 
     private func addExpense(_ description: String) {
@@ -48,11 +53,17 @@ final class InsightsUITests: XCTestCase {
         XCTAssertTrue(amount.waitForNonExistence(timeout: 10), "form closed")
     }
 
-    /// Opens the menu of the card at `index` and picks `item`.
-    private func pick(_ item: String, onCardAt index: Int) {
-        let menu = app.buttons.matching(identifier: "flow.insight.menu").element(boundBy: index)
-        XCTAssertTrue(menu.waitForExistence(timeout: 5))
-        menu.tap()
+    /// Opens the menu of the card for `description` and picks `item`. The
+    /// menu is the card's sibling and its value is only the headline, which
+    /// every duplicate card shares, so it is found by sitting level with the
+    /// card.
+    private func pick(_ item: String, onCardFor description: String) {
+        let card = card(description)
+        XCTAssertTrue(card.waitForExistence(timeout: 5), description)
+        let menus = app.buttons.matching(identifier: "flow.insight.menu").allElementsBoundByIndex
+        let menu = menus.first { $0.frame.midY > card.frame.minY && $0.frame.midY < card.frame.maxY }
+        XCTAssertNotNil(menu, "menu for \(description)")
+        menu?.tap()
         let button = app.buttons[item]
         XCTAssertTrue(button.waitForExistence(timeout: 5), item)
         button.tap()
@@ -61,7 +72,7 @@ final class InsightsUITests: XCTestCase {
     func testSnoozeAndDismissPersist() throws {
         XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 20))
         tab("Flow")
-        XCTAssertFalse(app.descendants(matching: .any)["flow.insights"].waitForExistence(timeout: 2), "no cards on an empty store")
+        XCTAssertFalse(cards.firstMatch.waitForExistence(timeout: 2), "no cards for this run's rows yet")
 
         tab("Home")
         for description in descriptions {
@@ -78,10 +89,9 @@ final class InsightsUITests: XCTestCase {
         }
         XCTAssertEqual(cards.count, 3)
 
-        // Snooze A (the first card), then dismiss B (first after A went).
-        pick("Snooze for 30 days", onCardAt: 0)
+        pick("Snooze for 30 days", onCardFor: descriptions[0])
         XCTAssertTrue(card(descriptions[0]).waitForNonExistence(timeout: 5), "snoozed card gone")
-        pick("Dismiss", onCardAt: 0)
+        pick("Dismiss", onCardFor: descriptions[1])
         XCTAssertTrue(card(descriptions[1]).waitForNonExistence(timeout: 5), "dismissed card gone")
         XCTAssertTrue(card(descriptions[2]).exists)
         XCTAssertEqual(cards.count, 1)
@@ -111,6 +121,6 @@ final class InsightsUITests: XCTestCase {
         }
         XCTAssertFalse(app.buttons.containing(thisRun).firstMatch.waitForExistence(timeout: 2))
         tab("Flow")
-        XCTAssertFalse(app.descendants(matching: .any)["flow.insights"].waitForExistence(timeout: 2), "no cards once the rows are gone")
+        XCTAssertFalse(cards.firstMatch.waitForExistence(timeout: 2), "no cards for this run's rows once they are gone")
     }
 }

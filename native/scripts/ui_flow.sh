@@ -20,10 +20,9 @@ cd "$NATIVE" && xcodegen generate >/dev/null
 # system_flow.sh, so only the app tests, the Categories flow (its moves,
 # archive / restore and rename cascade; it deletes its expense and archives
 # its category), the Insights flow, the MVP flow, the onboarding tour and
-# the recurring flow run here. Classes run in name order, so the Insights
-# flow (it needs a store without transactions and deletes the six rows it
-# adds; its snooze and dismissal stay in preferences only) runs before the
-# MVP flow leaves its rows. The tour tests write no financial data; the
+# the recurring flow run here. The Insights flow counts only its own cards
+# and deletes the six rows it adds (its snooze and dismissal stay in
+# preferences only). The tour tests write no financial data; the
 # recurring flow deletes its templates and generated rows, leaving an empty
 # recurringTransactions section it wrote itself. So the store pulled below
 # holds the earlier flows' data plus that Swift-written section.
