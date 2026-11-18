@@ -66,7 +66,7 @@ Ranked by impact:
    - *Phase 0:* in Book (27.1), a sheet moves to the leading half, so a tap on the scrim where it used to be can land on a row underneath. It switched the currency once.
    - *Phase 0:* `OpeningView.swift:56` has a bare `ignoresSafeArea()` on a container whose children are laid out against the full window, so the opening bird is about 42pt off the safe-area centre when closed on 27.1.
    - *Phase 0:* the pinned Settings title clips scrolled content at a hard edge after popping back, and the inner-portrait add form clips Category and Date behind the keyboard.
-   - *Phase 0:* the widget extension has `TARGETED_DEVICE_FAMILY "1,2"` (`project.yml:141`), while the app has `"1"`.
+   - *Phase 0:* the widget extension had `TARGETED_DEVICE_FAMILY "1,2"` while the app has `"1"`; now `"1"` (budgie-pf2).
 8. **Tooling.**
    - The scripts create their simulator from the "iPhone 17 Pro" device type (`ui_flow.sh:11`, `system_flow.sh`, `sim_seed.py`, `upgrade_rehearsal.py`). The 27.1 runtime has only the Duo device type, so the scripts need a device and runtime parameter, with regression runs staying on a 27.0 runtime.
    - UI tests and the accessibility audit's exclusions assume a bottom tab bar: `AuditSupport.swift:266-284`, `WorthGoalsDepthUITests.swift:57-60`, `BackupUITests.swift:176`.

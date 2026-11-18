@@ -1470,3 +1470,6 @@ the copy changes listed here.
 - Quick action icons use SF Symbols (the Flutter build referenced asset
   names that did not exist, so its items had no icon): `minus.circle.fill`,
   `plus.circle.fill` and, for "Add by Voice", `mic.circle.fill`.
+- The widget extension targets iPhone only (`TARGETED_DEVICE_FAMILY "1"`),
+  like the app. Flutter's extension said iPhone and iPad while its app was
+  iPhone only, so the iPad entry never applied; nothing visible changes.
