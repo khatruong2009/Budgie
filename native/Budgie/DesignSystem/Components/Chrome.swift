@@ -10,6 +10,10 @@ extension View {
     /// sheet, on the Duo's inner display) is rounded on all corners and
     /// has no grab handle, which only a bottom sheet is dragged by; its
     /// inset stays, so detent maths is the same.
+    /// When the system moves the sheet sideways or resizes its width (a fold:
+    /// on the Duo in Book it moves to the leading half), its content ignores
+    /// taps until it has settled, so a tap aimed at the scrim where it was
+    /// can't pick a row that has just moved under the finger.
     /// Apply to the root view inside `.sheet`.
     func budgieSheetChrome(radius: CGFloat = Metrics.sheetRadius) -> some View {
         modifier(SheetChrome(radius: radius))
@@ -20,6 +24,12 @@ private struct SheetChrome: ViewModifier {
     let radius: CGFloat
     @Environment(\.sheetHostSize) private var host
     @State private var sheetWidth: CGFloat = 0
+    @State private var moves = 0
+    @State private var settling = false
+
+    /// How long content ignores taps after the sheet moves: the system's
+    /// move (about 0.4s) and the time a tap already on its way takes to land.
+    private static let settle: Duration = .milliseconds(800)
 
     /// A bottom sheet is at most a few points narrower than the window (the
     /// floating inset); a form sheet is much narrower.
@@ -28,6 +38,23 @@ private struct SheetChrome: ViewModifier {
     func body(content: Content) -> some View {
         let formSheet = isFormSheet
         content
+            .allowsHitTesting(!settling)
+            .background {
+                // Only the horizontal placement: detents and the keyboard
+                // move the sheet vertically, under the user's own action.
+                GeometryReader { proxy in
+                    let frame = proxy.frame(in: .global)
+                    Color.clear.onChange(of: [frame.minX, frame.width]) {
+                        settling = true
+                        moves += 1
+                    }
+                }
+            }
+            .task(id: moves) {
+                guard moves > 0 else { return }
+                try? await Task.sleep(for: Self.settle)
+                if !Task.isCancelled { settling = false }
+            }
             .safeAreaInset(edge: .top, spacing: 0) {
                 Capsule()
                     .fill(BudgieColor.hairline)

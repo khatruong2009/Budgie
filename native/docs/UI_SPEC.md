@@ -198,7 +198,10 @@ keeps its pattern and day wheels.
   full-width filled pill (52pt) for the primary action, an outlined pill
   for the secondary. Safe to spend shows its total on the feature card
   above the six breakdown rows (mono values: income in `income`, zeros in
-  `textSecondary`, expenses in `textPrimary`).
+  `textSecondary`, expenses in `textPrimary`). When a fold moves a sheet
+  sideways or changes its width (the Duo in Book puts it in the leading
+  half), its content ignores taps for 0.8s, so a tap meant for the scrim
+  can't pick a row that moved under it.
 - Dialogs: `budgieDialog` cards over the `scrim` token, one plain drop
   shadow for every dialog (the glow API is gone); title in `sheetTitle`;
   fields on `fieldFill`; Cancel outlined in `textPrimary`, the primary
