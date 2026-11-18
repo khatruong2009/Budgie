@@ -1286,10 +1286,11 @@ Flutter's values), the wash and glow behind the Worth account hero and
 editor banner, and the fixed `incomeFixed` / `expenseFixed` wheel tiles.
 The home screen widget's two white-labelled buttons and its mic circle were
 darkened the same way (the widget has its own palette, not these tokens).
-Two helpers keep category colours readable as text: `textSecondaryOnTint`
-(`#5A6170` light) on strongly tinted cards, and `BudgieColor.legible`,
-which mixes a pale chart colour towards the primary text colour until it
-reaches 4.5:1 on its own tint (the Spend drill-in chips).
+`BudgieColor.legible` keeps category colours readable as text: it mixes a
+pale chart colour towards the primary text colour until it reaches 4.5:1 on
+its own tint (the Spend drill-in chips and the Worth history Asset /
+Liability chip). The redesign (W4) left no strongly tinted cards, so their
+`textSecondaryOnTint` was removed and that text uses `textSecondary`.
 `BudgieAppTests/ColorContrastTests` asserts every pair below.
 
 | Token | Mode | Flutter / old | New | Pair | Ratio before | Ratio after |

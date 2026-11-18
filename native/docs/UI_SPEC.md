@@ -1163,9 +1163,7 @@ the primary, income and expense button gradients were adjusted to WCAG AA
 and the ratios before and after are in the table under
 "Colour tokens meet WCAG AA" in `PARITY_GAPS.md` (the same table, kept there only).
 
-Also: `textSecondaryOnTint` (`#4B5563` light, `#BEBED2` dark) for text on a
-strongly tinted card (Spend drill-in total, Worth history hero);
-`BudgieColor.legible(_:tint:)` mixes a pale chart colour towards the primary
+Also: `BudgieColor.legible(_:tint:)` mixes a pale chart colour towards the primary
 text colour until it reads on its own tint (the Spend drill-in chips and the
 Worth history Asset / Liability chip); the Spend rank palette and the wash and
 glow of the Worth hero and editor banner keep Flutter's lighter values
