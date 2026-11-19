@@ -47,7 +47,7 @@ struct DesignGalleryView: View {
             .padding(.bottom, 120)
         }
         .background(BudgieColor.background)
-        .toastHost()
+        .toastClearance()
         .overlay(alignment: .bottomTrailing) {
             GlowFab(label: "Add transaction") {}
                 .padding(Metrics.fabInset)

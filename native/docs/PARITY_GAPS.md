@@ -1466,6 +1466,9 @@ the copy changes listed here.
   under budget" where Flutter breaks "...under / budget", though the
   column is as wide as Flutter's, and the 48pt menu reserve is not the
   cause (visual QA R6, budgie-uia.48).
+- Toasts show over sheets and dialogs (their own window above the app's).
+  Flutter's floating SnackBars live in the root `ScaffoldMessenger`, under
+  any modal route, so one posted while a sheet was up was hidden by it.
 - Minimum iOS 17 (Flutter: iOS 15). Users on iOS 15/16 stay on the last
   Flutter release.
 - Quick action icons use SF Symbols (the Flutter build referenced asset
