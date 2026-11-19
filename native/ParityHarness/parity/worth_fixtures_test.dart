@@ -38,8 +38,6 @@ import 'harness_support.dart';
 
 String get zoneDir => 'worth/tz/${parityTz.replaceAll('/', '_')}';
 
-Object? bitsOrNull(double? d) => d == null ? null : bitsHex(d);
-
 // --- Copied verbatim from net_worth_page.dart (private members) ------------
 
 /// NW:406-422 `_rangeData` (months: 6, 12, or null for ALL).

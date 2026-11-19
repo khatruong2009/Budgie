@@ -1385,17 +1385,6 @@ Future<Map<String, Object?>> runRestore(
 
 // MARK: - Driving the real SettingsPage
 
-void quietLayoutErrors() {
-  // The test font is wider than Gabarito, so some rows overflow. That never
-  // touches a value read here; anything else still fails the test.
-  final previous = FlutterError.onError;
-  FlutterError.onError = (details) {
-    if (details.exceptionAsString().contains('overflowed')) return;
-    previous?.call(details);
-  };
-  addTearDown(() => FlutterError.onError = previous);
-}
-
 Future<void> pumpSettings(
     WidgetTester tester, AppHarness app, ThemeProvider theme) async {
   await tester.pumpWidget(const SizedBox());
@@ -1423,18 +1412,6 @@ Future<void> pumpSettings(
         () => Future<void>.delayed(const Duration(milliseconds: 10)));
     await tester.pump();
   }
-}
-
-/// Pumps (letting real IO run) until [done] or a generous timeout. The
-/// data rows show a spinner while busy, so `pumpAndSettle` cannot be used.
-Future<void> pumpUntil(WidgetTester tester, bool Function() done) async {
-  final watch = Stopwatch()..start();
-  while (!done() && watch.elapsed < const Duration(seconds: 90)) {
-    await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 2)));
-    await tester.pump(const Duration(milliseconds: 50));
-  }
-  if (!done()) throw StateError('timed out waiting for the page');
 }
 
 String? snackbarText(WidgetTester tester) {

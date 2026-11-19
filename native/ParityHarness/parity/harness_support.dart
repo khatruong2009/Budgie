@@ -17,7 +17,11 @@ import 'package:budget_app/theme_provider.dart';
 import 'package:budget_app/transaction.dart';
 import 'package:budget_app/transaction_generator.dart';
 import 'package:budget_app/transaction_model.dart';
+import 'package:flutter/foundation.dart' show FlutterError;
 import 'package:flutter/material.dart' show ThemeMode;
+import 'package:flutter/widgets.dart' show Widget;
+import 'package:flutter_test/flutter_test.dart'
+    show Finder, WidgetTester, addTearDown, find;
 import 'package:shared_preferences/shared_preferences.dart';
 
 final String fixturesRoot = Platform.environment['PARITY_FIXTURES'] ??
@@ -57,6 +61,12 @@ String bitsHex(double d) {
       data.getUint32(4).toRadixString(16).padLeft(8, '0');
 }
 
+/// [bitsHex] of a nullable number.
+String? bitsOrNull(double? d) => d == null ? null : bitsHex(d);
+
+String two(int v) => v.toString().padLeft(2, '0');
+String three(int v) => v.toString().padLeft(3, '0');
+
 /// A local date from components [y, m, d, h, min, s, ms, us].
 DateTime local(List c) => DateTime(
       c[0] as int,
@@ -74,6 +84,52 @@ void writeCompactJson(String path, Object? value) {
   File(path)
     ..parent.createSync(recursive: true)
     ..writeAsStringSync('${jsonEncode(value)}\n');
+}
+
+bool isType(Widget w, String name) => w.runtimeType.toString() == name;
+
+Finder byTypeName(String name) =>
+    find.byWidgetPredicate((w) => isType(w, name), description: name);
+
+void quietLayoutErrors() {
+  // The test font is wider than Gabarito, so some rows overflow. That never
+  // touches a value read here; anything else still fails the test.
+  final previous = FlutterError.onError;
+  FlutterError.onError = (details) {
+    if (details.exceptionAsString().contains('overflowed')) return;
+    previous?.call(details);
+  };
+  addTearDown(() => FlutterError.onError = previous);
+}
+
+/// Pumps (letting real IO run) until [done] or a generous timeout. The
+/// data rows show a spinner while busy, so `pumpAndSettle` cannot be used.
+Future<void> pumpUntil(WidgetTester tester, bool Function() done) async {
+  final watch = Stopwatch()..start();
+  while (!done() && watch.elapsed < const Duration(seconds: 90)) {
+    await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 2)));
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+  if (!done()) throw StateError('timed out waiting for the page');
+}
+
+/// Lets the page's chain of real store writes run to the end: waits until
+/// the store revision has been still for a while (a cascade is up to four
+/// commits, each awaited before the next starts).
+Future<void> settle(WidgetTester tester, {required int from}) async {
+  var last = from, still = 0;
+  for (var i = 0; i < 1000 && (last == from || still < 25); i++) {
+    await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)));
+    await tester.pump(const Duration(milliseconds: 50));
+    late int revision;
+    await tester.runAsync(() async =>
+        revision = (await AtomicFinancialStore.instance.read()).revision);
+    still = revision == last ? still + 1 : 0;
+    last = revision;
+  }
+  await tester.pumpAndSettle();
 }
 
 /// Pins every `DateTime.now()` in the app (see parity_clock.dart).

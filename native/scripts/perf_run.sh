@@ -24,11 +24,9 @@ derived="${3:?derived data dir}"
 here="$(cd "$(dirname "$0")" && pwd)"
 native="$(dirname "$here")"
 
-load="$(sysctl -n vm.loadavg | tr -d '{}' | awk '{print int($1)}')"
-while [ "$load" -gt 150 ]; do
+while load="$(sysctl -n vm.loadavg | tr -d '{}' | awk '{print int($1)}')"; [ "$load" -gt 150 ]; do
   echo "load $load > 150, waiting"
   sleep 60
-  load="$(sysctl -n vm.loadavg | tr -d '{}' | awk '{print int($1)}')"
 done
 
 common=(

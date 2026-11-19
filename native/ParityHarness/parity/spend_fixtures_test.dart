@@ -39,8 +39,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'harness_support.dart';
 
-String? maybeBits(double? d) => d == null ? null : bitsHex(d);
-
 String argb(Color c) => c.toARGB32().toRadixString(16).padLeft(8, '0');
 
 // --- Verbatim mirror of category_page.dart:60-115 and :131-154 -------------
@@ -108,9 +106,9 @@ Map<String, Object?> mirrorBreakdown(TransactionModel model, DateTime month) {
 
   return {
     'total': bitsHex(totalAmount),
-    'previousTotal': maybeBits(previousMonthTotal),
+    'previousTotal': bitsOrNull(previousMonthTotal),
     'largest': bitsHex(largestAmount),
-    'tailTotal': maybeBits(tailTotal),
+    'tailTotal': bitsOrNull(tailTotal),
     'records': [
       for (final r in records)
         {
@@ -119,7 +117,7 @@ Map<String, Object?> mirrorBreakdown(TransactionModel model, DateTime month) {
           'percentage': bitsHex(r.percentage),
           'percentageText': r.percentage.toStringAsFixed(0),
           'count': r.count,
-          'budgetLimit': maybeBits(r.budgetLimit),
+          'budgetLimit': bitsOrNull(r.budgetLimit),
           'colorIndex': r.colorIndex,
           'fromHash': r.fromHash,
           'hashCode': r.category.hashCode,
@@ -436,7 +434,7 @@ Future<Map<String, Object?>> readMonth(
   out['donut'] = {
     'month': donut.month.toIso8601String(),
     'total': bitsHex(donut.totalAmount),
-    'previousTotal': maybeBits(donut.previousMonthTotal),
+    'previousTotal': bitsOrNull(donut.previousMonthTotal),
     'previousLabel': donut.previousMonthLabel,
     'slices': [
       for (final s in donut.slices)

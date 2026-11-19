@@ -30,14 +30,6 @@ import 'harness_support.dart';
 
 String get zoneDir => 'voicerequest/tz/${parityTz.replaceAll('/', '_')}';
 
-DateTime local(List c) => DateTime(
-  c[0] as int,
-  c.length > 1 ? c[1] as int : 1,
-  c.length > 2 ? c[2] as int : 1,
-  c.length > 3 ? c[3] as int : 0,
-  c.length > 4 ? c[4] as int : 0,
-);
-
 /// Only 127.0.0.1 may be connected to.
 class LoopbackOnly extends HttpOverrides {
   final blocked = <String>[];

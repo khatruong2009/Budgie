@@ -25,13 +25,12 @@ Usage:
 The app must already be installed on the simulator. It is terminated first.
 Nothing here reads or writes any other simulator or any real data.
 """
-import datetime, json, random, subprocess, sys, uuid
+import datetime, json, random, shutil, sys, uuid
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
-from sim import reset_store
+from sim import BUNDLE, reset_store, sh
 
-BUNDLE = "com.khatruong.budgetbuddy"
 ROOT = Path(__file__).resolve().parent.parent
 BASE = ROOT / "Fixtures/store/large_10k/input/financial_store_v2.json"
 ROWS = 10_000
@@ -167,10 +166,6 @@ def build(now: datetime.datetime) -> tuple[bytes, dict]:
     return header + b"\n" + payload, summary
 
 
-def sh(*cmd, check=True):
-    return subprocess.run(cmd, check=check, text=True, capture_output=True).stdout.strip()
-
-
 def main():
     global ROWS, SNAPSHOTS
     args = sys.argv[1:]
@@ -191,7 +186,7 @@ def main():
         store = reset_store(container)
         # A leftover pre-native snapshot would hide the first-launch copy
         # (and its cost) from the launch measurements.
-        subprocess.run(["rm", "-rf", str(container / "Library/Application Support/pre-native-migration")], check=True)
+        shutil.rmtree(container / "Library/Application Support/pre-native-migration", ignore_errors=True)
         # No onboarding flag is written here: `simctl spawn defaults write`
         # lands in the simulator's own preferences, not the app container's
         # plist, so the app never sees it (checked on iOS 27.0). The tests

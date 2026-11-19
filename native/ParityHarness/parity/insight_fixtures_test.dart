@@ -37,9 +37,6 @@ String get zoneDir => 'insights/tz/${parityTz.replaceAll('/', '_')}';
 
 const engine = InsightEngine();
 
-String two(int v) => v.toString().padLeft(2, '0');
-String three(int v) => v.toString().padLeft(3, '0');
-
 /// A local wall-clock ISO string, as the app stores dates.
 String local(int y, int m, int d,
         [int h = 0, int mi = 0, int s = 0, int ms = 0]) =>

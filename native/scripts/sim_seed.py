@@ -9,25 +9,16 @@ Usage: sim_seed.py <simulator-name> <path/to/Budgie.app> [fixture-input-dir]
 Example: sim_seed.py Budgie-UI-A build/Budgie.app native/Fixtures/store/typical/input
 Prints the simulator UDID.
 """
-import json, subprocess, sys, time
+import subprocess, sys, time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
-from sim import copy_store, runtime_for
+from sim import BUNDLE, copy_store, find_or_create, sh
 
 name, app = sys.argv[1], sys.argv[2]
 fixture = Path(sys.argv[3]) if len(sys.argv) > 3 else None
-BUNDLE = "com.khatruong.budgetbuddy"
 
-def sh(*cmd):
-    return subprocess.run(cmd, check=True, text=True, capture_output=True).stdout.strip()
-
-devices = json.loads(sh("xcrun", "simctl", "list", "devices", "-j"))["devices"]
-found = next((d for items in devices.values() for d in items if d["name"] == name and d.get("isAvailable", True)), None)
-if found:
-    udid, was_booted = found["udid"], found["state"] == "Booted"
-else:
-    udid, was_booted = sh("xcrun", "simctl", "create", name, "iPhone 17 Pro", runtime_for("iPhone 17 Pro")), False
+udid, was_booted = find_or_create(name)
 try:
     subprocess.run(["xcrun", "simctl", "boot", udid], capture_output=True)
     sh("xcrun", "simctl", "bootstatus", udid, "-b")

@@ -496,22 +496,6 @@ Future<Map<String, Object?>> typicalSections() async {
 
 // --- The canary: the real page's dialogs -------------------------------------
 
-/// Lets the page's real store writes run to the end.
-Future<void> settle(WidgetTester tester, {required int from}) async {
-  var last = from, still = 0;
-  for (var i = 0; i < 1000 && (last == from || still < 25); i++) {
-    await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 20)));
-    await tester.pump(const Duration(milliseconds: 50));
-    late int revision;
-    await tester.runAsync(() async =>
-        revision = (await AtomicFinancialStore.instance.read()).revision);
-    still = revision == last ? still + 1 : 0;
-    last = revision;
-  }
-  await tester.pumpAndSettle();
-}
-
 late Map<String, Object?> canaryResult;
 
 void main() {
