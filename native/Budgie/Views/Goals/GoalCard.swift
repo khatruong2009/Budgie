@@ -1,12 +1,9 @@
 import BudgieCore
 import SwiftUI
 
-/// One goal (`_SavingsGoalCard`, savings_goals_page.dart:691-892): the name
-/// and status pill, "{saved} of {target}" (or "{saved} saved") with the
-/// percent, a 10pt bar in the status colour, the pace or "Fully funded"
-/// line, then Add money and the ellipsis (only the ellipsis, right-aligned,
-/// once complete). A completed card is tinted green and long-presses to its
-/// actions, as in Flutter; a tap does nothing.
+/// One goal (`_SavingsGoalCard`, savings_goals_page.dart:691-892). A completed
+/// card is tinted green and long-presses to its actions, as in Flutter; a tap
+/// does nothing.
 ///
 /// VoiceOver reads the texts and bar as one element with Add money, Edit
 /// goal and Delete goal actions; the two buttons stay separate elements.
@@ -29,7 +26,6 @@ struct GoalCard: View {
             : AnyLayout(HStackLayout(spacing: Metrics.spacingS))
     }
 
-    /// The saved amount.
     private static let amountText = TextSpec(face: .monoSemiBold, size: 22, tracking: -0.4, height: 1.2, tabular: true, relativeTo: .title2)
     /// " of {target}", " saved".
     private static let amountTail = TextSpec(face: .monoRegular, size: 13, height: 1.2, tabular: true, relativeTo: .footnote)
@@ -129,7 +125,6 @@ struct GoalCard: View {
         .accessibilityAction(named: "Delete goal", onDelete)
     }
 
-    /// The status colour: success, warning or accent.
     static func color(_ status: SavingsGoalStatus) -> Color {
         switch status {
         case .complete: BudgieColor.income

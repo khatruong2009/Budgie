@@ -2,12 +2,10 @@ import SwiftUI
 
 /// The completion celebration (`_CompletionCelebration` and
 /// `_CelebrationPainter`, savings_goals_page.dart:1547-1692), 1600ms linear:
-/// the dialog scrim (Flutter: black at 34%), 18 dots flying out from the
-/// centre (44 to 224pt, radii 3 / 4.5 / 6, success and accent alternating,
-/// fading as they go)
-/// under a "Goal complete" card that scales 0.7 to 1 with Flutter's
-/// `easeOutBack` over the first 80%; everything fades out over the last
-/// 25%. It never takes touches. The page skips it under Reduce Motion.
+/// the dialog scrim (black at 34% in Flutter), dots flying out and fading
+/// under a "Goal complete" card that scales in with Flutter's `easeOutBack`;
+/// everything fades out over the last 25%. It never takes touches. The page
+/// skips it under Reduce Motion.
 struct CelebrationOverlay: View {
     let name: String
     /// When it started (animation clock only).

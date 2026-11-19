@@ -1,10 +1,8 @@
 import BudgieCore
 import SwiftUI
 
-/// The Goals tab (`SavingsGoalsPage`, savings_goals_page.dart): header, the
-/// empty state or the summary card and one card per goal (incomplete first,
-/// then by target date), the add button, the actions sheet, the add / edit,
-/// Add money and delete dialogs, and the completion celebration.
+/// The Goals tab (`SavingsGoalsPage`, savings_goals_page.dart): one card per
+/// goal, incomplete first, then by target date.
 ///
 /// Every mutation is awaited while its dialog stays open (the scrim and the
 /// buttons do nothing meanwhile), then the dialog closes and a toast
@@ -69,7 +67,6 @@ struct GoalsView: View {
 
     // MARK: - Sections
 
-    /// `_buildEmptyState` (savings_goals_page.dart:164-211).
     private var emptyState: some View {
         // No piggy bank in SF Symbols (D3).
         EmptyStateView(
@@ -161,7 +158,6 @@ struct GoalsView: View {
         }
     }
 
-    /// `_showAllocationForm` (savings_goals_page.dart:331-368).
     private func allocate(_ amount: Double, to goal: SavingsGoalRecord) {
         let willComplete = goal.willComplete(allocating: amount)
         run(success: .allocationAdded) {
@@ -227,13 +223,6 @@ private struct Celebration: Identifiable {
     let id = UUID()
     let name: String
     let start = Date()
-}
-
-/// Text styles of the Goals tab that Flutter derives from the named ones
-/// with a size or weight override.
-enum GoalText {
-    /// `rowSubtitle` at 13, height 1.45 (empty state, delete body).
-    static let body = TextSpec(face: .gabaritoRegular, size: 13, height: 1.45, relativeTo: .footnote)
 }
 
 // MARK: - Summary

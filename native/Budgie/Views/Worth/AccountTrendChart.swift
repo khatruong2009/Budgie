@@ -3,9 +3,7 @@ import SwiftUI
 
 // MARK: - Trend chart
 
-/// `_AccountHistoryChart` (NW:1904-2136). Empty: a 200pt note. Otherwise
-/// padding (20, 20, 20, 16): "Trend" with the date range and the latest
-/// compact amount, 16, then the 200pt chart.
+/// `_AccountHistoryChart` (NW:1904-2136). Empty: a 200pt note.
 struct AccountTrendChart: View {
     let name: String
     let history: [NetWorthSnapshotRecord]
@@ -52,19 +50,12 @@ struct AccountTrendChart: View {
 /// (0...max(1, n - 1); one snapshot is drawn twice, at 0 and 1), the padded
 /// `NetWorthChartScale.account` y range, and in paint order the hairline
 /// grid, the area (18% to 0 from the highest spot down), the main line
-/// (3pt), and the last spot's dot (`trendDot`, radius 5,
-/// ring 3pt at 50% outside it). Lines have round caps and are curved with
-/// fl_chart's cubic (smoothness 0.28) only when there are more than two
-/// snapshots.
+/// (3pt) and the last spot's dot. Lines have round caps and are curved with
+/// fl_chart's cubic only when there are more than two snapshots.
 ///
-/// Touch (fl_chart's built-in handling, without its 48pt threshold, see
-/// PARITY_GAPS.md): while a finger is down, the spot nearest in x shows fl_chart's default
-/// indicators (a 4pt line up from the bottom and a dot, per line) and the
-/// tooltip above it; lifting clears it. A mostly vertical drag scrolls the
-/// page instead and clears it, as Flutter's scroll view wins the gesture
-/// arena and cancels the chart's touch (`ChartTouch`). The tooltip is drawn
-/// once (fl_chart stacks one copy per line) and kept inside the plot
-/// horizontally.
+/// Touch: see `ChartTouch` and PARITY_GAPS.md. The spot nearest in x shows
+/// fl_chart's default indicators and the tooltip above it, drawn once
+/// (fl_chart stacks one copy per line) and kept inside the plot horizontally.
 struct AccountTrendPlot: View {
     let history: [NetWorthSnapshotRecord]
     let color: Color
@@ -122,9 +113,9 @@ struct AccountTrendPlot: View {
 
     @ViewBuilder
     private func layers(points: [CGPoint], scale: NetWorthChartScale, plot: CGSize, touched: Int?) -> some View {
-        let line = Self.linePath(points, curved: history.count > 2)
+        let line = Path(
+            smoothCurveThrough: points, smoothness: history.count > 2 ? NetWorthPresentation.curveSmoothness : 0)
         let topY = points.map(\.y).min() ?? 0
-        let lineStyle = { (width: CGFloat) in StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .miter) }
         ZStack(alignment: .topLeading) {
             Path { path in
                 for value in scale.gridLines {
@@ -149,7 +140,7 @@ struct AccountTrendPlot: View {
             .fill(LinearGradient(
                 colors: [color.opacity(0.18), color.opacity(0)],
                 startPoint: UnitPoint(x: 0.5, y: topY / plot.height), endPoint: UnitPoint(x: 0.5, y: 1)))
-            line.stroke(color, style: lineStyle(3))
+            line.stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
             if let last = points.last {
                 // `FlDotCirclePainter(radius 5, stroke 3)`: the ring is
                 // centred 1.5pt outside the fill.
@@ -157,7 +148,7 @@ struct AccountTrendPlot: View {
                 Path(circleAt: last, radius: 5).fill(BudgieColor.textPrimary)
             }
             if let touched {
-                indicator(at: points[touched], plotHeight: plot.height, dotRadius: 7.2, color: color)
+                indicator(at: points[touched], plotHeight: plot.height)
             }
         }
     }
@@ -165,8 +156,9 @@ struct AccountTrendPlot: View {
     /// `defaultTouchedIndicators`: a 4pt butt-capped line from the bottom
     /// up to the dot's lower edge, then the dot (radius 7.2), in the line's
     /// colour.
-    private func indicator(at point: CGPoint, plotHeight: CGFloat, dotRadius: CGFloat, color: Color) -> some View {
-        ZStack(alignment: .topLeading) {
+    private func indicator(at point: CGPoint, plotHeight: CGFloat) -> some View {
+        let dotRadius: CGFloat = 7.2
+        return ZStack(alignment: .topLeading) {
             Path { path in
                 path.move(to: CGPoint(x: point.x, y: plotHeight))
                 path.addLine(to: CGPoint(x: point.x, y: min(plotHeight, point.y + dotRadius)))
@@ -203,26 +195,12 @@ struct AccountTrendPlot: View {
         if history.count == 1 { return "1 balance update, \(point(first))" }
         return "\(history.count) balance updates from \(point(first)), to \(point(last))"
     }
-
-    // MARK: Geometry (fl_chart)
-
-    /// The line through `points`: `curveSmoothness` 0.28, or straight
-    /// segments when it is not curved.
-    private static func linePath(_ points: [CGPoint], curved: Bool) -> Path {
-        Path(smoothCurveThrough: points, smoothness: curved ? NetWorthPresentation.curveSmoothness : 0)
-    }
 }
 
 /// The trend chart's touch: the finger's x while it is down on the plot,
-/// nil once lifted or once the page scrolls.
-///
-/// iOS 18+: a UIKit press that begins at touch-down (the tooltip shows at
-/// once, as fl_chart's down event) and lets the scroll view's pan begin
-/// alongside it only for a mostly vertical movement; when the page starts
-/// scrolling the press cancels itself. A mostly horizontal movement keeps
-/// the scroll view from starting, so scrubbing does not scroll. iOS 17
-/// keeps a simultaneous SwiftUI drag, which coexists with scrolling there,
-/// and drops the touch once the drag turns out vertical.
+/// nil once lifted. A mostly vertical drag scrolls the page and clears it, as
+/// Flutter's scroll view wins the gesture arena. iOS 18+ uses a UIKit press
+/// (the tooltip shows at touch-down); iOS 17 a simultaneous SwiftUI drag.
 private struct ChartTouch: ViewModifier {
     @Binding var touchX: CGFloat?
     @State private var scrolled = false
@@ -299,11 +277,9 @@ private struct ScrubPress: UIGestureRecognizerRepresentable {
     }
 }
 
-/// Places the tooltip as fl_chart does: centred on the spot (`anchor`, in
-/// plot coordinates), its bottom 16pt (`tooltipMargin`) above it, laid out
-/// at most `maxWidth` wide (content width plus padding); then shifted to
-/// stay inside the plot horizontally (fl_chart's `fitInsideHorizontally`,
-/// off in Flutter).
+/// Places the tooltip as fl_chart does: centred on `anchor` (plot
+/// coordinates), its bottom 16pt (`tooltipMargin`) above it, laid out at most
+/// `maxWidth` wide, then shifted to stay inside the plot horizontally.
 private struct TooltipLayout: Layout {
     let anchor: CGPoint
     let maxWidth: CGFloat

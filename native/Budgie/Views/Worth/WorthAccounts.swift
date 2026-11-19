@@ -77,12 +77,8 @@ struct WorthAccountsList: View {
     }
 }
 
-/// One account (`_AccountRow`, NW:1095-1226): the keyword icon on a tile
-/// tinted by the account's type, the name over its share of the tab's
-/// total, the whole-unit amount over the change against the previous
-/// snapshot (green when good for the type, tertiary "—" when there is
-/// none), and a 6pt share bar. A tap opens the account editor, as in
-/// Flutter; the context menu has Flutter's long-press sheet actions (Edit
+/// One account (`_AccountRow`, NW:1095-1226). A tap opens the account editor,
+/// as in Flutter; the context menu mirrors Flutter's long-press sheet (Edit
 /// Balance, View History, Delete Account).
 struct AccountRow: View {
     let entry: NetWorthEntryRecord
