@@ -273,9 +273,12 @@ def typed_prefs(prefs):
     return out
 
 
-def dart_view(cases):
+def dart_view(cases, nows=None):
     """Runs the real Flutter models over pulled states (verify mode) and
-    returns {case: {problems, summary}}."""
+    returns {case: {problems, summary}}. `nows` maps a case to the clock
+    (the Swift summary's "now") its models load and summarize at, so they
+    see the same current month as the app run they are compared with;
+    other cases use the harness's fixed launch clock."""
     root = SCRATCH / "dart-view"
     shutil.rmtree(root, ignore_errors=True)
     for name, pulled in cases.items():
@@ -285,6 +288,8 @@ def dart_view(cases):
         with open(pulled / "preferences.plist", "rb") as f:
             prefs = plistlib.load(f)
         (target / "prefs.json").write_text(json.dumps(typed_prefs(prefs)))
+        if nows and name in nows:
+            (target / "now.txt").write_text(nows[name])
     result = run([str(NATIVE / "ParityHarness" / "run.sh"), "verify"], check=False,
                  env={"SWIFT_OUT": str(root), "PARITY_WORK_DIR": str(SCRATCH / "parity")})
     report_path = root / "dart-verification.json"
@@ -561,7 +566,9 @@ def compare_pulled(dirs):
         if summary.exists():
             shutil.copy2(summary, case / "swift-summary.json")
         staged[Path(raw).name] = case
-    dart = dart_view(staged)
+    nows = {name: json.loads((case / "swift-summary.json").read_text())["now"]
+            for name, case in staged.items() if (case / "swift-summary.json").exists()}
+    dart = dart_view(staged, nows)
     report = {}
     for name, case in staged.items():
         entry = {"dartProblems": dart[name]["problems"]}
@@ -612,14 +619,24 @@ def main():
                 rehearsal.record(key, error=str(error)[-4000:])
 
         readable_pulls = {k: v for k, v in pulled.items() if (v / "financial_store").exists()}
-        dart = dart_view(readable_pulls) if readable_pulls else {}
+        # The Swift app runs on the real clock, so each Dart view loads at
+        # the "now" of the Swift summary it is compared with: its own, or,
+        # for a Flutter state, its pair's.
+        pairs = [("2-swift", "1-flutter"), ("3-swift-edited", "4-flutter-back"), ("s3-swift", "s3-flutter-back")]
+        nows = {}
+        for case, pulled_dir in pulled.items():
+            if (pulled_dir / "swift-summary.json").exists():
+                nows[case] = json.loads((pulled_dir / "swift-summary.json").read_text())["now"]
+        for swift_case, flutter_case in pairs:
+            if swift_case in nows:
+                nows.setdefault(flutter_case, nows[swift_case])
+        dart = dart_view(readable_pulls, nows) if readable_pulls else {}
         comparisons = {}
         for case, pulled_dir in pulled.items():
             swift_summary = pulled_dir / "swift-summary.json"
             if swift_summary.exists() and case in dart:
                 comparisons[f"{case}: Swift vs Flutter models on the same files"] = compare(json.loads(swift_summary.read_text()), dart[case])
         # What the user saw in Flutter before the upgrade vs what Swift shows after.
-        pairs = [("2-swift", "1-flutter"), ("3-swift-edited", "4-flutter-back"), ("s3-swift", "s3-flutter-back")]
         for swift_case, flutter_case in pairs:
             swift_summary = pulled.get(swift_case, Path("/nonexistent")) / "swift-summary.json"
             if swift_summary.exists() and flutter_case in dart:

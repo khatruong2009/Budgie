@@ -27,6 +27,9 @@
 //                       optional "backup": {"appVersion", "exportedAt", "themeMode"};
 //                       optional "insights": what the insight preferences
 //                       load as, and the cards shown at a clock}
+//   now.txt            optional: the clock (Dart local ISO text) to load and
+//                       summarize at instead of launchNow: the "now" of the
+//                       app run that wrote the files (upgrade_rehearsal.py)
 //   backup.json        optional: Swift's backup export of this store after a
 //                       launch (see verifyBackup)
 //   export.csv         optional: Swift's CSV export of the ledger; swift.json
@@ -35,7 +38,7 @@
 //
 // The whole run is under one zone (VERIFY_TZ in run.sh = the zone Swift wrote
 // the stores in, BUDGIE_SWIFT_ZONE). The summary of every loaded store
-// (`summarize`, at the launch clock) goes to dart-verification.json, where
+// (`summarize`, at the launch clock or now.txt) goes to dart-verification.json, where
 // the Swift side compares it with its own numbers (DartSummaryOfSwiftStores).
 //
 // Writes $SWIFT_OUT/dart-verification.json and fails if any case failed.
@@ -288,6 +291,10 @@ void main() {
           ? jsonDecode(swiftFile.readAsStringSync()) as Map<String, dynamic>
           : <String, dynamic>{};
       final prefs = prefsFrom(File('${dir.path}/prefs.json'));
+      final nowFile = File('${dir.path}/now.txt');
+      final now = nowFile.existsSync()
+          ? DateTime.parse(nowFile.readAsStringSync().trim())
+          : launchNow;
 
       // Work on a copy: loading may legitimately write (restore, migration).
       final work = await Directory.systemTemp.createTemp('verify_$name');
@@ -295,7 +302,7 @@ void main() {
       copyDir(Directory('${dir.path}/financial_store'), storeDir);
 
       SharedPreferences.setMockInitialValues(Map.of(prefs));
-      pinClock(launchNow);
+      pinClock(now);
       await AtomicFinancialStore.instance.resetForTesting(directory: storeDir);
       final snapshot = await AtomicFinancialStore.instance.read();
       if (swift.isNotEmpty && snapshot.revision != swift['revision']) {
@@ -312,7 +319,7 @@ void main() {
       Map<String, Object?>? summary;
       try {
         await app.initialize(generate: false);
-        summary = summarize(app, asOf: launchNow);
+        summary = summarize(app, asOf: now);
       } catch (error) {
         problems.add('app load threw ${error.runtimeType}: $error');
       }
