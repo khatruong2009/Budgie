@@ -80,14 +80,19 @@ struct HomeParityTests {
 
         #expect(data.categoryPicker(for: .expense).map(\.name) == f["expenseCategories"].array.map { $0.string! })
         #expect(pairs(data.budgetLimits) == pairs(f["limits"]))
-        #expect(data.budgetedCategories().map(\.name) == f["budgeted"].array.map { $0.string! })
-        #expect(data.unbudgetedCategories().map(\.name) == f["unbudgeted"].array.map { $0.string! })
+        let lists = data.budgetOverview(MonthSummary())
+        #expect(lists.budgeted.map(\.name) == f["budgeted"].array.map { $0.string! })
+        #expect(lists.unbudgeted.map(\.name) == f["unbudgeted"].array.map { $0.string! })
+        // One entry per exact name, in picker order, split by whether a limit is held.
+        var seenNames = Set<[UInt16]>()
+        let expenseNames = data.categoryPicker(for: .expense).filter { seenNames.insert(Array($0.name.utf16)).inserted }
 
         let months = f["months"].array
         #expect(months.count == 4)
         for m in months {
             let month = try data.calendar.parse(m["month"].string!)
-            let swift = data.budgetProgress(ledger.summary(forMonth: month))
+            let overview = data.budgetOverview(ledger.summary(forMonth: month))
+            let swift = overview.progress
             let dart = m["rows"].array
             #expect(swift.map(\.category) == dart.map { $0["category"].string! }, "\(m["month"].string!)")
             for (s, d) in zip(swift, dart) {
@@ -104,10 +109,8 @@ struct HomeParityTests {
                 #expect(status == d["status"].string, "\(s.category) status")
             }
             // The one-pass overview Home reads agrees with the separate queries.
-            let overview = data.budgetOverview(ledger.summary(forMonth: month))
-            #expect(overview.progress == swift)
-            #expect(overview.budgeted.map(\.id) == data.budgetedCategories().map(\.id))
-            #expect(overview.unbudgeted.map(\.id) == data.unbudgetedCategories().map(\.id))
+            #expect(overview.budgeted.map(\.id) == expenseNames.filter { data.budgetLimit(for: $0.name) != nil }.map(\.id))
+            #expect(overview.unbudgeted.map(\.id) == expenseNames.filter { data.budgetLimit(for: $0.name) == nil }.map(\.id))
             for info in overview.budgeted + overview.unbudgeted {
                 #expect(overview.limit(for: info.name) == data.budgetLimit(for: info.name), "\(info.name) limit")
             }

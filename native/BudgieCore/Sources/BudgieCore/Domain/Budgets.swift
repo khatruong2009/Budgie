@@ -41,8 +41,7 @@ extension FinancialData {
     /// the key is absent or its stored value is not > 0 (Dart's load drops
     /// those, `transaction_model.dart:413-420`).
     public func budgetLimit(for category: String) -> Double? {
-        let key = Array(category.utf16)
-        return budgetLimits.first { Array($0.0.utf16) == key }?.1
+        budgetLimits.first { DartString.equal($0.0, category) }?.1
     }
 
     /// Dart `setCategoryBudgetLimit`: the category is trimmed and an empty
@@ -70,10 +69,8 @@ extension FinancialData {
             // Replace at the first occurrence (keeping its key lexeme) and
             // drop later duplicates so the value is unambiguous.
             members[first].value = .double(limit)
-            var index = members.count - 1
-            while index > first {
-                if members[index].key.codeUnits == key { members.remove(at: index) }
-                index -= 1
+            for index in members.indices.reversed() where index > first && members[index].key.codeUnits == key {
+                members.remove(at: index)
             }
         } else {
             members.removeAll { $0.key.codeUnits == key }
@@ -83,13 +80,17 @@ extension FinancialData {
         return true
     }
 
+    /// Drops every stored member whose key has these code units.
+    mutating func removeBudgetMembers(_ key: [UInt16]) {
+        budgetLimitsObject.members.removeAll { $0.key.codeUnits == key }
+    }
+
     /// Dart `removeCategoryBudgetLimit`: an exact key, not trimmed. Returns
     /// false (nothing to write) when Dart holds no limit for it.
     @discardableResult
     public mutating func removeBudgetLimit(category: String) -> Bool {
         guard budgetLimit(for: category) != nil else { return false }
-        let key = Array(category.utf16)
-        budgetLimitsObject.members.removeAll { $0.key.codeUnits == key }
+        removeBudgetMembers(Array(category.utf16))
         return true
     }
 
@@ -103,8 +104,7 @@ extension FinancialData {
     }
 
     /// Everything Home's budgets section shows, from one pass over the
-    /// expense categories and the limits (`budgetProgress`,
-    /// `budgetedCategories` and `unbudgetedCategories` together).
+    /// expense categories and the limits.
     public struct BudgetOverview: Sendable {
         public let progress: [BudgetProgress]
         public let budgeted: [CategoryInfo]
@@ -114,10 +114,16 @@ extension FinancialData {
 
         public static let empty = BudgetOverview(progress: [], budgeted: [], unbudgeted: [], limits: [:])
 
-        /// `budgetLimit(for:)` from the same pass.
         public func limit(for category: String) -> Double? { limits[Array(category.utf16)] }
     }
 
+    /// `progress` is `_buildBudgetProgressItems` for one month's ledger
+    /// summary: every expense category with a limit > 0, spent from the
+    /// month's category totals by exact name (0 when absent), sorted by spent
+    /// descending, then name in UTF-16 order. Limits whose name is not an
+    /// expense category (archived, or a case variant of one) get no row.
+    /// `budgeted` (the EDIT sheet) and `unbudgeted` (the Add a budget sheet)
+    /// are the expense categories with and without a limit, in category order.
     public func budgetOverview(_ summary: MonthSummary) -> BudgetOverview {
         // `budgetLimits` has one entry per exact key, so this is `budgetLimit(for:)`.
         var limits: [[UInt16]: Double] = [:]
@@ -129,15 +135,6 @@ extension FinancialData {
         return BudgetOverview(
             progress: Self.budgetRows(budgeted, limits: limits, summary: summary), budgeted: budgeted,
             unbudgeted: unbudgeted, limits: limits)
-    }
-
-    /// `_buildBudgetProgressItems` for one month's ledger summary: every
-    /// expense category with a limit > 0, spent from the month's category
-    /// totals by exact name (0 when absent), sorted by spent descending, then
-    /// name in UTF-16 order. Limits whose name is not an expense category
-    /// (archived, or a case variant of one) get no row.
-    public func budgetProgress(_ summary: MonthSummary) -> [BudgetProgress] {
-        budgetOverview(summary).progress
     }
 
     private static func budgetRows(_ budgeted: [CategoryInfo], limits: [[UInt16]: Double], summary: MonthSummary) -> [BudgetProgress] {
@@ -156,17 +153,5 @@ extension FinancialData {
             if DartString.precedes(b.element.category, a.element.category) { return false }
             return a.offset < b.offset
         }.map(\.element)
-    }
-
-    /// `_budgetedCategories`: expense categories with a limit, in category
-    /// order (the EDIT sheet).
-    public func budgetedCategories() -> [CategoryInfo] {
-        expenseCategoryKeys().filter { budgetLimit(for: $0.name) != nil }
-    }
-
-    /// `_unbudgetedCategories`: expense categories without a limit, in
-    /// category order (the Add a budget sheet).
-    public func unbudgetedCategories() -> [CategoryInfo] {
-        expenseCategoryKeys().filter { budgetLimit(for: $0.name) == nil }
     }
 }

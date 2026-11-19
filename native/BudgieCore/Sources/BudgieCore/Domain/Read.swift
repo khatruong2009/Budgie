@@ -13,18 +13,18 @@ import Foundation
 /// hidden from the UI and written back unchanged.
 
 enum Read {
-    /// `x as String` where null is an error.
-    static func requiredString(_ object: JSONObject, _ key: String) -> String? {
-        object[key]?.stringValue
+    /// `x as T?`: `.some(nil)` for missing/null, the converted value, nil
+    /// (failure) when `convert` rejects the JSON type.
+    private static func optional<T>(_ object: JSONObject, _ key: String, _ convert: (JSONValue) -> T?) -> T?? {
+        switch object[key] {
+        case nil, .null?: return .some(nil)
+        case let value?: return convert(value).map { Optional($0) }
+        }
     }
 
     /// `x as String?`: nil for missing/null, failure for another type.
     static func optionalString(_ object: JSONObject, _ key: String) -> String?? {
-        switch object[key] {
-        case nil, .null?: return .some(nil)
-        case .string(let s)?: return .some(s.value)
-        default: return nil
-        }
+        optional(object, key, \.stringValue)
     }
 
     /// `(x as num).toDouble()`.
@@ -34,11 +34,7 @@ enum Read {
 
     /// `x as bool?`: .some(nil) for missing/null, nil (failure) for another type.
     static func optionalBool(_ object: JSONObject, _ key: String) -> Bool?? {
-        switch object[key] {
-        case nil, .null?: return .some(nil)
-        case .bool(let b)?: return .some(b)
-        default: return nil
-        }
+        optional(object, key, \.boolValue)
     }
 
     /// `x as int?` (strict: a number with a fractional lexeme fails).
@@ -52,20 +48,12 @@ enum Read {
 
     /// `(x as num?)?.toInt()`: any number, converted as Dart's `toInt`.
     static func optionalNumber(_ object: JSONObject, _ key: String) -> Int?? {
-        switch object[key] {
-        case nil, .null?: return .some(nil)
-        case .number(let n)?: return .some(Int(DartNumbers.toInt(n.doubleValue, lexeme: n)))
-        default: return nil
-        }
+        optional(object, key) { $0.numberValue.map { Int(DartNumbers.toInt($0)) } }
     }
 
     /// `(x as num?)?.toDouble()`.
     static func optionalDouble(_ object: JSONObject, _ key: String) -> Double?? {
-        switch object[key] {
-        case nil, .null?: return .some(nil)
-        case .number(let n)?: return .some(n.doubleValue)
-        default: return nil
-        }
+        optional(object, key) { $0.numberValue?.doubleValue }
     }
 
     /// A lenient date: nil for a missing, non-string, empty or unparseable value.

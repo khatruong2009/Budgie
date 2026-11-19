@@ -18,9 +18,9 @@ public struct NetWorthEntryRecord: Identifiable, Hashable, Sendable {
     /// Dart `NetWorthEntry.fromJson` (strict: id, name, type, createdAt required).
     static func parse(_ value: JSONValue, calendar: DartCalendar, now: () -> DartDateTime) -> NetWorthEntryRecord? {
         guard case .object(let object) = value,
-            let id = Read.requiredString(object, "id"),
-            let name = Read.requiredString(object, "name"),
-            let typeName = Read.requiredString(object, "type"),
+            let id = object["id"]?.stringValue,
+            let name = object["name"]?.stringValue,
+            let typeName = object["type"]?.stringValue,
             let createdAt = Read.parsedDate(object, "createdAt", calendar)
         else { return nil }
         var snapshots: [NetWorthSnapshotRecord] = []
@@ -45,34 +45,28 @@ public struct NetWorthEntryRecord: Identifiable, Hashable, Sendable {
             ("name", .string(name)),
             ("type", .string(type.rawValue)),
             ("createdAt", .string(createdAt.toIso8601String())),
-            ("snapshots", .array([.object(JSONObject(ordered: [
-                ("recordedAt", .string(snapshot.recordedAt.toIso8601String())),
-                ("amount", .double(snapshot.amount)),
-            ]))])),
+            ("snapshots", .array([snapshot.dartJSON])),
         ])
         return NetWorthEntryRecord(id: id, name: name, type: type, createdAt: createdAt, snapshots: [snapshot], raw: raw)
     }
 
-    /// `snapshotForMonth`: latest snapshot recorded in that local month.
-    public func snapshot(forMonth month: DartDateTime) -> NetWorthSnapshotRecord? {
+    /// The latest-recorded snapshot satisfying `matches`; the first of equal instants.
+    func latestSnapshot(where matches: (NetWorthSnapshotRecord) -> Bool) -> NetWorthSnapshotRecord? {
         var latest: NetWorthSnapshotRecord?
-        let m = month.fields
-        for snapshot in snapshots {
-            let f = snapshot.recordedAt.fields
-            guard f.year == m.year && f.month == m.month else { continue }
+        for snapshot in snapshots where matches(snapshot) {
             if latest == nil || snapshot.recordedAt.isAfter(latest!.recordedAt) { latest = snapshot }
         }
         return latest
     }
 
+    /// `snapshotForMonth`: latest snapshot recorded in that local month.
+    public func snapshot(forMonth month: DartDateTime) -> NetWorthSnapshotRecord? {
+        latestSnapshot { DartCalendar.isSameMonth($0.recordedAt, month) }
+    }
+
     /// `latestSnapshotThrough`: latest snapshot at or before `date` (carry-forward).
     public func latestSnapshot(through date: DartDateTime) -> NetWorthSnapshotRecord? {
-        var latest: NetWorthSnapshotRecord?
-        for snapshot in snapshots {
-            if snapshot.recordedAt.isAfter(date) { continue }
-            if latest == nil || snapshot.recordedAt.isAfter(latest!.recordedAt) { latest = snapshot }
-        }
-        return latest
+        latestSnapshot { !$0.recordedAt.isAfter(date) }
     }
 
     public func amount(at date: DartDateTime) -> Double? {

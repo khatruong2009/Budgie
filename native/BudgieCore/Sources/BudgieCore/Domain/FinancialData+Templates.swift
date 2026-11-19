@@ -12,9 +12,7 @@ extension FinancialData {
     /// last occurrence already generated for this template.
     @discardableResult
     public mutating func updateTemplate(id: String, _ edit: RecurringTemplate.Edit) -> Bool {
-        guard let index = templateRows.firstIndex(where: { $0.record.map { DartString.equal($0.id, id) } ?? false }), let template = templateRows[index].record else {
-            return false
-        }
+        guard let index = templateRows.index(ofID: id), let template = templateRows[index].record else { return false }
         var next = template.applying(edit)
         if next.scheduleKey != template.scheduleKey {
             next = next.with(nextOccurrence: RecurringTemplate.editedCursor(
@@ -38,9 +36,7 @@ extension FinancialData {
     /// cursor.
     @discardableResult
     public mutating func setTemplateActive(id: String, _ active: Bool, now: DartDateTime) -> Bool {
-        guard let index = templateRows.firstIndex(where: { $0.record.map { DartString.equal($0.id, id) } ?? false }), let template = templateRows[index].record else {
-            return false
-        }
+        guard let index = templateRows.index(ofID: id), let template = templateRows[index].record else { return false }
         var next = template.with(isActive: active)
         if active && !template.isActive {
             let cursor = RecurringGenerator.resumedCursor(of: template, now: now, calendar: calendar)
@@ -51,14 +47,10 @@ extension FinancialData {
     }
 
     @discardableResult
-    public mutating func deleteTemplate(id: String) -> Bool {
-        let before = templateRows.count
-        templateRows.removeAll { $0.record.map { DartString.equal($0.id, id) } ?? false }
-        return templateRows.count != before
-    }
+    public mutating func deleteTemplate(id: String) -> Bool { templateRows.removeRows(id: id) }
 
     mutating func replaceTemplate(_ template: RecurringTemplate) {
-        if let index = templateRows.firstIndex(where: { $0.record.map { DartString.equal($0.id, template.id) } ?? false }) {
+        if let index = templateRows.index(ofID: template.id) {
             templateRows[index] = .record(template)
         }
     }

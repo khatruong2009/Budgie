@@ -86,11 +86,10 @@ public struct LedgerIndex: Sendable {
             if seenCategories.insert(units).inserted && !DartString.trim(record.category).isEmpty {
                 categories.append((record.category, Array(DartString.lowercase(record.category).utf16)))
             }
-            let f = record.date.fields
-            let monthKey = f.year * 12 + f.month
+            let monthKey = DartCalendar.monthKey(record.date)
             keyed.append((
                 LedgerRow(
-                    record: record, dayKey: f.year * 10000 + f.month * 100 + f.day, monthKey: monthKey,
+                    record: record, dayKey: TransactionFilter.dayKey(record.date), monthKey: monthKey,
                     descriptionLower: DartString.lowercase(record.description)),
                 record.createdAt.microsecondsSinceEpoch, Array(record.id.utf16)))
 

@@ -13,10 +13,7 @@ public enum HomeSummary {
     /// previous month is zero; otherwise `(current - previous) / previous *
     /// 100`, with no sign correction for a negative previous value.
     public static func percentDelta(current: Double, previous: Double) -> Double? {
-        if previous == 0 {
-            if current == 0 { return nil }
-            return 100
-        }
+        if previous == 0 { return current == 0 ? nil : 100 }
         return (current - previous) / previous * 100
     }
 

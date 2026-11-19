@@ -92,8 +92,6 @@ public struct TransactionFilter: Equatable, Sendable {
         let tag = tagId.map { Array($0.utf16) }
         let fromKey = from.map(Self.dayKey)
         let toKey = to.map(Self.dayKey)
-        let minAmount = minAmount, maxAmount = maxAmount
-        let kind = kind
 
         return index.newestFirst.filter { row in
             let record = row.record

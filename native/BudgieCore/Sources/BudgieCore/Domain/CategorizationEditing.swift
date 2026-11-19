@@ -94,9 +94,7 @@ extension RuleDraft {
     /// (see `CategorizationEditError`). `addRule` does not apply them, as
     /// Dart's provider stores such rules.
     public var boundsError: CategorizationEditError? {
-        for bound in [minimumAmount, maximumAmount] {
-            if let bound, bound < 0 { return .ruleAmountNegative }
-        }
+        if [minimumAmount, maximumAmount].contains(where: { ($0 ?? 0) < 0 }) { return .ruleAmountNegative }
         if let minimumAmount, let maximumAmount, minimumAmount > maximumAmount { return .ruleMinimumAboveMaximum }
         return nil
     }
@@ -141,9 +139,7 @@ extension FinancialData {
     /// empty when nothing changed.
     @discardableResult
     public mutating func deleteTag(id: String) -> [String] {
-        let before = tagRows.count
-        tagRows.removeAll { $0.record.map { DartString.equal($0.id, id) } ?? false }
-        var changed = tagRows.count != before
+        var changed = tagRows.removeRows(id: id)
         for index in ruleRows.indices {
             guard let rule = ruleRows[index].record, rule.tagIds.contains(where: { DartString.equal($0, id) }) else { continue }
             ruleRows[index] = .record(rule.removingTag(id))
@@ -159,9 +155,7 @@ extension FinancialData {
     /// show a chip for it).
     public func validateRule(_ draft: RuleDraft, keepingTagIDs: [String] = []) -> CategorizationEditError? {
         if DartString.trim(draft.merchantPattern).isEmpty { return .rulePatternRequired }
-        for bound in [draft.minimumAmount, draft.maximumAmount] {
-            if let bound, !bound.isFinite { return .ruleAmountNotFinite }
-        }
+        if [draft.minimumAmount, draft.maximumAmount].contains(where: { !($0 ?? 0).isFinite }) { return .ruleAmountNotFinite }
         let known = tags.map(\.id) + keepingTagIDs
         if let unknown = draft.tagIds.first(where: { id in !known.contains { DartString.equal($0, id) } }) {
             return .unknownTag(unknown)
@@ -178,7 +172,7 @@ extension FinancialData {
     public mutating func addRule(_ draft: RuleDraft, id: String) throws(CategorizationEditError) -> CategorizationRuleRecord {
         if let error = validateRule(draft) { throw error }
         let rule = CategorizationRuleRecord.make(id: id, draft)
-        ruleRows.removeAll { $0.record.map { DartString.equal($0.id, id) } ?? false }
+        ruleRows.removeRows(id: id)
         ruleRows.append(.record(rule))
         return rule
     }
@@ -195,7 +189,7 @@ extension FinancialData {
     /// (write `categorizationRules` then).
     @discardableResult
     public mutating func updateRule(id: String, _ draft: RuleDraft) throws(CategorizationEditError) -> Bool {
-        let indices = ruleRows.indices.filter { ruleRows[$0].record.map { DartString.equal($0.id, id) } ?? false }
+        let indices = ruleRows.indices.filter { ruleRows[$0].hasID(id) }
         guard let first = indices.first, let current = ruleRows[first].record else { throw .ruleNotFound }
         if let error = validateRule(draft, keepingTagIDs: current.tagIds) ?? draft.boundsError { throw error }
         var changed = false
@@ -228,8 +222,6 @@ extension FinancialData {
     /// (Dart still writes the unchanged list). Write `categorizationRules`.
     @discardableResult
     public mutating func deleteRule(id: String) -> Bool {
-        let before = ruleRows.count
-        ruleRows.removeAll { $0.record.map { DartString.equal($0.id, id) } ?? false }
-        return ruleRows.count != before
+        ruleRows.removeRows(id: id)
     }
 }

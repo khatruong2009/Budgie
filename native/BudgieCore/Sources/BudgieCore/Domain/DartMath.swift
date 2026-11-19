@@ -1,7 +1,6 @@
 import Foundation
 
-// `dart:math` and `num` helpers on doubles, shared by the Worth and Flow
-// math (NetWorthPresentation, CashFlowMath) so both fold values as Dart.
+// `dart:math` and `num` helpers on doubles, so every fold behaves as Dart's.
 
 /// Dart `dart:math` `max`/`min` on doubles (NaN wins; `max(-0.0, 0.0)` is 0.0).
 func dartMax(_ a: Double, _ b: Double) -> Double {
@@ -43,4 +42,14 @@ func dartClampExact(_ value: Double, _ lower: Double, _ upper: Double) -> Double
     if dartCompare(value, lower) < 0 { return lower }
     if dartCompare(value, upper) > 0 { return upper }
     return value
+}
+
+extension Sequence {
+    /// Ascending by `key`, ties in original order.
+    func sortedStably<Key: Comparable>(by key: (Element) -> Key) -> [Element] {
+        enumerated().sorted { a, b in
+            let x = key(a.element), y = key(b.element)
+            return x != y ? x < y : a.offset < b.offset
+        }.map(\.element)
+    }
 }

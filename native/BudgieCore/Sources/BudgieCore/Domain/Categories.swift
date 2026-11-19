@@ -5,19 +5,19 @@ import Foundation
 public struct CategoryInfo: Hashable, Sendable, Identifiable {
     public let id: String
     public let type: TransactionType
-    public let name: String
-    public let iconIdentifier: String
-    public let colorToken: String
-    public let sortOrder: Int
-    public let isArchived: Bool
+    public private(set) var name: String
+    public private(set) var iconIdentifier: String
+    public private(set) var colorToken: String
+    public private(set) var sortOrder: Int
+    public private(set) var isArchived: Bool
     public let isBuiltIn: Bool
-    public let raw: JSONObject
+    public private(set) var raw: JSONObject
 
     /// Dart `BudgetCategory.fromJson`. nil where its casts would throw.
     static func parse(_ value: JSONValue) -> CategoryInfo? {
         guard case .object(let object) = value,
-            let id = Read.requiredString(object, "id"),
-            let name = Read.requiredString(object, "name"),
+            let id = object["id"]?.stringValue,
+            let name = object["name"]?.stringValue,
             case .some(let icon) = Read.optionalString(object, "iconIdentifier"),
             case .some(let color) = Read.optionalString(object, "colorToken")
         else { return nil }
@@ -35,32 +35,31 @@ public struct CategoryInfo: Hashable, Sendable, Identifiable {
     }
 
     func with(sortOrder: Int) -> CategoryInfo {
-        var raw = self.raw
-        raw["sortOrder"] = .int(sortOrder)
-        return CategoryInfo(
-            id: id, type: type, name: name, iconIdentifier: iconIdentifier, colorToken: colorToken, sortOrder: sortOrder,
-            isArchived: isArchived, isBuiltIn: isBuiltIn, raw: raw)
+        var copy = self
+        copy.sortOrder = sortOrder
+        copy.raw["sortOrder"] = .int(sortOrder)
+        return copy
     }
 
     /// Dart `copyWith(name:, iconIdentifier:, colorToken:)`. Only keys whose
     /// value changes (names compared as UTF-16) are rewritten.
     func with(name: String, iconIdentifier: String, colorToken: String) -> CategoryInfo {
-        var raw = self.raw
-        if !DartString.equal(name, self.name) { raw["name"] = .string(name) }
-        if !DartString.equal(iconIdentifier, self.iconIdentifier) { raw["iconIdentifier"] = .string(iconIdentifier) }
-        if !DartString.equal(colorToken, self.colorToken) { raw["colorToken"] = .string(colorToken) }
-        return CategoryInfo(
-            id: id, type: type, name: name, iconIdentifier: iconIdentifier, colorToken: colorToken, sortOrder: sortOrder,
-            isArchived: isArchived, isBuiltIn: isBuiltIn, raw: raw)
+        var copy = self
+        if !DartString.equal(name, self.name) { copy.raw["name"] = .string(name) }
+        if !DartString.equal(iconIdentifier, self.iconIdentifier) { copy.raw["iconIdentifier"] = .string(iconIdentifier) }
+        if !DartString.equal(colorToken, self.colorToken) { copy.raw["colorToken"] = .string(colorToken) }
+        copy.name = name
+        copy.iconIdentifier = iconIdentifier
+        copy.colorToken = colorToken
+        return copy
     }
 
     /// Dart `copyWith(isArchived:)`.
     func with(isArchived: Bool) -> CategoryInfo {
-        var raw = self.raw
-        raw["isArchived"] = .bool(isArchived)
-        return CategoryInfo(
-            id: id, type: type, name: name, iconIdentifier: iconIdentifier, colorToken: colorToken, sortOrder: sortOrder,
-            isArchived: isArchived, isBuiltIn: isBuiltIn, raw: raw)
+        var copy = self
+        copy.isArchived = isArchived
+        copy.raw["isArchived"] = .bool(isArchived)
+        return copy
     }
 
     /// A new definition as Dart `BudgetCategory(...).toJson()` writes it.
@@ -85,7 +84,7 @@ public struct CategoryInfo: Hashable, Sendable, Identifiable {
 }
 
 public enum CategoryCatalog {
-    /// `CategoryProvider._builtInCategories()` (research C section 3).
+    /// `CategoryProvider._builtInCategories()`.
     public static let builtIn: [CategoryInfo] = {
         let expenses: [(String, String, String)] = [
             ("General", "square_grid_2x2", "accent"), ("Eating Out", "asterisk_circle", "orange"),
@@ -98,16 +97,14 @@ public enum CategoryCatalog {
             ("Salary", "money", "green"), ("Investment", "chart", "blue"), ("Gift", "gift", "purple"),
             ("Other", "square_grid_2x2", "accent"),
         ]
-        func slug(_ name: String) -> String { name.lowercased().replacingOccurrences(of: " ", with: "-") }
-        return expenses.enumerated().map { i, c in
-            CategoryInfo.make(
-                id: "expense-\(slug(c.0))", type: .expense, name: c.0, iconIdentifier: c.1, colorToken: c.2, sortOrder: i,
-                isBuiltIn: true)
-        } + incomes.enumerated().map { i, c in
-            CategoryInfo.make(
-                id: "income-\(slug(c.0))", type: .income, name: c.0, iconIdentifier: c.1, colorToken: c.2, sortOrder: i,
-                isBuiltIn: true)
+        func seeds(_ rows: [(String, String, String)], _ type: TransactionType) -> [CategoryInfo] {
+            rows.enumerated().map { i, c in
+                CategoryInfo.make(
+                    id: "\(type.rawValue)-\(c.0.lowercased().replacingOccurrences(of: " ", with: "-"))", type: type, name: c.0,
+                    iconIdentifier: c.1, colorToken: c.2, sortOrder: i, isBuiltIn: true)
+            }
         }
+        return seeds(expenses, .expense) + seeds(incomes, .income)
     }()
 
     /// The stored rows of the `categories` section: each readable (Dart
@@ -134,10 +131,7 @@ public enum CategoryCatalog {
     /// and names added earlier in this pass included) whose `toLowerCase()`
     /// equals the name's `trim().toLowerCase()` as UTF-16 code units.
     public static func pickerList(_ categories: [CategoryInfo], type: TransactionType, usedNames: [String]) -> [CategoryInfo] {
-        let defined = categories.enumerated()
-            .filter { $0.element.type == type }
-            .sorted { ($0.element.sortOrder, $0.offset) < ($1.element.sortOrder, $1.offset) }
-            .map(\.element)
+        let defined = categories.filter { $0.type == type }.sortedStably { $0.sortOrder }
         var result = defined.filter { !$0.isArchived }
         var known = Set(defined.map { Array(DartString.lowercase($0.name).utf16) })
         for name in usedNames where !known.contains(Array(DartString.lowercase(DartString.trim(name)).utf16)) {
@@ -149,45 +143,30 @@ public enum CategoryCatalog {
         return result
     }
 
-    /// The keys of Dart's `categoryIconRegistry` in insertion order
-    /// (common.dart:4-23): the editor's icon grid. Any other identifier is
-    /// stored as `square_grid_2x2` by add and update.
-    public static let iconIdentifiers = [
-        "square_grid_2x2", "asterisk_circle", "cart", "house", "car", "airplane", "bag", "gift", "heart", "film", "paw",
-        "people", "money", "chart", "book", "phone", "wrench", "leaf",
+    /// Dart's `categoryIconRegistry` (common.dart:4-23) in insertion order, each key
+    /// with its SF Symbol (the Cupertino glyph's SF counterpart where one exists,
+    /// filled where the Cupertino glyph is: `car_detailed` and `paw`).
+    private static let icons: [(id: String, symbol: String)] = [
+        ("square_grid_2x2", "square.grid.2x2"), ("asterisk_circle", "asterisk.circle"), ("cart", "cart"),
+        ("house", "house"), ("car", "car.fill"), ("airplane", "airplane"), ("bag", "bag"), ("gift", "gift"),
+        ("heart", "heart"), ("film", "film"), ("paw", "pawprint.fill"), ("people", "person.2"),
+        ("money", "dollarsign"), ("chart", "chart.bar"), ("book", "book"), ("phone", "iphone"),
+        ("wrench", "hammer"), ("leaf", "leaf.arrow.circlepath"),
     ]
+
+    /// The editor's icon grid. Any other identifier is stored as
+    /// `square_grid_2x2` by add and update.
+    public static let iconIdentifiers = icons.map(\.id)
 
     /// The editor's colour choices (`_colorTokens`,
     /// category_settings_page.dart:381-390). Add and update store any token
     /// verbatim; an unknown one renders as accent.
     public static let colorTokens = ["accent", "green", "blue", "orange", "red", "purple", "pink", "cyan"]
 
-    /// SF Symbol for a Flutter icon identifier (CupertinoIcons registry,
-    /// common.dart; the Cupertino glyph's SF counterpart where one exists,
-    /// filled where the Cupertino glyph is: `car_detailed` and `paw`).
-    /// Unknown identifiers fall back like Flutter does.
+    /// SF Symbol for a Flutter icon identifier; unknown ones fall back like
+    /// Flutter does.
     public static func symbol(for iconIdentifier: String) -> String {
-        switch iconIdentifier {
-        case "square_grid_2x2": "square.grid.2x2"
-        case "asterisk_circle": "asterisk.circle"
-        case "cart": "cart"
-        case "house": "house"
-        case "car": "car.fill"
-        case "airplane": "airplane"
-        case "bag": "bag"
-        case "gift": "gift"
-        case "heart": "heart"
-        case "film": "film"
-        case "paw": "pawprint.fill"
-        case "people": "person.2"
-        case "money": "dollarsign"
-        case "chart": "chart.bar"
-        case "book": "book"
-        case "phone": "iphone"
-        case "wrench": "hammer"
-        case "leaf": "leaf.arrow.circlepath"
-        default: "square.grid.2x2"
-        }
+        icons.first { $0.id == iconIdentifier }?.symbol ?? "square.grid.2x2"
     }
 }
 
@@ -234,10 +213,9 @@ extension FinancialData {
         var added = false
         let stored = matchesPaddedCategoryNames ? categoryRows.count : 0
         for (type, name) in names where !containsCategory(type: type, name: name, trimmingStoredBefore: stored) {
-            let count = categoryRows.filter { $0.record?.type == type }.count
             categoryRows.append(.record(CategoryInfo.make(
                 id: uniqueCategoryID(type: type, name: name, newID: newID), type: type, name: name,
-                iconIdentifier: "square_grid_2x2", colorToken: "accent", sortOrder: count, isBuiltIn: false)))
+                iconIdentifier: "square_grid_2x2", colorToken: "accent", sortOrder: categoryRowCount(type: type), isBuiltIn: false)))
             added = true
         }
         if added { normalizeCategorySortOrders() }
@@ -275,8 +253,12 @@ extension FinancialData {
         while slug.hasPrefix("-") { slug.removeFirst() }
         while slug.hasSuffix("-") { slug.removeLast() }
         let candidate = "\(type.rawValue)-\(slug.isEmpty ? "category" : slug)"
-        if categoryRows.contains(where: { $0.record.map { DartString.equal($0.id, candidate) } ?? false }) { return "\(type.rawValue)-\(newID())" }
-        return candidate
+        return categoryRows.contains(where: { $0.hasID(candidate) }) ? "\(type.rawValue)-\(newID())" : candidate
+    }
+
+    /// How many definitions of the type are stored, archived ones included.
+    func categoryRowCount(type: TransactionType) -> Int {
+        categoryRows.count { $0.record?.type == type }
     }
 
     /// Dart `_normalizeSortOrders`: per type, every definition (archived
@@ -284,15 +266,7 @@ extension FinancialData {
     /// whose number changes are patched.
     mutating func normalizeCategorySortOrders() {
         for type in TransactionType.allCases {
-            let ordered = categoryRows.indices
-                .filter { categoryRows[$0].record?.type == type }
-                .enumerated()
-                .sorted { a, b in
-                    let x = categoryRows[a.element].record!.sortOrder, y = categoryRows[b.element].record!.sortOrder
-                    return x != y ? x < y : a.offset < b.offset
-                }
-                .map(\.element)
-            for (position, index) in ordered.enumerated() {
+            for (position, index) in categoryRowIndices(type: type).enumerated() {
                 guard let record = categoryRows[index].record, record.sortOrder != position else { continue }
                 categoryRows[index] = .record(record.with(sortOrder: position))
             }
@@ -307,7 +281,7 @@ extension FinancialData {
     /// none (Dart `_containsName` sees archived ones), so Flutter's list has
     /// no entry for it either.
     public func categoryPicker(for type: TransactionType) -> [CategoryInfo] {
-        CategoryCatalog.pickerList(categories, type: type, usedNames: [])
+        categoryDefinitions(type: type, includeArchived: false)
     }
 
     /// A case-insensitive match compared as UTF-16, as Dart's

@@ -63,7 +63,7 @@ public struct DonutGeometry: Sendable, Equatable {
     }
 
     /// `slices.fold(0.0, (sum, s) => sum + s.value)`.
-    private var total: Double { values.reduce(0.0) { $0 + $1 } }
+    private var total: Double { values.reduce(0.0, +) }
 
     /// The arcs `_DonutPainter.paint` draws (:242-304) at `sweep` progress
     /// (the eased animation value, 0...1; 1 when settled). The progress
@@ -80,7 +80,7 @@ public struct DonutGeometry: Sendable, Equatable {
         let outerRadius = Double(min(size.width, size.height)) / 2
         let thickness = Self.ringThickness
         let baseRadius = outerRadius - thickness / 2
-        let selectedRadius = outerRadius - thickness / 2 - Self.selectedRadiusInset
+        let selectedRadius = baseRadius - Self.selectedRadiusInset
         let startAngle = -Double.pi / 2
         let gapAngle = 2 * Double.pi * Self.gapFraction
 

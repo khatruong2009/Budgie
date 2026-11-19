@@ -174,11 +174,11 @@ struct CategoryEditingTests {
 
         // The Tags stream's entry point.
         var f = try data(#"{"categorizationRules":[\#(rule("r1", "expense", "A")),\#(rule("r2", "income", "A")),\#(rule("r3", nil, "A"))]}"#)
-        let renamed = f.renameRuleCategory(from: "A", to: "B", type: .income)
-        #expect(renamed)
+        let renamed = f.renameRuleCategory(from: "A", to: "B", restrictedTo: .income)
+        #expect(renamed > 0)
         #expect(f.rules.map(\.category) == ["A", "B", "B"])
-        let none = f.renameRuleCategory(from: "Z", to: "B", type: .income)
-        #expect(!none)
+        let none = f.renameRuleCategory(from: "Z", to: "B", restrictedTo: .income)
+        #expect(none == 0)
         // Flutter's pass (parity tests only) renames every type.
         let flutterCount = f.renameRuleCategory(from: "A", to: "C", restrictedTo: nil)
         #expect(flutterCount == 1)

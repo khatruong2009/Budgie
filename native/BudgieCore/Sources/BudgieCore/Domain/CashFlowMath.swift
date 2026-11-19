@@ -32,8 +32,7 @@ public enum CashFlowMath {
             let f = entry.month.fields
             return f.year < selected.year || (f.year == selected.year && f.month <= selected.month)
         }
-        if kept.count > months { return Array(kept[(kept.count - months)...]) }
-        return kept
+        return Array(kept.suffix(months))
     }
 
     // MARK: Metric strip
@@ -52,10 +51,8 @@ public enum CashFlowMath {
     /// `_computeMetrics` (`hp:143-152`): two ascending folds from 0.0.
     public static func metrics(_ window: [MonthCashFlow]) -> Metrics {
         guard !window.isEmpty else { return Metrics(avgSaved: 0, savingsRate: 0) }
-        var totalIncome = 0.0
-        for entry in window { totalIncome += entry.income }
-        var totalExpenses = 0.0
-        for entry in window { totalExpenses += entry.expenses }
+        let totalIncome = window.reduce(0.0) { $0 + $1.income }
+        let totalExpenses = window.reduce(0.0) { $0 + $1.expenses }
         let totalSavings = totalIncome - totalExpenses
         let avgSavings = totalSavings / Double(window.count)
         let savingsRate = totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0.0
@@ -185,18 +182,12 @@ public enum CashFlowMath {
     /// `LayoutBuilder` max width). Positive and negative bars scale to
     /// different maxima (76 and 40) of the same largest |net|.
     public static func barLayout(_ window: [MonthCashFlow], selectedMonth: DartDateTime, availableWidth: Double) -> BarLayout {
-        var maxMagnitude = 0.0
-        for entry in window { maxMagnitude = dartMax(maxMagnitude, abs(entry.net)) }
+        let maxMagnitude = Self.maxMagnitude(window.map(\.net))
         let selected = selectedMonth.fields
         let bars = window.map { entry -> Bar in
             let net = entry.net
             let isPositive = net >= 0
-            let height: Double
-            if maxMagnitude <= 0 {
-                height = 0
-            } else {
-                height = (abs(net) / maxMagnitude) * (isPositive ? maxPositiveBarHeight : maxNegativeBarHeight)
-            }
+            let height = maxMagnitude <= 0 ? 0 : (abs(net) / maxMagnitude) * (isPositive ? maxPositiveBarHeight : maxNegativeBarHeight)
             let f = entry.month.fields
             return Bar(
                 entry: entry, height: height, top: isPositive ? barBaselineY - height : barBaselineY,
@@ -222,7 +213,7 @@ public enum CashFlowMath {
         public init(entry: MonthCashFlow) { self.entry = entry }
 
         /// `data.income - data.expenses`.
-        public var net: Double { entry.income - entry.expenses }
+        public var net: Double { entry.net }
         /// Net colour (income when true, else danger) and icon (check when
         /// true, else `trending_up`, as Flutter).
         public var netIsPositive: Bool { net >= 0 }
@@ -245,9 +236,13 @@ public enum CashFlowMath {
     /// `_TrendSparkline` (`hp:995-998`): the y axis runs from -bound to
     /// +bound, `bound = maxAbs <= 0 ? 100 : maxAbs × 1.15`.
     public static func sparklineBound(_ nets: [Double]) -> Double {
-        var maxMagnitude = 0.0
-        for value in nets { maxMagnitude = dartMax(maxMagnitude, abs(value)) }
-        return maxMagnitude <= 0 ? 100.0 : maxMagnitude * 1.15
+        let peak = maxMagnitude(nets)
+        return peak <= 0 ? 100.0 : peak * 1.15
+    }
+
+    /// The largest |value| folded from 0.0 with Dart's `max`.
+    private static func maxMagnitude(_ values: [Double]) -> Double {
+        values.reduce(0.0) { dartMax($0, abs($1)) }
     }
 
     /// fl_chart's default `curveSmoothness` (`LineChartBarData`), which the
@@ -285,7 +280,6 @@ public enum CashFlowMath {
     public static func trendControlPoints(_ points: [CGPoint], smoothness: Double = trendCurveSmoothness) -> [(CGPoint, CGPoint)] {
         guard points.count > 1 else { return [] }
         var result: [(CGPoint, CGPoint)] = []
-        result.reserveCapacity(points.count - 1)
         var tx = 0.0, ty = 0.0
         for i in 1..<points.count {
             let current = points[i], previous = points[i - 1]
