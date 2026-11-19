@@ -82,7 +82,6 @@ struct BudgetLimitSheet: View {
             }
             .padding(.top, Metrics.spacingL)
         }
-        // 12 + the chrome's 19pt handle inset.
         .padding(EdgeInsets(top: 12, leading: Metrics.pageHorizontal, bottom: 16, trailing: Metrics.pageHorizontal))
         .fixedSize(horizontal: false, vertical: true)
         .onGeometryChangeCompat {
@@ -154,21 +153,22 @@ struct BudgetLimitSheet: View {
     /// verified write, then closes.
     private func save() {
         guard !saving, let limit else { return }
-        saving = true
-        Task {
-            // A failed write still closes the sheet, as in Flutter: the change
-            // stays in memory and the unsaved-changes banner offers the retry.
-            _ = await model.setBudgetLimit(category: category, limit: limit)
-            dismiss()
-        }
+        commit { await model.setBudgetLimit(category: category, limit: limit) }
     }
 
     /// `_removeLimit`: also sets `saving`, so Save spins and Remove disables.
     private func remove() {
         guard !saving else { return }
+        commit { await model.removeBudgetLimit(category: category) }
+    }
+
+    /// Spins, awaits the verified write, then closes. A failed write still
+    /// closes the sheet, as in Flutter: the change stays in memory and the
+    /// unsaved-changes banner offers the retry.
+    private func commit(_ write: @escaping () async -> Bool) {
         saving = true
         Task {
-            _ = await model.removeBudgetLimit(category: category)
+            _ = await write()
             dismiss()
         }
     }
@@ -177,7 +177,7 @@ struct BudgetLimitSheet: View {
 
     /// An unchanged prefill keeps `currentLimit` exactly (99.999 stays
     /// 99.999, not the 100.0 its "100.00" parses to; 0.001 stays saveable);
-    /// any edit parses (`AmountInput`, D6) and must be above 0. Flutter
+    /// any edit parses (`AmountParser`, D6) and must be above 0. Flutter
     /// always parses the text.
     nonisolated static func limit(text: String, prefill: String, currentLimit: Double?, formatter: MoneyFormatter) -> Double? {
         if let currentLimit, text == prefill { return currentLimit }

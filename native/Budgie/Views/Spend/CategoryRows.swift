@@ -56,13 +56,9 @@ private struct CategoryRow: View {
         let color = record.palette.color
         let amount = formatter.format(record.amount, decimalDigits: 0)
         let subtitle = record.subtitle(money: formatter)
-        VStack(alignment: .leading, spacing: 10) {
-            SpendRowLine(
-                tile: IconTile(symbol: symbol, color: color), title: record.name, subtitle: subtitle, amount: amount)
-            GlowProgressBar(value: record.barFraction, height: 6, color: color)
-                .padding(.leading, SpendRowLine.textInset)
-                .accessibilityHidden(true)
-        }
+        SpendRowLine(
+            tile: IconTile(symbol: symbol, color: color), title: record.name, subtitle: subtitle, amount: amount,
+            barFraction: record.barFraction, barColor: color)
         .padding(.vertical, 12)
         .padding(.horizontal, 10)
         .background(
@@ -88,14 +84,10 @@ private struct TailRow: View {
 
     var body: some View {
         let amount = formatter.format(tail.total, decimalDigits: 0)
-        VStack(alignment: .leading, spacing: 10) {
-            SpendRowLine(
-                tile: IconTile(symbol: "ellipsis", color: BudgieColor.textSecondary, background: BudgieColor.hairline),
-                title: tail.title, subtitle: tail.subtitle, amount: amount)
-            GlowProgressBar(value: tail.barFraction, height: 6, color: BudgieColor.trackSecondary)
-                .padding(.leading, SpendRowLine.textInset)
-                .accessibilityHidden(true)
-        }
+        SpendRowLine(
+            tile: IconTile(symbol: "ellipsis", color: BudgieColor.textSecondary, background: BudgieColor.hairline),
+            title: tail.title, subtitle: tail.subtitle, amount: amount, barFraction: tail.barFraction,
+            barColor: BudgieColor.trackSecondary)
         .padding(.vertical, 14)
         .padding(.horizontal, 12)
         .contentShape(Rectangle())
@@ -122,20 +114,29 @@ private struct CollapseRow: View {
     }
 }
 
-/// The shared top line (Home's Recent activity rows): the 40pt tile, 12,
-/// title over subtitle (one line each), 8, the amount at its full width in
-/// `amountSmall`.
+/// The shared row body: the top line (Home's Recent activity rows) of the
+/// 40pt tile, 12, title over subtitle (one line each), 8, the amount at its
+/// full width in `amountSmall`; then a 6pt bar under the text.
 private struct SpendRowLine: View {
     let tile: IconTile
     let title: String
     let subtitle: String
     let amount: String
-
-    /// Where the text starts: the tile and its gap (the bars line up with
-    /// it, as in the Spend mockup).
-    static let textInset: CGFloat = 40 + 12
+    let barFraction: Double
+    let barColor: Color
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            line
+            // The bar lines up with the text: the tile and its gap (the
+            // Spend mockup).
+            GlowProgressBar(value: barFraction, height: 6, color: barColor)
+                .padding(.leading, 40 + 12)
+                .accessibilityHidden(true)
+        }
+    }
+
+    private var line: some View {
         HStack(spacing: 0) {
             tile
             VStack(alignment: .leading, spacing: Metrics.spacingXXS) {

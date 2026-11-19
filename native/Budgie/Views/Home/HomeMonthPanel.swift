@@ -176,7 +176,7 @@ private struct MonthWheel: View {
 
     /// Flutter's tap-to-scroll: 300ms easeInOut (none under Reduce Motion).
     private func scroll(to index: Int) {
-        withAnimation(reduceMotion ? nil : Motion.easeInOut(0.3)) { centred = index }
+        Motion.animate(Motion.easeInOut(0.3), reduceMotion: reduceMotion) { centred = index }
     }
 
     private func select(_ index: Int) {

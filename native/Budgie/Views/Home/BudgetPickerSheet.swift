@@ -38,7 +38,6 @@ struct BudgetPickerSheet: View {
                     .padding(.top, 6)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            // 12 + the chrome's 19pt handle inset.
             .padding(EdgeInsets(top: 12, leading: Metrics.pageHorizontal, bottom: 16, trailing: Metrics.pageHorizontal))
             .fixedSize(horizontal: false, vertical: true)
             .onGeometryChangeCompat { headerHeight = $0.height }
@@ -47,14 +46,13 @@ struct BudgetPickerSheet: View {
                     VStack(spacing: 0) {
                         ForEach(categories) { info in
                             if info.id != categories.first?.id { Hairline().padding(.horizontal, Metrics.hairlineInset) }
-                            BudgetCategoryTile(
-                                info: info, limit: kind == .edit ? overview.limit(for: info.name) : nil,
-                                formatter: formatter
-                            ) { onPick(info.name) }
+                            categoryRow(info, formatter: formatter)
                         }
                         if showsAddRow {
                             if !categories.isEmpty { Hairline().padding(.horizontal, Metrics.hairlineInset) }
-                            AddBudgetRow(action: onAdd)
+                            BudgetPickerRow(
+                                tile: IconTile(symbol: "plus", color: BudgieColor.accent), title: "Add a budget",
+                                titleColor: BudgieColor.accent, lineLimit: nil, action: onAdd)
                         }
                     }
                 }
@@ -78,6 +76,16 @@ struct BudgetPickerSheet: View {
         return .height(min(BudgetSheetLayout.handleHeight + header + list, hostHeight * 0.75))
     }
 
+    /// The category's tile and "$X limit" when budgeted (the Add sheet has no subtitle).
+    private func categoryRow(_ info: CategoryInfo, formatter: MoneyFormatter) -> some View {
+        let limit = kind == .edit ? overview.limit(for: info.name) : nil
+        return BudgetPickerRow(
+            tile: IconTile(category: info), title: info.name,
+            subtitle: limit.flatMap { $0 > 0 ? "\(formatter.format($0, decimalDigits: 0)) limit" : nil }
+        ) { onPick(info.name) }
+        .accessibilityIdentifier("budgets.picker.\(info.name)")
+    }
+
     private var title: String { kind == .edit ? "Edit budgets" : "Add a budget" }
 
     private func subtitle(hasBudgets: Bool) -> String {
@@ -91,35 +99,38 @@ struct BudgetPickerSheet: View {
     }
 }
 
-/// `_EditBudgetCategoryTile` (spending_page.dart:1876-1946): the category's
-/// tile and "$X limit" for a budgeted category, no subtitle in the Add sheet;
-/// chevron; light haptic.
-private struct BudgetCategoryTile: View {
-    let info: CategoryInfo
-    let limit: Double?
-    let formatter: MoneyFormatter
+/// A picker row: `_EditBudgetCategoryTile` (spending_page.dart:1876-1946) or
+/// `_AddBudgetRow` (:1819-1873); tile, title, optional subtitle, chevron;
+/// light haptic.
+private struct BudgetPickerRow: View {
+    let tile: IconTile
+    let title: String
+    var titleColor = BudgieColor.textPrimary
+    var subtitle: String?
+    var lineLimit: Int? = 1
     let action: () -> Void
 
     var body: some View {
-        let budgeted = (limit ?? 0) > 0
         HapticButton(action: action) {
             HStack(spacing: 12) {
-                IconTile(category: info)
+                tile
                 VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
-                    Text(info.name).textStyle(.rowTitle).foregroundStyle(BudgieColor.textPrimary).lineLimit(1)
-                    if budgeted, let limit {
-                        Text("\(formatter.format(limit, decimalDigits: 0)) limit")
-                            .textStyle(.rowSubtitle)
-                            .foregroundStyle(BudgieColor.textSecondary)
+                    Text(title).textStyle(.rowTitle).foregroundStyle(titleColor).lineLimit(lineLimit)
+                    if let subtitle {
+                        Text(subtitle).textStyle(.rowSubtitle).foregroundStyle(BudgieColor.textSecondary)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                BudgetChevron()
+                // `Symbols.chevron_right_rounded` 20, weight 500, tertiary.
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(BudgieColor.textTertiary)
+                    .frame(width: 20)
+                    .accessibilityHidden(true)
             }
             .padding(12)
             .contentShape(Rectangle())
         }
         .buttonStyle(PressScaleStyle(scale: 1))
-        .accessibilityIdentifier("budgets.picker.\(info.name)")
     }
 }

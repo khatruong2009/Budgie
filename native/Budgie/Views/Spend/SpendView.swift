@@ -124,17 +124,10 @@ struct SpendView: View {
             }
         }
         if let tail = breakdown.tail {
-            if expanded {
-                rows.append(SpendListRow(kind: .collapse, formatter: formatter) {
-                    rowTaps += 1
-                    tailExpanded = false
-                })
-            } else {
-                rows.append(SpendListRow(kind: .tail(tail), formatter: formatter) {
-                    rowTaps += 1
-                    tailExpanded = true
-                })
-            }
+            rows.append(SpendListRow(kind: expanded ? .collapse : .tail(tail), formatter: formatter) {
+                rowTaps += 1
+                tailExpanded = !expanded
+            })
         }
         return rows
     }
