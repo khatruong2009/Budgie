@@ -3,12 +3,10 @@ import WidgetKit
 
 /// Reads the cash flow value the app writes to the shared app group.
 enum CashFlowStore {
-  static let suiteName = WidgetShared.appGroup
-
   /// Returns nil when the app has never written data (fresh install).
   /// Returns 0 when the stored value belongs to a previous month.
   static func read(for date: Date = Date()) -> Double? {
-    guard let defaults = UserDefaults(suiteName: suiteName),
+    guard let defaults = UserDefaults(suiteName: WidgetShared.appGroup),
       defaults.object(forKey: WidgetShared.cashFlowKey) != nil,
       let storedMonth = defaults.string(forKey: WidgetShared.cashFlowMonthKey)
     else { return nil }
@@ -19,7 +17,7 @@ enum CashFlowStore {
   /// The app's Hide balances setting (D12), written by the Swift app only;
   /// false when absent.
   static func hidesBalances() -> Bool {
-    UserDefaults(suiteName: suiteName)?.bool(forKey: WidgetShared.hideBalancesKey) ?? false
+    UserDefaults(suiteName: WidgetShared.appGroup)?.bool(forKey: WidgetShared.hideBalancesKey) ?? false
   }
 
   /// Always Gregorian: the key must match what the Dart side writes from
@@ -139,18 +137,17 @@ struct BudgetWidgetEntry: TimelineEntry {
 }
 
 struct BudgetWidgetProvider: TimelineProvider {
-  func placeholder(in context: Context) -> BudgetWidgetEntry {
-    BudgetWidgetEntry(date: Date(), cashFlow: CashFlowStore.read(), hidesBalances: CashFlowStore.hidesBalances())
+  private func entry(_ date: Date = Date()) -> BudgetWidgetEntry {
+    BudgetWidgetEntry(date: date, cashFlow: CashFlowStore.read(for: date), hidesBalances: CashFlowStore.hidesBalances())
   }
 
-  func getSnapshot(in context: Context, completion: @escaping (BudgetWidgetEntry) -> Void) {
-    completion(BudgetWidgetEntry(date: Date(), cashFlow: CashFlowStore.read(), hidesBalances: CashFlowStore.hidesBalances()))
-  }
+  func placeholder(in context: Context) -> BudgetWidgetEntry { entry() }
+
+  func getSnapshot(in context: Context, completion: @escaping (BudgetWidgetEntry) -> Void) { completion(entry()) }
 
   func getTimeline(in context: Context, completion: @escaping (Timeline<BudgetWidgetEntry>) -> Void) {
     let now = Date()
-    let entry = BudgetWidgetEntry(date: now, cashFlow: CashFlowStore.read(for: now), hidesBalances: CashFlowStore.hidesBalances())
-    completion(Timeline(entries: [entry], policy: .after(CashFlowStore.startOfNextMonth(after: now))))
+    completion(Timeline(entries: [entry(now)], policy: .after(CashFlowStore.startOfNextMonth(after: now))))
   }
 }
 

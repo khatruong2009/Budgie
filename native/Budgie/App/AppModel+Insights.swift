@@ -75,22 +75,19 @@ extension AppModel {
     /// `_dismiss`: hidden for good; the whole dismissed list is rewritten.
     /// Like Flutter, no confirmation and no undo.
     func dismissInsight(id: String) {
-        let write = insightPreferences.dismiss(id)
-        preferences.set(write.value, forKey: write.key)
-        hideInsight(id)
+        hideInsight(id, writing: insightPreferences.dismiss(id))
     }
 
     /// `_snooze`: hidden for 30 x 24 hours from now; the whole snoozed map
     /// is rewritten.
     func snoozeInsight(id: String) {
-        let write = insightPreferences.snooze(id, now: now)
-        preferences.set(write.value, forKey: write.key)
-        hideInsight(id)
+        hideInsight(id, writing: insightPreferences.snooze(id, now: now))
     }
 
     /// Every card with the id goes at once, as Flutter's rebuild does; the
     /// next candidate fills in when the recomputation lands.
-    private func hideInsight(_ id: String) {
+    private func hideInsight(_ id: String, writing write: (key: String, value: PreferenceValue)) {
+        preferences.set(write.value, forKey: write.key)
         insights.removeAll { $0.id.utf16.elementsEqual(id.utf16) }
         refreshInsights()
     }

@@ -12,7 +12,7 @@ enum Signpost {
 }
 
 /// The persisted launch log (`.notice`) that docs/REAL_DEVICE_CHECKLISTS.md
-/// (budgie-uia.8) greps: `launch prewarm=`, `protected data available after`,
+/// greps: `launch prewarm=`, `protected data available after`,
 /// `store loaded` and `pre-native snapshot`. Only public, non-financial
 /// values: flags, seconds, a revision number and an outcome word.
 enum LaunchLog {
@@ -38,7 +38,7 @@ enum LaunchLog {
         logger.notice("store load failed \(kind, privacy: .public)")
     }
 
-    /// `created`, `exists`, `skipped` or `failed`.
+    /// `created`, `exists` or `failed`.
     static func preNativeSnapshot(_ outcome: String) {
         logger.notice("pre-native snapshot \(outcome, privacy: .public)")
     }

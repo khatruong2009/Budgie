@@ -146,18 +146,14 @@ struct RecurringView: View {
     }
 
     private func setActive(_ template: RecurringTemplate, _ active: Bool) async {
-        guard hasTemplate(template.id) else { return }
+        guard model.hasTemplate(template.id) else { return }
         if !(await model.setTemplateActive(id: template.id, active)) { model.showToast(.saveFailed) }
     }
 
     private func delete(_ template: RecurringTemplate) async {
         // Already gone (deleted elsewhere): nothing failed.
-        guard hasTemplate(template.id) else { return }
+        guard model.hasTemplate(template.id) else { return }
         let saved = await model.deleteTemplate(id: template.id)
         model.showToast(saved ? .recurringDeleted : .saveFailed)
-    }
-
-    private func hasTemplate(_ id: String) -> Bool {
-        model.data?.templates.contains { $0.id == id } ?? false
     }
 }

@@ -10,8 +10,9 @@ enum AppIdentifiers {
 /// What the Add sheet should open with (quick actions, deep links, widget).
 /// `.voice` opens the recording sheet, which continues into the add form
 /// with what was said (`VoiceDraft`).
-enum AddRoute: Equatable, Sendable {
+enum AddRoute: Equatable, Sendable, Identifiable {
     case expense, income, voice
+    var id: Self { self }
 }
 
 enum ThemeMode: String, CaseIterable, Sendable {

@@ -1,7 +1,6 @@
 import BudgieCore
 import Foundation
 import os
-import UIKit
 
 extension AppModel {
     // MARK: - Export files

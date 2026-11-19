@@ -24,17 +24,15 @@ extension AppModel {
     /// missing row or a non-finite amount.
     @discardableResult
     func updateTransaction(id: String, _ edit: TransactionRecord.Edit) async -> SaveOutcome {
-        guard edit.amount.isFinite,
-            applyMutation({ $0.updateTransaction(id: id, edit, now: now) }, after: transactionsChanged)
-        else { return .rejected }
-        return await persist([Section.transactions]) ? .saved : .failed
+        guard edit.amount.isFinite else { return .rejected }
+        return await mutateOutcome(
+            [Section.transactions], { $0.updateTransaction(id: id, edit, now: now) }, after: transactionsChanged)
     }
 
     /// `.rejected` (nothing written, no save-failed toast) for a missing row.
     @discardableResult
     func deleteTransaction(id: String) async -> SaveOutcome {
-        guard applyMutation({ $0.deleteTransaction(id: id) }, after: transactionsChanged) else { return .rejected }
-        return await persist([Section.transactions]) ? .saved : .failed
+        await mutateOutcome([Section.transactions], { $0.deleteTransaction(id: id) }, after: transactionsChanged)
     }
 
     // MARK: - Recurring
@@ -94,16 +92,14 @@ extension AppModel {
     /// The latest transaction generated from a template, for the edit
     /// form's preview (`RecurringGenerator.previewOccurrences(editing:...)`).
     /// Read it once when the form opens: it scans the ledger.
-    func lastGeneratedDate(forTemplate id: String) -> DartDateTime? {
-        data?.lastGeneratedDate(forTemplate: id)
-    }
+    func lastGeneratedDate(forTemplate id: String) -> DartDateTime? { data?.lastGeneratedDate(forTemplate: id) }
+
+    func hasTemplate(_ id: String) -> Bool { data?.templates.contains { $0.id == id } ?? false }
 
     // MARK: - Budgets
 
     /// Dart `getCategoryBudgetLimit`: exact name, nil when there is none.
-    func budgetLimit(for category: String) -> Double? {
-        data?.budgetLimit(for: category)
-    }
+    func budgetLimit(for category: String) -> Double? { data?.budgetLimit(for: category) }
 
     /// Dart `setCategoryBudgetLimit` (trimmed; `limit <= 0` removes).
     @discardableResult

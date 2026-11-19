@@ -17,7 +17,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     @MainActor static let model = AppModel()
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-        // The launch log's first line (REAL_DEVICE_CHECKLISTS, budgie-uia.8).
+        // The launch log's first line.
         LaunchLog.processLaunched(protectedDataAvailable: application.isProtectedDataAvailable)
         Signpost.launch.emitEvent("processLaunch")
         // Replaces the Flutter build's dynamic items (same three, same order).
