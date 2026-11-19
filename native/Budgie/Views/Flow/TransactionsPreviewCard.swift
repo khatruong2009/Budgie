@@ -17,7 +17,7 @@ struct TransactionsPreviewCard: View {
             .accessibilityHint("Opens all transactions")
             .accessibilityIdentifier("flow.preview.empty")
         } else {
-            GlowListCard(rows: rows.map { FlowTransactionRow(record: $0.record, formatter: formatter, action: onOpen) })
+            GlowListCard(rows: rows.map { FlowTransactionRow(row: $0, formatter: formatter, action: onOpen) })
         }
     }
 }
@@ -28,22 +28,21 @@ struct TransactionsPreviewCard: View {
 /// amount, green for income and primary text for expenses. No press scale;
 /// a light haptic on tap.
 private struct FlowTransactionRow: View {
-    let record: TransactionRecord
+    let row: LedgerRow
     let formatter: MoneyFormatter
     let action: () -> Void
 
     @Environment(AppModel.self) private var model
 
     var body: some View {
+        let record = row.record
         let isIncome = record.type == .income
-        let day = DartDateFormat.MMMd(record.date)
         let info = model.categoryInfo(named: record.category, type: record.type)
         HapticButton(action: action) {
             TransactionRowLayout(
                 // Flutter shows a blank line for an empty description.
                 title: record.description.isEmpty ? " " : record.description, isRecurring: record.isRecurring,
-                subtitle: "\(record.category) \u{00B7} \(day)",
-                amount: formatter.formatSigned(isIncome ? record.amount : -record.amount, plusForPositive: true),
+                subtitle: row.flowSubtitle, amount: row.flowAmountText(formatter),
                 amountColor: isIncome ? BudgieColor.income : BudgieColor.textPrimary
             ) {
                 FlowCategoryTile(info: info, isIncome: isIncome)
@@ -53,9 +52,7 @@ private struct FlowTransactionRow: View {
         .buttonStyle(PressScaleStyle(scale: 1))
         // Read like Home's recent-activity rows: the description, then the rest.
         .accessibilityLabel(record.description.isEmpty ? "Transaction" : record.description)
-        .accessibilityValue(
-            "\(record.category), \(day), \(isIncome ? "income" : "expense") \(formatter.format(record.amount))"
-                + (record.isRecurring ? ", recurring" : ""))
+        .accessibilityValue(record.activityAccessibilityValue(formatter: formatter))
         .accessibilityHint("Opens all transactions")
         .accessibilityIdentifier("flow.preview.row")
     }

@@ -11,7 +11,7 @@ struct FlowView: View {
     @Environment(AppModel.self) private var model
     @State private var rangeMonths = CashFlowMath.defaultRange
     @State private var sheet: FlowSheet?
-    @State private var page: FlowPage?
+    @State private var page: SeeAllPage?
     /// Range tile taps: Flutter's `selectionClick` fires on every tile tap,
     /// the already-selected one included.
     @State private var rangePicks = 0
@@ -84,12 +84,6 @@ struct FlowView: View {
         .accessibilityHint("Chooses how many months the chart and the averages cover")
         .accessibilityIdentifier("flow.rangePill")
     }
-}
-
-/// The page Flow pushes from SEE ALL and the preview rows. Pushed by item,
-/// never with `navigationDestination(isPresented:)` (see UI_SPEC "Shell").
-private enum FlowPage {
-    case transactions
 }
 
 /// The Flow tab's sheets, one at a time.

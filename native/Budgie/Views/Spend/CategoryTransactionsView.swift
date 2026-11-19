@@ -19,14 +19,16 @@ struct CategoryTransactionsView: View {
     @State private var editing: TransactionRecord?
     @State private var pendingDelete: TransactionRecord?
     @State private var rowTaps = 0
-    @State private var styleCache = StyleCache()
+    @State private var styleCache = SingleSlotCache<StyleKey, (Color, String)>()
 
     var body: some View {
         let category = drillIn.category
         // `where(category == name && type == expense)` on the month's rows,
         // already `compareNewestFirst` in the ledger.
         let rows = MonthListCopy.drillInRows(monthRows: model.ledger.newestFirst(inMonth: drillIn.month), category: category)
-        let (color, symbol) = currentStyle()
+        let (color, symbol) = styleCache.value(
+            for: StyleKey(drillIn: drillIn, ledgerRevision: model.ledgerRevision, dataRevision: model.dataRevision),
+            computeStyle)
         let formatter = model.moneyFormatter
         // Folded in row order (:46-49).
         let total = MonthListCopy.drillInTotal(rows, formatter: formatter)
@@ -50,26 +52,13 @@ struct CategoryTransactionsView: View {
                     .padding(EdgeInsets(top: 28, leading: 24, bottom: 0, trailing: 24))
                     .budgieContentColumn()
                 ScrollView {
-                    // One card, a hairline between rows (SEE ALL's day
-                    // cards). The swipe slides a row (on the card fill) over
-                    // the delete background; the card clips it at its edge.
-                    GlowCard(padding: Metrics.listCardPadding) {
-                        LazyVStack(spacing: 0) {
-                            ForEach(rows) { row in
-                                if row.id != rows.first?.id { Hairline().padding(.horizontal, Metrics.hairlineInset) }
-                                SwipeToDeleteRow {
-                                    pendingDelete = row.record
-                                } content: {
-                                    ExpenseRow(record: row.record, color: color, symbol: symbol, formatter: formatter) {
-                                        rowTaps += 1
-                                        editing = row.record
-                                    }
-                                    .background(BudgieColor.card)
-                                }
-                            }
+                    // One card, as SEE ALL's day cards.
+                    DeletableRowsCard(rows: rows, pendingDelete: $pendingDelete) { row in
+                        ExpenseRow(record: row.record, color: color, symbol: symbol, formatter: formatter) {
+                            rowTaps += 1
+                            editing = row.record
                         }
                     }
-                    .clipShape(RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
                     .padding(EdgeInsets(top: 12, leading: Metrics.pageHorizontal, bottom: Metrics.pageHorizontal, trailing: Metrics.pageHorizontal))
                     .budgieContentColumn()
                 }
@@ -86,12 +75,6 @@ struct CategoryTransactionsView: View {
 
     /// The category's colour and icon as its Spend row shows them now, or
     /// the pushed ones when it is no longer in the month's breakdown.
-    private func currentStyle() -> (Color, String) {
-        styleCache.style(for: drillIn, ledgerRevision: model.ledgerRevision, dataRevision: model.dataRevision) {
-            computeStyle()
-        }
-    }
-
     private func computeStyle() -> (Color, String) {
         guard let data = model.data else { return (drillIn.palette.color, drillIn.symbol) }
         let picker = data.categoryPicker(for: .expense)
@@ -105,31 +88,13 @@ struct CategoryTransactionsView: View {
     }
 }
 
-/// The category's style, recomputed only when the ledger or the data changed
+/// The category's style is recomputed only when the ledger or the data changed
 /// (`dataRevision` is bumped by every change of `model.data`, which holds the
 /// categories and budget limits the breakdown reads) or the route is another.
-/// A plain reference held in `@State`, so reading it in `body` is not an
-/// observed change.
-private final class StyleCache {
-    private var key: Key?
-    private var cached: (Color, String)?
-
-    private struct Key: Equatable {
-        let drillIn: SpendDrillIn
-        let ledgerRevision: Int
-        let dataRevision: Int
-    }
-
-    func style(
-        for drillIn: SpendDrillIn, ledgerRevision: Int, dataRevision: Int, compute: () -> (Color, String)
-    ) -> (Color, String) {
-        let wanted = Key(drillIn: drillIn, ledgerRevision: ledgerRevision, dataRevision: dataRevision)
-        if let cached, key == wanted { return cached }
-        let style = compute()
-        cached = style
-        key = wanted
-        return style
-    }
+private struct StyleKey: Equatable {
+    let drillIn: SpendDrillIn
+    let ledgerRevision: Int
+    let dataRevision: Int
 }
 
 /// `_buildSummaryCard` (:159-235) as a plain card (Flutter tints it with the

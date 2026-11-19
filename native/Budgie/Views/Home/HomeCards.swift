@@ -173,7 +173,6 @@ private struct RecentRow: View {
     @Environment(AppModel.self) private var model
     var body: some View {
         let isIncome = record.type == .income
-        let day = DartDateFormat.MMMd(record.date)
         let copy = HomeSummary.recentRow(record, formatter: formatter)
         HapticButton(action: onTap) {
             TransactionRowLayout(
@@ -194,9 +193,16 @@ private struct RecentRow: View {
         // VoiceOver reads the label then the value, so this sounds the
         // same while the description stays findable on its own.
         .accessibilityLabel(copy.title)
-        .accessibilityValue(
-            "\(record.category), \(day), \(isIncome ? "income" : "expense") \(formatter.format(record.amount))"
-                + (record.isRecurring ? ", recurring" : ""))
+        .accessibilityValue(record.activityAccessibilityValue(formatter: formatter))
         .accessibilityHint("Double tap to edit")
+    }
+}
+
+extension TransactionRecord {
+    /// The VoiceOver value of Home's and Flow's activity rows: "category, day,
+    /// income|expense amount", then ", recurring".
+    func activityAccessibilityValue(formatter: MoneyFormatter) -> String {
+        "\(category), \(DartDateFormat.MMMd(date)), \(type == .income ? "income" : "expense") \(formatter.format(amount))"
+            + (isRecurring ? ", recurring" : "")
     }
 }

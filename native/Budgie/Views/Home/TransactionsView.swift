@@ -22,7 +22,7 @@ struct TransactionsView: View {
     @State private var pendingDelete: TransactionRecord?
     @State private var monthTaps = 0
     @State private var rowTaps = 0
-    @State private var dayGroupCache = DayGroupCache()
+    @State private var dayGroupCache = SingleSlotCache<DayGroupKey, [MonthListCopy.DayGroup]>()
 
     var body: some View {
         let ledger = model.ledger
@@ -93,7 +93,9 @@ struct TransactionsView: View {
         } else {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0, pinnedViews: .sectionHeaders) {
-                    ForEach(dayGroupCache.groups(for: rows, month: month, revision: model.ledgerRevision)) { group in
+                    ForEach(dayGroupCache.value(for: DayGroupKey(month: month, revision: model.ledgerRevision)) {
+                        MonthListCopy.dayGroups(from: rows)
+                    }) { group in
                         Section {
                             dayCard(group, formatter: formatter)
                                 .padding(.horizontal, Metrics.pageHorizontal)
@@ -111,25 +113,45 @@ struct TransactionsView: View {
         }
     }
 
-    /// One day's rows in a card, a hairline between them. The swipe slides a
-    /// row (on the card fill) over the delete background; the card clips it
-    /// at its edge.
     private func dayCard(_ group: MonthListCopy.DayGroup, formatter: MoneyFormatter) -> some View {
+        DeletableRowsCard(rows: group.rows, pendingDelete: $pendingDelete) { row in
+            TransactionRow(row: row, formatter: formatter) {
+                rowTaps += 1
+                editing = row.record
+            }
+        }
+    }
+}
+
+// MARK: - Day groups
+
+/// The day groups depend on the month and the ledger alone (the ledger is
+/// replaced together with a `ledgerRevision` bump).
+private struct DayGroupKey: Equatable {
+    let month: DartDateTime
+    let revision: Int
+}
+
+/// One card of rows with a hairline between them, each swiping to delete. The
+/// swipe slides a row (on the card fill) over the delete background; the card
+/// clips it at its edge.
+struct DeletableRowsCard<Row: View>: View {
+    let rows: [LedgerRow]
+    @Binding var pendingDelete: TransactionRecord?
+    @ViewBuilder let content: (LedgerRow) -> Row
+
+    var body: some View {
         GlowCard(padding: Metrics.listCardPadding) {
             LazyVStack(spacing: 0) {
-                ForEach(group.rows) { row in
+                ForEach(rows) { row in
                     // One child per record lets the lazy stack defer offscreen rows,
                     // including each row's optional divider.
                     VStack(spacing: 0) {
-                        if row.id != group.rows.first?.id { Hairline().padding(.horizontal, Metrics.hairlineInset) }
+                        if row.id != rows.first?.id { Hairline().padding(.horizontal, Metrics.hairlineInset) }
                         SwipeToDeleteRow {
                             pendingDelete = row.record
                         } content: {
-                            TransactionRow(record: row.record, formatter: formatter) {
-                                rowTaps += 1
-                                editing = row.record
-                            }
-                            .background(BudgieColor.card)
+                            content(row).background(BudgieColor.card)
                         }
                     }
                 }
@@ -139,28 +161,16 @@ struct TransactionsView: View {
     }
 }
 
-// MARK: - Day groups
+/// A plain reference for a value recomputed only when its key changes, held in
+/// `@State` so reading it in `body` is not an observed change.
+final class SingleSlotCache<Key: Equatable, Value> {
+    private var slot: (key: Key, value: Value)?
 
-/// The month's day groups, rebuilt only when the month or the ledger changes
-/// (the rows are a function of both, and the ledger is replaced together with
-/// a `ledgerRevision` bump). A plain reference held in `@State`, so reading it
-/// in `body` is not an observed change.
-private final class DayGroupCache {
-    private var key: Key?
-    private var cached: [MonthListCopy.DayGroup] = []
-
-    private struct Key: Equatable {
-        let month: DartDateTime
-        let revision: Int
-    }
-
-    func groups(for rows: ArraySlice<LedgerRow>, month: DartDateTime, revision: Int) -> [MonthListCopy.DayGroup] {
-        let wanted = Key(month: month, revision: revision)
-        if key != wanted {
-            cached = MonthListCopy.dayGroups(from: rows)
-            key = wanted
-        }
-        return cached
+    func value(for key: Key, _ compute: () -> Value) -> Value {
+        if let slot, slot.key == key { return slot.value }
+        let value = compute()
+        slot = (key, value)
+        return value
     }
 }
 
@@ -246,21 +256,21 @@ private struct DateHeader: View {
 /// (income in `income`, expenses in `textPrimary`).
 private struct TransactionRow: View {
     @Environment(AppModel.self) private var model
-    let record: TransactionRecord
+    let row: LedgerRow
     let formatter: MoneyFormatter
     let onTap: () -> Void
 
     var body: some View {
+        let record = row.record
         let isIncome = record.type == .income
         let info = model.categoryInfo(named: record.category, type: record.type)
         let amount = MonthListCopy.rowAmount(record, formatter: formatter)
-        let signed = formatter.formatSigned(isIncome ? record.amount : -record.amount, plusForPositive: true)
 
         Button(action: onTap) {
             TransactionRowLayout(
                 titleLines: nil, titleAlignment: .leading,
                 title: record.description, isRecurring: record.isRecurring,
-                subtitle: MonthListCopy.rowSubtitle(record), amount: signed,
+                subtitle: MonthListCopy.rowSubtitle(record), amount: row.flowAmountText(formatter),
                 amountColor: isIncome ? BudgieColor.income : BudgieColor.textPrimary
             ) {
                 IconTile(category: info)

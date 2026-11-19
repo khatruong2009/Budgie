@@ -67,7 +67,7 @@ private struct NetCashFlowBars: View {
 }
 
 /// One month (`_NetCashFlowBar`, hp:762-879): the bar (radius 10), the
-/// current month's glow and badge, and the month label in the bottom band.
+/// current month's badge, and the month label in the bottom band.
 /// The whole column is the tap target (the badge overhang is not); a tap
 /// gives a light haptic and opens the month detail sheet.
 private struct NetCashFlowBarColumn: View {
@@ -89,7 +89,11 @@ private struct NetCashFlowBarColumn: View {
         let color = barColor
         let signed = CashFlowMath.badgeText(bar.entry.net, formatter: formatter)
         ZStack(alignment: .topLeading) {
-            barShape(color)
+            // Flutter's `BorderRadius.circular(10)`; SwiftUI clamps the radius
+            // on short bars as Flutter does.
+            RoundedRectangle(cornerRadius: CashFlowMath.barCornerRadius, style: .circular)
+                .fill(color)
+                .frame(width: barWidth, height: CGFloat(bar.height))
                 .offset(y: bar.top)
             if bar.isCurrent {
                 // Centred in a box 4 bars wide starting 1.5 bars to the left.
@@ -128,18 +132,10 @@ private struct NetCashFlowBarColumn: View {
         .accessibilityIdentifier("flow.bar.\(DartDateFormat.yyyyMM(bar.entry.month))")
     }
 
-    /// Current month: income (or danger) at full strength with the glow
-    /// (blur 20, alpha .6); others: income at 45% or danger at 60%.
+    /// Current month: income (or danger) at full strength; others: income at
+    /// 45% or danger at 60%.
     private var barColor: Color {
         if bar.isCurrent { return bar.isPositive ? BudgieColor.income : BudgieColor.danger }
         return bar.isPositive ? BudgieColor.income.opacity(0.45) : BudgieColor.danger.opacity(0.6)
-    }
-
-    private func barShape(_ color: Color) -> some View {
-        // Flutter's `BorderRadius.circular(10)`; SwiftUI clamps the radius
-        // on short bars as Flutter does.
-        RoundedRectangle(cornerRadius: CashFlowMath.barCornerRadius, style: .circular)
-            .fill(color)
-            .frame(width: barWidth, height: CGFloat(bar.height))
     }
 }
