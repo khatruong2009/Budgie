@@ -31,7 +31,7 @@ extension AccessibilityAuditUITests {
             let income = app.labelled(containing: "Income recorded, ")
             guard expect(income, "the breakdown sheet") else { return false }
             runner.audit("Safe to spend sheet")
-            dragSheetDown(from: income)
+            app.dragSheetDown(from: income)
             return income.waitForNonExistence(timeout: 10)
         }
 

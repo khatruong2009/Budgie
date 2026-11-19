@@ -177,20 +177,6 @@ final class AccessibilityAuditUITests: XCTestCase {
         for _ in 0..<3 { app.swipeDown() }
     }
 
-    /// Drags a bottom sheet down by one of its elements.
-    func dragSheetDown(from element: XCUIElement, in frame: CGRect? = nil) {
-        let start = element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-        start.press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)))
-    }
-
-    func monthName(_ pattern: String, monthsAgo: Int = 0) -> String {
-        let month = Calendar.current.date(byAdding: .month, value: -monthsAgo, to: Date()) ?? Date()
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = pattern
-        return formatter.string(from: month)
-    }
-
     // MARK: - The audit
 
     /// The tab roots, Settings and every sheet, dialog and pushed page, in

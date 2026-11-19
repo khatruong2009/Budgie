@@ -94,12 +94,6 @@ final class VoiceUITests: XCTestCase {
     /// The form's selected category (the Category row's value).
     private var categoryWheel: String { app.formCategory.value as? String ?? "" }
 
-    /// Drags the sheet (grabbed at `element`) to the bottom of the screen.
-    private func dragSheetDown(from element: XCUIElement) {
-        let start = element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-        start.press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)))
-    }
-
     // MARK: Happy path
 
     /// Home mic > LISTENING > Stop > THINKING > the prefilled Add Expense
@@ -121,7 +115,7 @@ final class VoiceUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["Make this recurring"].exists)
 
         // A swipe down does not dismiss the confirmation.
-        dragSheetDown(from: app.staticTexts["Add Expense"])
+        app.dragSheetDown(from: app.staticTexts["Add Expense"])
         XCTAssertTrue(app.staticTexts["Add Expense"].exists, "the form was dismissed by a swipe")
         XCTAssertTrue(app.textFields["Amount"].exists)
 
@@ -328,7 +322,7 @@ final class VoiceUITests: XCTestCase {
         XCTAssertEqual(app.buttons.matching(identifier: "voice.stop").count, 1)
 
         // Closing the one sheet leaves Home, not a second sheet beneath.
-        dragSheetDown(from: listening)
+        app.dragSheetDown(from: listening)
         XCTAssertTrue(listening.waitForNonExistence(timeout: 10), "the sheet did not close")
         sleep(2)
         XCTAssertFalse(listening.exists, "a second voice sheet was stacked")
