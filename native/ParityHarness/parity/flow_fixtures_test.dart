@@ -41,8 +41,6 @@ import 'harness_support.dart';
 final bool writeZoneIndependent = parityTz == 'UTC';
 String get zoneDir => 'flow/tz/${parityTz.replaceAll('/', '_')}';
 
-Object? numberJson(double? d) => d == null ? null : bitsHex(d);
-
 String fnvText(String text) => fnv(utf8.encode(text));
 
 // --- Copied verbatim from history_page.dart (private members) -------------
@@ -460,7 +458,6 @@ class Lcg {
   }
 }
 
-String two(int v) => v.toString().padLeft(2, '0');
 String localIso(int y, int m, int d, int h, int min) =>
     '${y.toString().padLeft(4, '0')}-${two(m)}-${two(d)}T${two(h)}:${two(min)}:00.000';
 
@@ -897,8 +894,8 @@ Map<String, Object?> filterSpecJson(FilterSpec spec) {
   return {
     'spec': spec.toJson(),
     'query': state.searchQuery,
-    'min': numberJson(state.minAmount),
-    'max': numberJson(state.maxAmount),
+    'min': bitsOrNull(state.minAmount),
+    'max': bitsOrNull(state.maxAmount),
     'start': state.startDate?.toIso8601String(),
     'end': state.endDate?.toIso8601String(),
     'isActive': state.hasActiveFilters,
@@ -1025,7 +1022,7 @@ Map<String, Object?> yoyView(TransactionModel model, DateTime selectedMonth) {
     'income': {
       'current': bitsHex(current.income),
       'previous': bitsHex(previous.income),
-      'delta': numberJson(incomeDelta),
+      'delta': bitsOrNull(incomeDelta),
       'label': formatPercentDelta(incomeDelta),
       'isGood': (incomeDelta ?? 0) >= 0,
       'this': bitsHex(incomeMax > 0 ? current.income / incomeMax : 0.0),
@@ -1034,7 +1031,7 @@ Map<String, Object?> yoyView(TransactionModel model, DateTime selectedMonth) {
     'expenses': {
       'current': bitsHex(current.expenses),
       'previous': bitsHex(previous.expenses),
-      'delta': numberJson(expenseDelta),
+      'delta': bitsOrNull(expenseDelta),
       'label': formatPercentDelta(expenseDelta),
       'isBad': (expenseDelta ?? 0) > 0,
       'this': bitsHex(expenseMax > 0 ? current.expenses / expenseMax : 0.0),
@@ -1072,9 +1069,6 @@ Map<String, Object?> trendView(
 }
 
 // --- Widget checks ---------------------------------------------------------------
-
-Finder byTypeName(String name) =>
-    find.byWidgetPredicate((w) => w.runtimeType.toString() == name);
 
 List<String> textsIn(WidgetTester tester, Finder scope) => [
       for (final t in tester.widgetList<Text>(
@@ -1547,7 +1541,7 @@ void main() {
           return {
             'current': bitsHex(current),
             'previous': bitsHex(previous),
-            'delta': numberJson(delta),
+            'delta': bitsOrNull(delta),
             'label': formatPercentDelta(delta),
           };
         }()
@@ -1601,7 +1595,7 @@ void main() {
           final v = parseAmount(text);
           return {
             'text': text,
-            'result': numberJson(v),
+            'result': bitsOrNull(v),
             'isNaN': v?.isNaN ?? false,
             'isFinite': v?.isFinite ?? false,
           };

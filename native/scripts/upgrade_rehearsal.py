@@ -29,15 +29,15 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
-from sim import copy_store, runtime_for
+from sim import BUNDLE, copy_store, find_or_create, simctl_json
 
 REPO = Path(subprocess.check_output(["git", "rev-parse", "--show-toplevel"], cwd=Path(__file__).parent, text=True).strip())
 NATIVE = REPO / "native"
 FIXTURES = NATIVE / "Fixtures"
-BUNDLE = "com.khatruong.budgetbuddy"
 GROUP = "group.com.khatruong.budgetbuddy"
 SIM_NAME = "Budgie-Rehearsal"
 SCRATCH = Path(os.environ.get("BUDGIE_REHEARSAL_SCRATCH", tempfile.gettempdir())) / "budgie-rehearsal"
+SUMMARY = Path("Library/Caches/budgie-rehearsal.json")
 # The onboarding flag of a user who finished the tour. Without it both
 # builds open on the tour, not the data the screenshots are for.
 ONBOARDED = {"flutter.onboarding_completed": {"type": "bool", "value": True}}
@@ -55,21 +55,11 @@ def run(cmd, check=True, env=None, **kw):
 
 class Simulator:
     def __init__(self):
-        devices = json.loads(run(["xcrun", "simctl", "list", "devices", "-j"]).stdout)["devices"]
-        self.udid = None
-        for runtime, items in devices.items():
-            for d in items:
-                if d["name"] == SIM_NAME and d.get("isAvailable", True):
-                    self.udid = d["udid"]
-        if not self.udid:
-            self.udid = run(["xcrun", "simctl", "create", SIM_NAME, "iPhone 17 Pro", runtime_for("iPhone 17 Pro")]).stdout.strip()
+        self.udid, _ = find_or_create(SIM_NAME)
 
     def state(self):
-        devices = json.loads(run(["xcrun", "simctl", "list", "devices", "-j"]).stdout)["devices"]
-        for items in devices.values():
-            for d in items:
-                if d["udid"] == self.udid:
-                    return d["state"]
+        return next((d["state"] for items in simctl_json("devices")["devices"].values() for d in items
+                     if d["udid"] == self.udid), None)
 
     def boot(self):
         if self.state() != "Booted":
@@ -97,18 +87,21 @@ class Simulator:
         run(["xcrun", "simctl", "spawn", self.udid, "notifyutil", "-p", "com.apple.BiometricKit_Sim.pearl.match"], check=False)
 
     def launch(self, env=None, wait=6):
-        child = {f"SIMCTL_CHILD_{k}": v for k, v in (env or {}).items()}
         run(["xcrun", "simctl", "terminate", self.udid, BUNDLE], check=False)
         # A summary left by an earlier Swift run must not be attributed to
         # this launch.
         try:
-            (self.data_container() / "Library" / "Caches" / "budgie-rehearsal.json").unlink()
+            (self.data_container() / SUMMARY).unlink()
         except (FileNotFoundError, RuntimeError):
             pass
-        run(["xcrun", "simctl", "launch", self.udid, BUNDLE], env=child)
+        self.start(env)
         time.sleep(wait)
         self.face_id_match()
         time.sleep(3)
+
+    def start(self, env):
+        child = {f"SIMCTL_CHILD_{k}": v for k, v in (env or {}).items()}
+        run(["xcrun", "simctl", "launch", self.udid, BUNDLE], env=child)
 
     def terminate(self):
         run(["xcrun", "simctl", "terminate", self.udid, BUNDLE], check=False)
@@ -127,11 +120,12 @@ class Simulator:
     def screenshot(self, path):
         run(["xcrun", "simctl", "io", self.udid, "screenshot", str(path)], check=False)
 
-    def open_url(self, url):
-        run(["xcrun", "simctl", "openurl", self.udid, url], check=False)
-
 
 # ---------------------------------------------------------------- builds
+
+def products_app(derived, name):
+    return derived / "Build" / "Products" / "Debug-iphonesimulator" / f"{name}.app"
+
 
 def build_flutter():
     """The Flutter app at the `flutter-final` tag (budget_app/ was removed
@@ -147,7 +141,7 @@ def build_flutter():
     derived = SCRATCH / "flutter-derived"
     run(["xcodebuild", "build", "-workspace", "ios/Runner.xcworkspace", "-scheme", "Runner", "-configuration", "Debug",
          "-sdk", "iphonesimulator", "-derivedDataPath", str(derived), "ARCHS=arm64", "ONLY_ACTIVE_ARCH=YES"], cwd=app_dir)
-    return derived / "Build" / "Products" / "Debug-iphonesimulator" / "Runner.app"
+    return products_app(derived, "Runner")
 
 
 def build_swift():
@@ -156,7 +150,7 @@ def build_swift():
     run(["xcodebuild", "build", "-project", "Budgie.xcodeproj", "-scheme", "Budgie", "-configuration", "Debug",
          "-destination", "generic/platform=iOS Simulator", "-derivedDataPath", str(derived),
          "CODE_SIGN_IDENTITY=-", "CODE_SIGN_STYLE=Manual"], cwd=NATIVE)
-    return derived / "Build" / "Products" / "Debug-iphonesimulator" / "Budgie.app"
+    return products_app(derived, "Budgie")
 
 
 # ---------------------------------------------------------------- state
@@ -197,6 +191,10 @@ def read_prefs(sim):
         return plistlib.load(f)
 
 
+def names(directory):
+    return sorted(p.name for p in directory.iterdir()) if directory.exists() else []
+
+
 def pull(sim, dest):
     dest.mkdir(parents=True, exist_ok=True)
     container = sim.data_container()
@@ -214,13 +212,13 @@ def pull(sim, dest):
         plist = group / "Library" / "Preferences" / f"{GROUP}.plist"
         if plist.exists():
             shutil.copy2(plist, dest / "app-group.plist")
-    summary = container / "Library" / "Caches" / "budgie-rehearsal.json"
+    summary = container / SUMMARY
     if summary.exists():
         shutil.copy2(summary, dest / "swift-summary.json")
     return {
         "sceneDelegateClasses": scene_delegate_classes(container),
-        "files": sorted(p.name for p in (dest / "financial_store").iterdir()) if (dest / "financial_store").exists() else [],
-        "preNativeSnapshots": sorted(p.name for p in (dest / "pre-native-migration").iterdir()) if (dest / "pre-native-migration").exists() else [],
+        "files": names(dest / "financial_store"),
+        "preNativeSnapshots": names(dest / "pre-native-migration"),
         "flutterPrefKeys": sorted(k for k in prefs if k.startswith("flutter.")),
     }
 
@@ -312,9 +310,9 @@ def compare(swift, dart):
         if not s:
             issues.append(f"month {key} missing in Swift")
             continue
-        for field, dfield in [("totalIncome", "totalIncome"), ("totalExpenses", "totalExpenses")]:
-            if s[field] != month[dfield]:
-                issues.append(f"{key} {field} swift {s[field]} dart {month[dfield]}")
+        for field in ("totalIncome", "totalExpenses"):
+            if s[field] != month[field]:
+                issues.append(f"{key} {field} swift {s[field]} dart {month[field]}")
         if s["count"] != len(month["transactionIds"]):
             issues.append(f"{key} count swift {s['count']} dart {len(month['transactionIds'])}")
     for key in swift["monthly"]:
@@ -437,13 +435,16 @@ class Rehearsal:
         # Reinstalling moves the data container; resolve paths afterwards.
         support = self.sim.data_container() / "Library" / "Application Support"
         store = support / "financial_store"
-        stamps = {p.name: (p.stat().st_mtime_ns, p.stat().st_size) for p in store.iterdir()}
+
+        def stamp():
+            return {p.name: (p.stat().st_mtime_ns, p.stat().st_size) for p in store.iterdir()}
+
+        stamps = stamp()
         lock_seconds = 15
         env = {"BUDGIE_REHEARSAL_SUMMARY": "1", "BUDGIE_SIMULATE_LOCKED_SECONDS": str(lock_seconds)}
-        child = {f"SIMCTL_CHILD_{k}": v for k, v in env.items()}
-        summary = self.sim.data_container() / "Library" / "Caches" / "budgie-rehearsal.json"
+        summary = self.sim.data_container() / SUMMARY
         started = time.time()
-        run(["xcrun", "simctl", "launch", self.sim.udid, BUNDLE], env=child)
+        self.sim.start(env)
         # Poll the whole window (screenshots can return late, so none are
         # taken until the first write is seen).
         first_write = {}
@@ -456,7 +457,7 @@ class Rehearsal:
                                          str(self.out / name / "1-while-locked.png")],
                                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             state = {
-                "store": {p.name: (p.stat().st_mtime_ns, p.stat().st_size) for p in store.iterdir()} != stamps,
+                "store": stamp() != stamps,
                 "preNative": (support / "pre-native-migration").exists(),
                 "summary": summary.exists(),
             }
@@ -598,8 +599,8 @@ def main():
     out = NATIVE / "docs" / "rehearsal" / stamp
     out.mkdir(parents=True)
 
-    flutter_app = SCRATCH / "flutter-derived" / "Build" / "Products" / "Debug-iphonesimulator" / "Runner.app"
-    swift_app = SCRATCH / "swift-derived" / "Build" / "Products" / "Debug-iphonesimulator" / "Budgie.app"
+    flutter_app = products_app(SCRATCH / "flutter-derived", "Runner")
+    swift_app = products_app(SCRATCH / "swift-derived", "Budgie")
     if not args.skip_build or not flutter_app.exists():
         flutter_app = build_flutter()
     if not args.skip_build or not swift_app.exists():

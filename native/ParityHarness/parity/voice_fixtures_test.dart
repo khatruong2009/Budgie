@@ -26,7 +26,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'harness_support.dart';
 
-String two(int v) => v.toString().padLeft(2, '0');
 String ymd(DateTime d) =>
     '${d.year.toString().padLeft(4, '0')}-${two(d.month)}-${two(d.day)}';
 

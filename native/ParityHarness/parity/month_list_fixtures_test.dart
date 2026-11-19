@@ -276,11 +276,6 @@ List<Dataset> datasets() => [
   ]),
 ];
 
-bool isType(Widget w, String name) => w.runtimeType.toString() == name;
-
-Finder byTypeName(String name) =>
-    find.byWidgetPredicate((w) => isType(w, name), description: name);
-
 List<String> textsUnder(Finder parent) => [
   for (final e
       in find.descendant(of: parent, matching: find.byType(Text)).evaluate())
