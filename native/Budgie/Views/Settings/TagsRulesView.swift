@@ -7,14 +7,6 @@ import SwiftUI
 /// in stored order (or the empty card), then "Merchant rules" over the
 /// rules in Flutter's `rules` order (priority descending). Each row has a
 /// trailing delete button; tag rows have no tap (as Flutter).
-///
-/// Differences from Flutter (PARITY_GAPS): the rows use the redesign's
-/// icon tiles and row text; deleting a tag asks first (it also leaves every
-/// rule that used it), deleting a rule does not (as Flutter); the dialogs
-/// are the redesign's centred card and show refusals inline; a failed
-/// write shows the save-failed toast (Flutter is silent). Swift-only: a
-/// rule row opens the rule editor (tap, or VoiceOver's Edit action) and
-/// has an enable switch; a disabled rule's text and tile are dimmed.
 struct TagsRulesView: View {
     @Environment(AppModel.self) private var model
 
@@ -147,8 +139,9 @@ enum TagsRulesDialog: Identifiable {
 }
 
 /// `_SectionTitle` as a `SectionHeader`: the title (21 w700) and the "Add"
-/// text link (sentence case, like every section link; Flutter's "ADD") in accent (textLink), baseline aligned, inset 4; the link's tap
-/// area is 44 x 44. No haptic, as Flutter.
+/// text link (sentence case, like every section link; Flutter's "ADD") in
+/// accent (textLink), baseline aligned, inset 4; the link's tap area is
+/// 44 x 44. No haptic, as Flutter.
 private struct SectionTitle: View {
     let title: String
     let addLabel: String

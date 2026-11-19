@@ -37,10 +37,7 @@ import SwiftUI
 /// switch is on the page's row).
 ///
 /// The keyboard (Flutter's: no capitalisation, a Done key) goes away on
-/// Done and when a dropdown opens, so the menu is not cut by it. With the
-/// keyboard up the fields scroll; the scroll indicator flashes once the
-/// keyboard is shown and the bottom edge fades while more is below, cues
-/// that the fields below are there.
+/// Done and when a dropdown opens, so the menu is not cut by it.
 struct RuleEditorDialog: View {
     /// The rule to edit; nil adds a new one.
     let rule: CategorizationRuleRecord?
@@ -152,7 +149,10 @@ struct RuleEditorDialog: View {
                         get: { categories.firstIndex { DartString.equal($0, selectedCategory) } ?? 0 },
                         set: { if categories.indices.contains($0) { category = categories[$0] } }),
                     identifier: "rules.editor.category")
-                if type == nil, let note = anyTypeNote(selectedCategory) {
+                if type == nil,
+                    let note = Self.anyTypeNote(
+                        selectedCategory, expense: activeNames(.expense), income: activeNames(.income))
+                {
                     Text(note)
                         .textStyle(.caption)
                         .foregroundStyle(BudgieColor.textSecondary)
@@ -176,10 +176,7 @@ struct RuleEditorDialog: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// The tags as the transaction form's chips (REDESIGN_PLAN 4.1: 34pt
-    /// capsules; selected: accent at 13% with accent 13 w700 text and a
-    /// check; else a 1pt card border with secondary 13 w600 text), under a
-    /// "Tags" caption.
+    /// The tags as the transaction form's chips, under a "Tags" caption.
     private var tagChips: some View {
         VStack(alignment: .leading, spacing: 6) {
             FieldCaption("Tags", isHeader: true)
@@ -204,20 +201,15 @@ struct RuleEditorDialog: View {
     /// The picker's names for `type` (nil: Any type), plus the edited
     /// rule's own category under its own type when the list lacks it.
     private func categoryNames(for type: TransactionType?) -> [String] {
-        var names = type.map { model.categories(for: $0).map(\.name) }
-            ?? Self.anyTypeCategories(
-                expense: model.categories(for: .expense).map(\.name), income: model.categories(for: .income).map(\.name))
+        var names = type.map(activeNames) ?? Self.anyTypeCategories(expense: activeNames(.expense), income: activeNames(.income))
         if let rule, rule.transactionType == type, !names.contains(where: { DartString.equal($0, rule.category) }) {
             names.append(rule.category)
         }
         return names
     }
 
-    /// Under Any type, when only one type has the category: the other
-    /// type's form will not take this rule's suggestion.
-    private func anyTypeNote(_ name: String) -> String? {
-        Self.anyTypeNote(
-            name, expense: model.categories(for: .expense).map(\.name), income: model.categories(for: .income).map(\.name))
+    private func activeNames(_ type: TransactionType) -> [String] {
+        model.categories(for: type).map(\.name)
     }
 
     private func submit(category: String) {

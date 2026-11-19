@@ -158,19 +158,16 @@ final class VoiceEntryModel {
         self.maxSeconds = maxSeconds
         self.tickInterval = tickInterval
         self.onDraft = onDraft
-        recorder.onInterruption = { [weak self] in self?.audioInterruptionBegan() }
+        recorder.onInterruption = { [weak self] in self?.appDidEnterBackground() }
     }
 
     var isProcessing: Bool { stage == .processing }
 
+    var remainingSeconds: Int { max(0, maxSeconds - secondsElapsed) }
     /// `_formatElapsed`: "M:SS" of the time left, never below "0:00". Flutter
     /// always printed "0:" and the raw seconds, which only matches while the cap
     /// is under a minute (it is 30 s; `BUDGIE_VOICE_MAX_SECONDS` can raise it).
-    var remainingSeconds: Int { max(0, maxSeconds - secondsElapsed) }
-    var countdownText: String {
-        let seconds = remainingSeconds % 60
-        return String(remainingSeconds / 60) + ":" + (seconds < 10 ? "0" : "") + String(seconds)
-    }
+    var countdownText: String { String(format: "%d:%02d", remainingSeconds / 60, remainingSeconds % 60) }
 
     // MARK: Lifecycle
 
@@ -195,16 +192,11 @@ final class VoiceEntryModel {
         services.finish()
     }
 
-    /// The app went to the background (`AppLifecycleState.paused`): stop and
-    /// go on with what was recorded.
+    /// The app went to the background (`AppLifecycleState.paused`) or the
+    /// system interrupted the audio session (a call, Siri): stop and go on
+    /// with what was recorded. Flutter has no interruption handling; the
+    /// timer would keep counting over a paused recorder.
     func appDidEnterBackground() {
-        if stage == .recording { stop() }
-    }
-
-    /// The system interrupted the audio session (a call, Siri): the same as
-    /// going to the background. Flutter has no handling; the timer would
-    /// keep counting over a paused recorder.
-    func audioInterruptionBegan() {
         if stage == .recording { stop() }
     }
 

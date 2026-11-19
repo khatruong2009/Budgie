@@ -13,13 +13,6 @@ import SwiftUI
 /// Cancel and Save / Update in the type's colour. Save validates all three
 /// fields at once (`RecurringForm.validate`) and closes only after the
 /// awaited write.
-///
-/// Differences from Flutter (PARITY_GAPS): the Expense/Income toggle when
-/// adding; no Day of Week wheel; the Day of Month wheel follows the picked
-/// start day until it is touched; the picker offers only days that pass
-/// the one-year rule, which applies only to a start set here, plus an
-/// edit's stored start day (so OK on an old template keeps its start); an
-/// edit previews from the cursor the edit will leave and keeps the cursor.
 struct RecurringFormView: View {
     let template: RecurringTemplate?
 
@@ -31,9 +24,10 @@ struct RecurringFormView: View {
     @State private var descriptionText: String
     @State private var category: String
     @State private var pattern: RecurrencePattern
-    @State private var dayOfMonth: Int
+    /// Set in `load()` (`RecurringForm.initialDayOfMonth`).
+    @State private var dayOfMonth = 1
     /// The wheel was moved: the day no longer follows the picked start day.
-    @State private var dayOfMonthEdited: Bool
+    @State private var dayOfMonthEdited = false
     /// The picked day at midnight; nil keeps the stored start (edit) or the
     /// moment the form opened (add).
     @State private var pickedStart: DartDateTime?
@@ -59,9 +53,6 @@ struct RecurringFormView: View {
         _descriptionText = State(initialValue: template?.description ?? "")
         _category = State(initialValue: template?.category ?? "")
         _pattern = State(initialValue: template?.pattern ?? .monthly)
-        // Set in `load()` (`RecurringForm.initialDayOfMonth`).
-        _dayOfMonth = State(initialValue: 1)
-        _dayOfMonthEdited = State(initialValue: false)
     }
 
     // MARK: - Derived values
@@ -304,9 +295,7 @@ struct RecurringFormView: View {
         guard !loaded else { return }
         let now = model.now
         openedAt = now
-        for kind in TransactionType.allCases {
-            options[kind] = model.categories(for: kind)
-        }
+        options = Dictionary(uniqueKeysWithValues: TransactionType.allCases.map { ($0, model.categories(for: $0)) })
         if let template {
             templateInfo = model.categoryInfo(named: template.category, type: template.type)
             lastGenerated = model.lastGeneratedDate(forTemplate: template.id)
@@ -350,12 +339,7 @@ struct RecurringFormView: View {
         }
         saving = true
         let edit = edit(amount: amount, description: result.description)
-        let saved: Bool
-        if let template {
-            saved = await model.updateTemplate(id: template.id, edit)
-        } else {
-            saved = await model.addTemplate(edit)
-        }
+        let saved = if let template { await model.updateTemplate(id: template.id, edit) } else { await model.addTemplate(edit) }
         dismiss()
         if !saved { model.showToast(.saveFailed) }
     }
