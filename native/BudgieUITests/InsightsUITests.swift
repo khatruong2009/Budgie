@@ -27,10 +27,6 @@ final class InsightsUITests: XCTestCase {
         app.launch()
     }
 
-    private func tab(_ name: String) {
-        app.tabBars.buttons[name].tap()
-    }
-
     /// The duplicate card whose explanation names `description`.
     private func card(_ description: String) -> XCUIElement {
         app.descendants(matching: .any).matching(NSPredicate(
@@ -71,16 +67,16 @@ final class InsightsUITests: XCTestCase {
 
     func testSnoozeAndDismissPersist() throws {
         XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 20))
-        tab("Flow")
+        app.tab("Flow")
         XCTAssertFalse(cards.firstMatch.waitForExistence(timeout: 2), "no cards for this run's rows yet")
 
-        tab("Home")
+        app.tab("Home")
         for description in descriptions {
             addExpense(description)
             addExpense(description)
         }
 
-        tab("Flow")
+        app.tab("Flow")
         XCTAssertTrue(app.descendants(matching: .any)["flow.insights"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts["Insights"].exists)
         XCTAssertTrue(app.staticTexts["Calculated privately on this device \u{B7} Not financial advice"].exists)
@@ -100,7 +96,7 @@ final class InsightsUITests: XCTestCase {
         app.terminate()
         app.launch()
         XCTAssertTrue(app.tabBars.buttons["Flow"].waitForExistence(timeout: 20))
-        tab("Flow")
+        app.tab("Flow")
         XCTAssertTrue(card(descriptions[2]).waitForExistence(timeout: 10))
         XCTAssertFalse(card(descriptions[0]).exists)
         XCTAssertFalse(card(descriptions[1]).exists)
@@ -108,7 +104,7 @@ final class InsightsUITests: XCTestCase {
 
         // Clean up: delete the six rows from Home's SEE ALL list.
         let thisRun = NSPredicate(format: "label CONTAINS 'Insight UI' AND label CONTAINS %@", run)
-        tab("Home")
+        app.tab("Home")
         app.buttons["See all transactions"].firstMatch.tap()
         for _ in 0..<6 {
             let row = app.buttons.containing(thisRun).firstMatch
@@ -120,7 +116,7 @@ final class InsightsUITests: XCTestCase {
             XCTAssertTrue(confirm.waitForNonExistence(timeout: 5))
         }
         XCTAssertFalse(app.buttons.containing(thisRun).firstMatch.waitForExistence(timeout: 2))
-        tab("Flow")
+        app.tab("Flow")
         XCTAssertFalse(cards.firstMatch.waitForExistence(timeout: 2), "no cards for this run's rows once they are gone")
     }
 }

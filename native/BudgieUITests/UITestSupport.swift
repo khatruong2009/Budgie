@@ -104,6 +104,10 @@ extension XCUIApplication {
         descendants(matching: .any).matching(NSPredicate(format: "label == %@", text)).firstMatch
     }
 
+    func tab(_ name: String) {
+        tabBars.buttons[name].tap()
+    }
+
     /// Home's root page, popping anything pushed on the Home tab.
     func goToHomeRoot() {
         tabBars.buttons["Home"].tap()
@@ -166,6 +170,32 @@ extension XCUIApplication {
         _ = switches["settings.hideBalances"].waitForExistence(timeout: 10)
     }
 
+    /// Home's gear, then the Settings row `row` (an identifier or a label),
+    /// then waits for `marker`, the pushed page's own element.
+    func openSettingsPage(_ row: String, marker: XCUIElement) {
+        goToHomeRoot()
+        buttons["home.settings"].tapSettled()
+        buttons[row].tapSettled()
+        XCTAssertTrue(marker.waitForExistence(timeout: 10))
+    }
+
+    /// Drags a bottom sheet down by one of its elements.
+    func dragSheetDown(from element: XCUIElement) {
+        let start = element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        start.press(forDuration: 0.1, thenDragTo: coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)))
+    }
+
+    /// Scrolls until `element` is wholly above the floating tab bar (a long
+    /// press behind it never raises the context menu, and a lone row almost
+    /// entirely behind the bar is tapped at its one visible corner).
+    func revealAboveTabBar(_ element: XCUIElement) {
+        let tabBar = tabBars.firstMatch
+        for _ in 0..<3 where element.frame.maxY > tabBar.frame.minY {
+            swipeUp()
+        }
+        XCTAssertLessThanOrEqual(element.frame.maxY, tabBar.frame.minY, "\(element) is behind the tab bar")
+    }
+
     /// Adds a transaction from Home: the FAB's form, switched to Income for
     /// an income. `category` picks that name in the form's Category menu;
     /// `monthsAgo` > 0 dates it on the 15th of that many months back through
@@ -187,11 +217,7 @@ extension XCUIApplication {
             let ok = buttons["datePicker.ok"]
             XCTAssertTrue(ok.waitForExistence(timeout: 5), "the date picker", file: file, line: line)
             for _ in 0..<monthsAgo { buttons["DatePicker.PreviousMonth"].tapSettled(file: file, line: line) }
-            let formatter = DateFormatter()
-            formatter.locale = Locale(identifier: "en_US_POSIX")
-            formatter.dateFormat = "LLLL"
-            let month = Calendar.current.date(byAdding: .month, value: -monthsAgo, to: Date()) ?? Date()
-            let day = buttons.matching(NSPredicate(format: "label ENDSWITH %@", ", \(formatter.string(from: month)) 15")).firstMatch
+            let day = buttons.matching(NSPredicate(format: "label ENDSWITH %@", ", \(monthName("LLLL", monthsAgo: monthsAgo)) 15")).firstMatch
             day.tapSettled(file: file, line: line)
             ok.tapSettled(file: file, line: line)
             XCTAssertTrue(ok.waitForNonExistence(timeout: 5), "the date picker closed", file: file, line: line)
@@ -243,8 +269,38 @@ extension XCUIApplication {
     }
 }
 
+/// Polls `condition` until it holds or `timeout` passes.
+@MainActor
+func waitUntil(_ timeout: TimeInterval = 5, _ condition: () -> Bool) -> Bool {
+    let deadline = Date().addingTimeInterval(timeout)
+    repeat {
+        if condition() { return true }
+        Thread.sleep(forTimeInterval: 0.25)
+    } while Date() < deadline
+    return false
+}
+
+/// The month `monthsAgo` months back, formatted with `pattern`.
+func monthName(_ pattern: String, monthsAgo: Int = 0) -> String {
+    let month = Calendar.current.date(byAdding: .month, value: -monthsAgo, to: Date()) ?? Date()
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.dateFormat = pattern
+    return formatter.string(from: month)
+}
+
 @MainActor
 extension XCUIElement {
+    /// Taps this field, deletes what it holds (a placeholder is not text)
+    /// and types `text`.
+    func replaceText(with text: String) {
+        tapSettled()
+        if let value = value as? String, !value.isEmpty, value != placeholderValue {
+            typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: value.count))
+        }
+        typeSettled(text)
+    }
+
     /// Waits until `predicate` (evaluated against this element: `label`,
     /// `value`, `isSelected`, `exists`, ...) holds, without a fixed sleep.
     func waitUntil(_ predicate: String, _ arguments: [Any] = [], timeout: TimeInterval = 5) -> Bool {

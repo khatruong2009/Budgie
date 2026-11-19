@@ -242,7 +242,7 @@ final class VoiceEntryModelTests: XCTestCase {
 
     func testTryAgainAfterNotConfiguredRecordsAgain() async {
         let unconfigured = VoiceServices.openAI(
-            apiKey: nil, session: .shared, today: { DartCalendar(timeZone: .current).date(2026, 9, 30) }, categoryNames: { _ in [] })
+            apiKey: nil, session: .shared, today: { FakeServices.today }, categoryNames: { _ in [] })
         let model = await recording(services: unconfigured)
         await stopped(model)
         assertError(model, .noSpeech, VoiceEntryError.notConfigured.message)
@@ -365,7 +365,7 @@ final class VoiceEntryModelTests: XCTestCase {
 
     func testNoKeyFailsBothStagesWithNotConfigured() async {
         let services = VoiceServices.openAI(
-            apiKey: nil, session: .shared, today: { DartCalendar(timeZone: .current).date(2026, 9, 30) }, categoryNames: { _ in [] })
+            apiKey: nil, session: .shared, today: { FakeServices.today }, categoryNames: { _ in [] })
         do {
             _ = try await services.transcribe(URL(fileURLWithPath: "/tmp/none.m4a"))
             XCTFail("expected notConfigured")
@@ -426,8 +426,6 @@ final class VoiceEntryModelTests: XCTestCase {
     /// and `VoiceDraftParser`: the stub's envelope must be what the client
     /// reads, and a retry sees the next answer.
     func testStubbedSessionDrivesTheRealClientEndToEnd() async throws {
-        let calendar = DartCalendar(timeZone: .current)
-        let today = calendar.date(2026, 9, 30)
         let content = #"{"type":"expense","description":"Chipotle","amount":12.5,"category":"Eating Out"}"#
         let plan = VoiceStubPlan(
             transcribe: [VoiceStubResponse(text: "lunch at Chipotle twelve fifty")],
@@ -435,7 +433,7 @@ final class VoiceEntryModelTests: XCTestCase {
         VoiceStubProtocol.install(plan)
         defer { VoiceStubProtocol.install(.empty) }
         let services = VoiceServices.openAI(
-            apiKey: VoiceTestHooks.fakeKey, session: VoiceStubProtocol.session(), today: { today },
+            apiKey: VoiceTestHooks.fakeKey, session: VoiceStubProtocol.session(), today: { FakeServices.today },
             categoryNames: { $0 == .expense ? ["General", "Eating Out"] : ["Salary", "Other"] })
 
         let audio = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("voice_stub_\(UUID().uuidString).m4a")
@@ -470,7 +468,7 @@ final class VoiceEntryModelTests: XCTestCase {
         let client = OpenAIVoiceClient(apiKey: VoiceTestHooks.fakeKey, session: session)
         do {
             _ = try await client.draftJSON(
-                transcript: "x", today: DartCalendar(timeZone: .current).date(2026, 9, 30), expenseCategories: [], incomeCategories: [])
+                transcript: "x", today: FakeServices.today, expenseCategories: [], incomeCategories: [])
             XCTFail("expected a failure")
         } catch {
             XCTAssertEqual(error, .failed, "a timeout is a transport failure")

@@ -18,7 +18,7 @@ final class ToastTests: XCTestCase {
     }
 
     /// A preset shown twice is two toasts: the second gets its own timer
-    /// instead of inheriting the first one's (it used to vanish early).
+    /// instead of inheriting the first one's.
     func testPresetsAreFreshToastsEveryTime() {
         XCTAssertNotEqual(Toast.goalAdded.id, Toast.goalAdded.id)
         XCTAssertNotEqual(Toast.saveFailed.id, Toast.saveFailed.id)

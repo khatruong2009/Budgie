@@ -40,18 +40,6 @@ final class SpendFlowUITests: XCTestCase {
 
     // MARK: - Helpers
 
-    private func monthKey(monthsAgo: Int) -> String {
-        format(monthsAgo: monthsAgo, "yyyy-MM")
-    }
-
-    private func format(monthsAgo: Int, _ pattern: String) -> String {
-        let month = Calendar.current.date(byAdding: .month, value: -monthsAgo, to: Date()) ?? Date()
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = pattern
-        return formatter.string(from: month)
-    }
-
     private func value(_ element: XCUIElement) -> String { element.value as? String ?? "" }
 
     /// The Spend row of a category (`spend.row.<rank>`, label "<name>, ...").
@@ -93,7 +81,7 @@ final class SpendFlowUITests: XCTestCase {
         let ok = app.buttons["datePicker.ok"]
         XCTAssertTrue(ok.waitForExistence(timeout: 10), "the date picker")
         for _ in 0..<steps { app.buttons["DatePicker.PreviousMonth"].tapSettled() }
-        app.buttons.matching(NSPredicate(format: "label ENDSWITH %@", ", \(format(monthsAgo: monthsAgo, "LLLL")) 15")).firstMatch
+        app.buttons.matching(NSPredicate(format: "label ENDSWITH %@", ", \(monthName("LLLL", monthsAgo: monthsAgo)) 15")).firstMatch
             .tapSettled()
         ok.tapSettled()
         XCTAssertTrue(ok.waitForNonExistence(timeout: 5), "the date picker closed")
@@ -113,23 +101,23 @@ final class SpendFlowUITests: XCTestCase {
         let donut = app.element("spend.donut")
         let pill = app.buttons["spend.monthPill"]
         XCTAssertTrue(pill.waitForExistence(timeout: 5))
-        XCTAssertEqual(pill.label, format(monthsAgo: 0, "LLLL"))
+        XCTAssertEqual(pill.label, monthName("LLLL", monthsAgo: 0))
 
         // The month sheet: this month is ticked; last month switches the donut.
         pill.tapSettled()
         XCTAssertTrue(app.element("spend.monthSheet").waitForExistence(timeout: 5), "the month sheet")
-        let current = app.buttons["spend.month.\(monthKey(monthsAgo: 0))"]
-        let previous = app.buttons["spend.month.\(monthKey(monthsAgo: 1))"]
+        let current = app.buttons["spend.month.\(monthName("yyyy-MM", monthsAgo: 0))"]
+        let previous = app.buttons["spend.month.\(monthName("yyyy-MM", monthsAgo: 1))"]
         XCTAssertTrue(current.waitForExistence(timeout: 5))
         XCTAssertTrue(current.isSelected, "this month is the selected row")
         previous.tapSettled()
         XCTAssertTrue(previous.waitForNonExistence(timeout: 5), "the sheet closed on a pick")
-        XCTAssertTrue(pill.waitForLabel(format(monthsAgo: 1, "LLLL")), "the pill follows: \(pill.label)")
+        XCTAssertTrue(pill.waitForLabel(monthName("LLLL", monthsAgo: 1)), "the pill follows: \(pill.label)")
         XCTAssertTrue(spendRow("Health").waitForExistence(timeout: 5), "last month's Health row")
         XCTAssertTrue(value(donut).hasPrefix("Spent "), value(donut))
         pill.tapSettled()
         current.tapSettled()
-        XCTAssertTrue(pill.waitForLabel(format(monthsAgo: 0, "LLLL")))
+        XCTAssertTrue(pill.waitForLabel(monthName("LLLL", monthsAgo: 0)))
 
         // Tapping the ring at 12 o'clock selects the first slice.
         XCTAssertTrue(donut.waitForExistence(timeout: 5))
@@ -201,9 +189,9 @@ final class SpendFlowUITests: XCTestCase {
         XCTAssertTrue(value(rate).hasSuffix("%"), value(rate))
 
         // A bar: its detail sheet with Income, Expenses and Net cash flow.
-        let bar = app.element("flow.bar.\(monthKey(monthsAgo: 0))")
+        let bar = app.element("flow.bar.\(monthName("yyyy-MM", monthsAgo: 0))")
         XCTAssertTrue(bar.waitForExistence(timeout: 5))
-        XCTAssertTrue(bar.label.hasPrefix(format(monthsAgo: 0, "LLLL yyyy")), bar.label)
+        XCTAssertTrue(bar.label.hasPrefix(monthName("LLLL yyyy", monthsAgo: 0)), bar.label)
         bar.tapSettled()
         let detail = app.element("flow.monthDetail")
         XCTAssertTrue(detail.waitForExistence(timeout: 5), "the month detail sheet")
@@ -338,7 +326,7 @@ final class SpendFlowUITests: XCTestCase {
         XCTAssertEqual(from.value as? String, "Any date")
         from.tapSettled()
         pickDay15(monthsAgo: 1, steps: 1)
-        let day = "\(format(monthsAgo: 1, "MMM")) 15"
+        let day = "\(monthName("MMM", monthsAgo: 1)) 15"
         XCTAssertTrue(from.waitForValue(day), "From reads \(day): \(value(from))")
         expectCount(2, "from last month on")
         to.tapSettled()
@@ -352,11 +340,11 @@ final class SpendFlowUITests: XCTestCase {
         let monthPill = app.buttons["flow.all.month"]
         monthPill.tapSettled()
         let option = app.buttons.matching(
-            NSPredicate(format: "identifier == 'flow.all.option' AND label == %@", format(monthsAgo: 0, "LLLL yyyy"))).firstMatch
+            NSPredicate(format: "identifier == 'flow.all.option' AND label == %@", monthName("LLLL yyyy", monthsAgo: 0))).firstMatch
         XCTAssertTrue(option.waitForExistence(timeout: 5), "the month sheet")
         option.tapSettled()
         XCTAssertTrue(option.waitForNonExistence(timeout: 5))
-        XCTAssertTrue(from.waitForValue("\(format(monthsAgo: 0, "MMM")) 1"), "From is the month's first day: \(value(from))")
+        XCTAssertTrue(from.waitForValue("\(monthName("MMM", monthsAgo: 0)) 1"), "From is the month's first day: \(value(from))")
         expectCount(1, "this month only")
         XCTAssertTrue(resultRow("pay").waitForExistence(timeout: 5))
         XCTAssertFalse(resultRow("old").exists)

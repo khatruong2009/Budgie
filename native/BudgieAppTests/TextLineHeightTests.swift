@@ -6,7 +6,7 @@ import XCTest
 /// Flutter lays out each line of app text at `round(size * height)` with the
 /// extra leading split evenly (Material `Typography` sets
 /// `leadingDistribution: even`); values measured with the real fonts in a
-/// Flutter widget test. Guards `TextStyleModifier` (budgie-uia.53).
+/// Flutter widget test. Guards `TextStyleModifier`.
 @MainActor
 final class TextLineHeightTests: XCTestCase {
     private func height(_ text: String, _ spec: TextSpec) -> CGFloat {

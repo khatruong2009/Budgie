@@ -15,17 +15,8 @@ final class TabsUITests: XCTestCase {
         app.launch()
     }
 
-    private func tab(_ name: String) {
-        app.tabBars.buttons[name].tap()
-    }
-
     /// The current month as the app keys its bars ("2026-09").
-    private var currentMonthKey: String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "yyyy-MM"
-        return formatter.string(from: Date())
-    }
+    private var currentMonthKey: String { monthName("yyyy-MM") }
 
     func testSpendAndFlow() throws {
         XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 20))
@@ -42,7 +33,7 @@ final class TabsUITests: XCTestCase {
                 .waitForExistence(timeout: 5))
 
         // Spend: the donut and the one category row, its drill-in and back.
-        tab("Spend")
+        app.tab("Spend")
         XCTAssertTrue(app.element("spend.donut").waitForExistence(timeout: 5))
         let row = app.buttons["spend.row.0"]
         XCTAssertTrue(row.waitForExistence(timeout: 5))
@@ -53,7 +44,7 @@ final class TabsUITests: XCTestCase {
         XCTAssertTrue(app.element("spend.donut").waitForExistence(timeout: 5))
 
         // Flow: the net cash flow card with this month's bar.
-        tab("Flow")
+        app.tab("Flow")
         XCTAssertTrue(app.element("flow.netCashFlow").waitForExistence(timeout: 5))
         XCTAssertTrue(app.element("flow.bar.\(currentMonthKey)").exists, "bar for \(currentMonthKey)")
 

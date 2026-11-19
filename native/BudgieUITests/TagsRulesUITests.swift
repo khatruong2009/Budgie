@@ -38,21 +38,8 @@ final class TagsRulesUITests: XCTestCase {
 
     // MARK: - Helpers
 
-    /// Polls `condition` until it holds or `timeout` passes.
-    private func waitUntil(_ timeout: TimeInterval = 5, _ condition: () -> Bool) -> Bool {
-        let deadline = Date().addingTimeInterval(timeout)
-        repeat {
-            if condition() { return true }
-            Thread.sleep(forTimeInterval: 0.25)
-        } while Date() < deadline
-        return false
-    }
-
     private func openTagsAndRules() {
-        app.goToHomeRoot()
-        app.buttons["home.settings"].tapSettled()
-        app.buttons["Tags & rules"].tapSettled()
-        XCTAssertTrue(app.element("tagsRules.list").waitForExistence(timeout: 10))
+        app.openSettingsPage("Tags & rules", marker: app.element("tagsRules.list"))
     }
 
     /// Scrolls the page until the element is on screen.

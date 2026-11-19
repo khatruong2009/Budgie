@@ -51,17 +51,9 @@ final class PerformanceUITests: XCTestCase {
         return metrics
     }
 
-    private func launchToHome() {
-        app.budgie(homeTimeout: 60)
-    }
-
-    private func tab(_ name: String) {
-        app.tabBars.buttons[name].tap()
-    }
-
     /// Flow > SEE ALL, and proof that the 10,000-row store is installed.
     private func openFlowSeeAll() {
-        tab("Flow")
+        app.tab("Flow")
         XCTAssertTrue(app.element("flow.netCashFlow").waitForExistence(timeout: 10))
         let seeAll = app.buttons["See all transactions"].firstMatch
         for _ in 0..<4 where !seeAll.isHittable { app.swipeUp() }
@@ -90,19 +82,19 @@ final class PerformanceUITests: XCTestCase {
     // MARK: - Tabs
 
     func testTabSwitches() {
-        launchToHome()
+        app.budgie(homeTimeout: 60)
         measure(
             metrics: [XCTClockMetric(), signpost("UI", "tabSwitch"), XCTCPUMetric(application: app)], options: options
         ) {
-            tab("Worth")
+            app.tab("Worth")
             XCTAssertTrue(app.element("worth.hero").waitForExistence(timeout: 10))
-            tab("Goals")
+            app.tab("Goals")
             XCTAssertTrue(app.element("goals.summary").waitForExistence(timeout: 10))
-            tab("Spend")
+            app.tab("Spend")
             XCTAssertTrue(app.element("spend.donut").waitForExistence(timeout: 10))
-            tab("Flow")
+            app.tab("Flow")
             XCTAssertTrue(app.element("flow.netCashFlow").waitForExistence(timeout: 10))
-            tab("Home")
+            app.tab("Home")
             XCTAssertTrue(app.element("home.settings").waitForExistence(timeout: 10))
         }
     }
@@ -114,9 +106,9 @@ final class PerformanceUITests: XCTestCase {
             metrics: [signpost("UI", "tabSwitch"), XCTClockMetric(), XCTCPUMetric(application: app)],
             options: manualOptions
         ) {
-            launchToHome()
+            app.budgie(homeTimeout: 60)
             startMeasuring()
-            tab(name)
+            app.tab(name)
             XCTAssertTrue(app.element(marker).waitForExistence(timeout: 20))
             stopMeasuring()
         }
@@ -130,7 +122,7 @@ final class PerformanceUITests: XCTestCase {
     /// Everything that re-runs Home's body: the add sheet opening and
     /// closing, and the month panel. `home.safeToSpend` is the suspect.
     func testHomeBodyRerenders() {
-        launchToHome()
+        app.budgie(homeTimeout: 60)
         let monthPill = app.buttons.matching(NSPredicate(format: "label MATCHES %@", "[A-Z][a-z]+ 20[0-9]{2}")).firstMatch
         measure(
             metrics: [signpost("UI", "home.safeToSpend"), XCTClockMetric(), XCTCPUMetric(application: app)], options: options
@@ -148,7 +140,7 @@ final class PerformanceUITests: XCTestCase {
     // MARK: - Lists
 
     func testFlowSeeAllScroll() {
-        launchToHome()
+        app.budgie(homeTimeout: 60)
         openFlowSeeAll()
         for _ in 0..<2 {
             let more = app.element("flow.all.loadMore")
@@ -164,7 +156,7 @@ final class PerformanceUITests: XCTestCase {
 
     /// One keystroke per measured region: `flow.refilter` is one interval.
     private func measureKeystroke(_ text: String) {
-        launchToHome()
+        app.budgie(homeTimeout: 60)
         openFlowSeeAll()
         let search = app.textFields["flow.all.search"]
         search.tapSettled()
@@ -189,7 +181,7 @@ final class PerformanceUITests: XCTestCase {
     /// Home itself (hero blur, gauge, budget bars, FABs) and Spend's page
     /// (donut, progress glows): the glow-heavy screens.
     func testHomeScroll() {
-        launchToHome()
+        app.budgie(homeTimeout: 60)
         measure(metrics: scrollMetrics, options: options) {
             for _ in 0..<3 { app.swipeUp(velocity: .fast) }
             for _ in 0..<3 { app.swipeDown(velocity: .fast) }
@@ -197,8 +189,8 @@ final class PerformanceUITests: XCTestCase {
     }
 
     func testSpendScroll() {
-        launchToHome()
-        tab("Spend")
+        app.budgie(homeTimeout: 60)
+        app.tab("Spend")
         XCTAssertTrue(app.element("spend.donut").waitForExistence(timeout: 10))
         measure(metrics: scrollMetrics, options: options) {
             for _ in 0..<3 { app.swipeUp(velocity: .fast) }
@@ -207,7 +199,7 @@ final class PerformanceUITests: XCTestCase {
     }
 
     func testHomeSeeAllScroll() {
-        launchToHome()
+        app.budgie(homeTimeout: 60)
         let seeAll = app.buttons["See all transactions"].firstMatch
         for _ in 0..<4 where !seeAll.isHittable { app.swipeUp() }
         seeAll.tap()
@@ -219,8 +211,8 @@ final class PerformanceUITests: XCTestCase {
     }
 
     func testSpendDrillInScroll() {
-        launchToHome()
-        tab("Spend")
+        app.budgie(homeTimeout: 60)
+        app.tab("Spend")
         let row = app.buttons["spend.row.0"]
         XCTAssertTrue(row.waitForExistence(timeout: 10))
         row.tap()
@@ -234,7 +226,7 @@ final class PerformanceUITests: XCTestCase {
     // MARK: - Worth history (500 snapshots, built eagerly)
 
     private func openPerfHistory() {
-        tab("Worth")
+        app.tab("Worth")
         let row = app.element("worth.account.Perf History")
         for _ in 0..<6 where !row.exists || !row.isHittable { app.swipeUp() }
         XCTAssertTrue(row.exists, "the Perf History account")
@@ -245,8 +237,8 @@ final class PerformanceUITests: XCTestCase {
     }
 
     func testWorthHistoryOpen() {
-        launchToHome()
-        tab("Worth")
+        app.budgie(homeTimeout: 60)
+        app.tab("Worth")
         measure(metrics: [XCTClockMetric(), XCTMemoryMetric(application: app)], options: manualOptions) {
             let row = app.element("worth.account.Perf History")
             for _ in 0..<6 where !row.exists || !row.isHittable { app.swipeUp() }
@@ -263,7 +255,7 @@ final class PerformanceUITests: XCTestCase {
     }
 
     func testWorthHistoryScroll() {
-        launchToHome()
+        app.budgie(homeTimeout: 60)
         openPerfHistory()
         XCTAssertTrue(app.element("worth.history.hero").waitForExistence(timeout: 20))
         measure(metrics: scrollMetrics, options: options) {
