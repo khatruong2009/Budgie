@@ -1,8 +1,6 @@
 import BudgieCore
 import SwiftUI
 
-/// The pieces of the account history page (net_worth_page.dart:1577-2136).
-
 enum AccountHistoryText {
     /// `amount` at 17 (the stat card values).
     static let statValue = TextSpec(face: .gabaritoBold, size: 17, tabular: true, relativeTo: .body)
@@ -12,10 +10,8 @@ enum AccountHistoryText {
 
 // MARK: - Hero
 
-/// `_AccountHistoryHeroCard` (NW:1577-1762) as a plain card (padding 24;
-/// Flutter washes it with the account colour, REDESIGN_PLAN 4.7): the
-/// type's tinted arrow tile, "Balance history" over the last update, the
-/// type badge, CURRENT BALANCE, the signed balance and the meta chips.
+/// `_AccountHistoryHeroCard` (NW:1577-1762) as a plain card (Flutter washes
+/// it with the account colour).
 struct AccountHistoryHeroCard: View {
     let type: NetWorthEntryType
     let color: Color
@@ -38,7 +34,7 @@ struct AccountHistoryHeroCard: View {
         GlowCard(padding: 24) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(spacing: 0) {
-                    IconTile(symbol: isAsset ? "arrow.up.right" : "arrow.down.left", color: color, size: 48, iconSize: 24)
+                    IconTile(symbol: type.arrowSymbol, color: color, size: 48, iconSize: 24)
                         .padding(.trailing, Metrics.spacingM)
                     VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
                         Text("Balance history")
@@ -94,23 +90,22 @@ struct AccountHistoryHeroCard: View {
                 symbol: "calendar", label: NetWorthText.snapshotCount(history.chart.count), color: BudgieColor.textPrimary,
                 background: BudgieColor.hairline)
         ]
+        func deltaChip(_ amount: Double, positive: Bool, suffix: String) -> MetaChip {
+            let tint = positive ? BudgieColor.income : BudgieColor.danger
+            return MetaChip(
+                symbol: positive ? "arrow.up.right" : "arrow.down.left",
+                label: formatter.formatCompactDelta(amount) + suffix, color: tint, background: tint.opacity(0.14))
+        }
         if let change = history.changeFromPrevious {
-            let tint = change >= 0 ? BudgieColor.income : BudgieColor.danger
-            chips.append(MetaChip(
-                symbol: change >= 0 ? "arrow.up.right" : "arrow.down.left",
-                label: formatter.formatCompactDelta(change) + " vs prior", color: tint, background: tint.opacity(0.14)))
+            chips.append(deltaChip(change, positive: change >= 0, suffix: " vs prior"))
         }
         if let total = history.totalChange {
-            let positive = history.totalChangeIsPositive == true
-            let tint = positive ? BudgieColor.income : BudgieColor.danger
-            chips.append(MetaChip(
-                symbol: positive ? "arrow.up.right" : "arrow.down.left",
-                label: formatter.formatCompactDelta(total) + " overall", color: tint, background: tint.opacity(0.14)))
+            chips.append(deltaChip(total, positive: history.totalChangeIsPositive == true, suffix: " overall"))
         }
         return chips
     }
 
-    /// `_metaChip`: padding 10 x 6, capsule, 14pt icon, 6, `badgeSmall`.
+    /// `_metaChip`.
     private func chipViews(_ chips: ArraySlice<MetaChip>) -> some View {
         ForEach(chips.indices, id: \.self) { index in
             let chip = chips[index]
@@ -129,8 +124,7 @@ struct AccountHistoryHeroCard: View {
 
 // MARK: - Stat card
 
-/// `_AccountHistoryStatCard` (NW:1764-1800): GlowCard radius 22, padding
-/// 16, the mono label, 8, the compact value in `amount` at 17.
+/// `_AccountHistoryStatCard` (NW:1764-1800).
 struct AccountHistoryStatCard: View {
     let label: String
     let value: String
@@ -158,12 +152,9 @@ struct AccountHistoryStatCard: View {
 
 // MARK: - Timeline row
 
-/// `_AccountHistoryTimelineRow` (NW:1802-1902) as a list row (REDESIGN_PLAN
-/// 4.7): padding 12, a 40pt calendar tile in the account colour (Flutter: a
-/// 12pt dot), 12, the `yMMMd` date over the `jm` time, 8, the signed amount
-/// over the compact change from the next older update (green when good for
-/// the type), 4, then the 48pt trash button, disabled (tertiary) while it
-/// is the only update.
+/// `_AccountHistoryTimelineRow` (NW:1802-1902) as a list row, with a
+/// calendar tile in place of Flutter's dot. The change is green when good for
+/// the type; the trash button is disabled while it is the only update.
 struct AccountTimelineRow: View {
     let snapshot: NetWorthSnapshotRecord
     let delta: Double?
@@ -181,6 +172,7 @@ struct AccountTimelineRow: View {
         let amount = formatter.formatSigned(snapshot.amount)
         let change = delta.map(formatter.formatCompactDelta)
         let changeColor = deltaIsFavorable.map { $0 ? BudgieColor.income : BudgieColor.danger } ?? BudgieColor.textSecondary
+        let deleteHint = canDelete ? "Delete this balance update" : "Keep at least one balance update"
 
         HStack(spacing: 0) {
             HStack(spacing: 0) {
@@ -228,8 +220,8 @@ struct AccountTimelineRow: View {
             .buttonStyle(.plain)
             .disabled(!canDelete)
             .padding(.leading, Metrics.spacingXS)
-            .help(canDelete ? "Delete this balance update" : "Keep at least one balance update")
-            .accessibilityLabel(canDelete ? "Delete this balance update" : "Keep at least one balance update")
+            .help(deleteHint)
+            .accessibilityLabel(deleteHint)
             .accessibilityIdentifier("worth.history.timeline.delete")
         }
         .padding(12)

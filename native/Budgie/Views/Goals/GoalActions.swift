@@ -2,12 +2,10 @@ import BudgieCore
 import SwiftUI
 
 /// The ellipsis sheet's content (`_showGoalActions`,
-/// savings_goals_page.dart:371-428) in the sheet pattern (REDESIGN_PLAN
-/// 4.3): the goal's name as the title, then "Edit goal" and "Delete goal"
-/// as list rows with a hairline between them, shown by the page's
-/// `budgieDialog` at the bottom placement (one floating card 20pt from the
-/// edges, over the scrim, as Flutter's transparent modal sheet). A row
-/// fires a light haptic; the page then swaps the sheet for that dialog.
+/// savings_goals_page.dart:371-428): the goal's name as the title, then "Edit
+/// goal" and "Delete goal" rows, shown by the page's `budgieDialog` at the
+/// bottom placement. A row fires a light haptic; the page then swaps the sheet
+/// for that dialog.
 struct GoalActionsSheet: View {
     let goal: SavingsGoalRecord
     let onEdit: () -> Void
@@ -33,9 +31,7 @@ struct GoalActionsSheet: View {
     }
 }
 
-/// `_GoalActionTile` (savings_goals_page.dart:962-1001): 40pt tile tinted
-/// like the label, 14pt gap, rowTitle, at least 48pt tall; the whole row
-/// taps.
+/// `_GoalActionTile` (savings_goals_page.dart:962-1001): the whole row taps.
 private struct GoalActionTile: View {
     let title: String
     let symbol: String
@@ -65,10 +61,13 @@ struct DeleteGoalDialog: View {
     let onCancel: () -> Void
     let onDelete: () -> Void
 
+    /// `rowSubtitle` at 13, height 1.45.
+    private static let body = TextSpec(face: .gabaritoRegular, size: 13, height: 1.45, relativeTo: .footnote)
+
     var body: some View {
         VStack(spacing: 0) {
             DialogTitle(text: "Delete savings goal?")
-            DialogMessage(text: "This removes \"\(goal.name)\" and its saved progress from your goals.", style: GoalText.body)
+            DialogMessage(text: "This removes \"\(goal.name)\" and its saved progress from your goals.", style: Self.body)
             DialogButtons(
                 cancelId: "goals.delete.cancel", submitTitle: "Delete", submitId: "goals.delete.confirm",
                 color: BudgieColor.danger, cancel: onCancel, submit: onDelete)
