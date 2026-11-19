@@ -50,7 +50,7 @@ public struct PreNativeMigrationBackup: Sendable {
     /// caller must not touch the store then.
     public func ensure(lastCommittedChecksum: String?) throws -> Outcome {
         let current = try currentPrimaryChecksum()
-        if let latest = try latestComplete() {
+        if let latest = try completeSnapshots().last {
             let recorded = try recordedPrimaryChecksum(latest)
             // A matching primary says nothing about a backup-only recovery
             // or legacy preferences written since the previous snapshot.
@@ -71,10 +71,6 @@ public struct PreNativeMigrationBackup: Sendable {
         return try FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
             .filter { FileManager.default.fileExists(atPath: $0.appendingPathComponent(PreNativeMigrationBackup.completeMarker).path) }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
-    }
-
-    private func latestComplete() throws -> URL? {
-        try completeSnapshots().last
     }
 
     private func currentPrimaryChecksum() throws -> String? {
@@ -190,8 +186,6 @@ public struct PreNativeMigrationBackup: Sendable {
             throw StoreFileSystemError.posix(operation: "open", name: url.lastPathComponent, errno: errno)
         }
         defer { close(fd) }
-        if fcntl(fd, F_FULLFSYNC) != 0 && fsync(fd) != 0 {
-            throw StoreFileSystemError.posix(operation: "fsync", name: url.lastPathComponent, errno: errno)
-        }
+        try fullSync(fd, name: url.lastPathComponent)
     }
 }

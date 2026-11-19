@@ -54,16 +54,7 @@ public enum DartSort {
 
     /// Dart `String.compareTo`: UTF-16 code-unit order.
     public static func compare(_ a: String, _ b: String) -> Int {
-        var left = a.utf16.makeIterator(), right = b.utf16.makeIterator()
-        while true {
-            switch (left.next(), right.next()) {
-            case (nil, nil): return 0
-            case (nil, _): return -1
-            case (_, nil): return 1
-            case (let x?, let y?) where x != y: return x < y ? -1 : 1
-            default: continue
-            }
-        }
+        a.utf16.lexicographicallyPrecedes(b.utf16) ? -1 : a.utf16.elementsEqual(b.utf16) ? 0 : 1
     }
 
     // MARK: - Port of dart:_internal Sort
@@ -153,20 +144,9 @@ public enum DartSort {
                         if comp > 0 {
                             great -= 1
                             continue
-                        } else if comp < 0 {
-                            // Triple exchange.
-                            a[k] = a[less]
-                            a[less] = a[great]
-                            less += 1
-                            a[great] = ak
-                            great -= 1
-                            break
-                        } else {
-                            a[k] = a[great]
-                            a[great] = ak
-                            great -= 1
-                            break
                         }
+                        exchange(&a, k, ak, &less, &great, intoLow: comp < 0)
+                        break
                     }
                 }
             }
@@ -187,27 +167,13 @@ public enum DartSort {
                     let compPivot2 = compare(ak, pivot2)
                     if compPivot2 > 0 {
                         while true {
-                            var comp = compare(a[great], pivot2)
-                            if comp > 0 {
+                            if compare(a[great], pivot2) > 0 {
                                 great -= 1
                                 if great < k { break }
                                 continue
-                            } else {
-                                comp = compare(a[great], pivot1)
-                                if comp < 0 {
-                                    // Triple exchange.
-                                    a[k] = a[less]
-                                    a[less] = a[great]
-                                    less += 1
-                                    a[great] = ak
-                                    great -= 1
-                                } else {
-                                    a[k] = a[great]
-                                    a[great] = ak
-                                    great -= 1
-                                }
-                                break
                             }
+                            exchange(&a, k, ak, &less, &great, intoLow: compare(a[great], pivot1) < 0)
+                            break
                         }
                     }
                 }
@@ -251,34 +217,35 @@ public enum DartSort {
                     let compPivot2 = compare(ak, pivot2)
                     if compPivot2 == 0 {
                         while true {
-                            var comp = compare(a[great], pivot2)
-                            if comp == 0 {
+                            if compare(a[great], pivot2) == 0 {
                                 great -= 1
                                 if great < k { break }
                                 continue
-                            } else {
-                                comp = compare(a[great], pivot1)
-                                if comp < 0 {
-                                    // Triple exchange.
-                                    a[k] = a[less]
-                                    a[less] = a[great]
-                                    less += 1
-                                    a[great] = ak
-                                    great -= 1
-                                } else {
-                                    a[k] = a[great]
-                                    a[great] = ak
-                                    great -= 1
-                                }
-                                break
                             }
+                            exchange(&a, k, ak, &less, &great, intoLow: compare(a[great], pivot1) < 0)
+                            break
                         }
                     }
                 }
             }
-            doSort(&a, less, great, compare)
-        } else {
-            doSort(&a, less, great, compare)
         }
+        doSort(&a, less, great, compare)
+    }
+
+    /// Moves `ak` (the element at `k`) out and `a[great]` into the slot at
+    /// `k`; with `intoLow` the old `a[less]` takes `a[great]`'s place first
+    /// (the triple exchange), keeping Dart's write order.
+    private static func exchange<E>(
+        _ a: inout [E], _ k: Int, _ ak: E, _ less: inout Int, _ great: inout Int, intoLow: Bool
+    ) {
+        if intoLow {
+            a[k] = a[less]
+            a[less] = a[great]
+            less += 1
+        } else {
+            a[k] = a[great]
+        }
+        a[great] = ak
+        great -= 1
     }
 }

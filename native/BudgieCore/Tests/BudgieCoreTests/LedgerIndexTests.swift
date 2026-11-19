@@ -30,12 +30,12 @@ struct LedgerIndexTests {
                 #expect(amount == want["categoryExpenses"][name].double, "\(path) \(key) \(name)")
             }
             #expect(summary.transactionCount == want["transactionIds"].array.count, "\(path) \(key) count")
-            let expenseRows = data.transactions.filter { $0.type == .expense && calendar.ledgerMonthKey($0.date) == calendar.ledgerMonthKey(month) }
+            let expenseRows = data.transactions.filter { $0.type == .expense && DartCalendar.monthKey($0.date) == DartCalendar.monthKey(month) }
             #expect(summary.categoryExpenseCounts.count == summary.categoryExpenses.count)
             for ((name, _), count) in zip(summary.categoryExpenses, summary.categoryExpenseCounts) {
                 #expect(expenseRows.filter { $0.category.utf16.elementsEqual(name.utf16) }.count == count)
             }
-            let monthKey = calendar.ledgerMonthKey(month)
+            let monthKey = DartCalendar.monthKey(month)
             #expect(index.newestFirst(inMonth: month).map(\.id) == index.newestFirst.filter { $0.monthKey == monthKey }.map(\.id), "\(path) \(key) month rows")
         }
         #expect(index.recent(3).map(\.id) == Array(index.newestFirst.prefix(3).map(\.id)))

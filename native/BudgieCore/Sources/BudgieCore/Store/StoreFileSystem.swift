@@ -30,6 +30,14 @@ public enum StoreFileSystemError: Error, Equatable, Sendable {
     case notAFile(name: String)
 }
 
+/// F_FULLFSYNC asks the drive to flush its cache too; falls back to fsync
+/// where it is unsupported.
+func fullSync(_ fd: Int32, name: String) throws {
+    if fcntl(fd, F_FULLFSYNC) != 0 && fsync(fd) != 0 {
+        throw StoreFileSystemError.posix(operation: "fsync", name: name, errno: errno)
+    }
+}
+
 /// The real store directory: `<Application Support>/financial_store/`.
 public final class DirectoryFileSystem: StoreFileSystem, @unchecked Sendable {
     public let directory: URL
@@ -86,11 +94,7 @@ public final class DirectoryFileSystem: StoreFileSystem, @unchecked Sendable {
             }
             offset += written
         }
-        // F_FULLFSYNC asks the drive to flush its cache too; fall back to
-        // fsync where it is unsupported.
-        if fcntl(fd, F_FULLFSYNC) != 0 && fsync(fd) != 0 {
-            throw StoreFileSystemError.posix(operation: "fsync", name: name + ".tmp", errno: errno)
-        }
+        try fullSync(fd, name: name + ".tmp")
         closed = true
         if close(fd) != 0 {
             throw StoreFileSystemError.posix(operation: "close", name: name + ".tmp", errno: errno)

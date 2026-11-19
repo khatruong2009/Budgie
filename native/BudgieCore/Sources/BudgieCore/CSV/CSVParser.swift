@@ -38,13 +38,8 @@ public enum CSVParser {
         let comma: UInt16 = 0x2C, quote: UInt16 = 0x22, cr: UInt16 = 0x0D, lf: UInt16 = 0x0A
 
         // FirstOccurrenceSettingsDetector: the lowest `indexOf` wins.
-        var firstCRLF = -1, firstLF = -1
-        for i in 0..<u.count {
-            if firstLF < 0 && u[i] == lf { firstLF = i }
-            if firstCRLF < 0 && u[i] == cr && i + 1 < u.count && u[i + 1] == lf { firstCRLF = i }
-            if firstLF >= 0 && firstCRLF >= 0 { break }
-        }
-        let crlf = !(firstLF >= 0 && (firstCRLF < 0 || firstLF < firstCRLF))
+        let firstCRLF = u.indices.dropLast().first { u[$0] == cr && u[$0 + 1] == lf } ?? .max
+        let crlf = u.firstIndex(of: lf).map { $0 > firstCRLF } ?? true
 
         var rows: [[[UInt16]]] = []
         var row: [[UInt16]] = []
@@ -110,10 +105,7 @@ public enum CSVParser {
             i += 1
         }
         // `isOptionalEolAtEnd`: nothing pending adds no row.
-        if !(!previousWasEndQuote && field.isEmpty && row.isEmpty) {
-            row.append(field)
-            rows.append(row)
-        }
+        if previousWasEndQuote || !field.isEmpty || !row.isEmpty { endRow() }
         return rows
     }
 }

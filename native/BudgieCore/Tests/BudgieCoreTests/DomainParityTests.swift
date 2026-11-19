@@ -58,7 +58,7 @@ func assertDartSummary(
         let ids = expectedMonth["transactionIds"].array.compactMap(\.string)
         #expect(totals.transactionCount == ids.count, "\(label) \(key) id count")
         #expect(
-            data.transactions.filter { calendar.ledgerMonthKey($0.date) == calendar.ledgerMonthKey(month) }.map(\.id).filter(isKnown)
+            data.transactions.filter { DartCalendar.monthKey($0.date) == DartCalendar.monthKey(month) }.map(\.id).filter(isKnown)
                 == ids.filter(isKnown),
             "\(label) \(key) ids")
     }

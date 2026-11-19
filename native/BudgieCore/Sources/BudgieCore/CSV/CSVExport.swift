@@ -30,7 +30,7 @@ public enum CSVExport {
         var lines = ["Date,Type,Category,Description,Amount"]
         for row in sorted {
             let fields = [
-                dateText(row.date),
+                DartDateFormat.yyyyMMdd(row.date),
                 row.isIncome ? "Income" : "Expense",
                 row.category,
                 row.description,
@@ -45,9 +45,6 @@ public enum CSVExport {
     public static func fileName(now: DartDateTime) -> String {
         "transactions_\(DartDateFormat.yyyyMMdd_HHmmss(now)).csv"
     }
-
-    /// `DateFormat('yyyy-MM-dd')` (a negative year prints without its sign).
-    private static func dateText(_ date: DartDateTime) -> String { DartDateFormat.yyyyMMdd(date) }
 
     /// Quote iff the field contains `,` `"` CR or LF; embedded `"` are doubled.
     /// Works on unicode scalars because "\r\n" is a single Character in Swift.

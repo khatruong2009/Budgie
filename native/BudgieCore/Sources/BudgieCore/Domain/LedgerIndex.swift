@@ -146,14 +146,14 @@ public struct LedgerIndex: Sendable {
 
     /// One month's rows, newest first.
     public func newestFirst(inMonth month: DartDateTime) -> ArraySlice<LedgerRow> {
-        guard let range = monthRanges[calendar.ledgerMonthKey(month)] else { return [] }
+        guard let range = monthRanges[DartCalendar.monthKey(month)] else { return [] }
         return newestFirst[range]
     }
 
     /// `getMonthlySummary` / `getCategoryExpensesForMonth`; empty for a
     /// month without transactions.
     public func summary(forMonth month: DartDateTime) -> MonthSummary {
-        summaries[calendar.ledgerMonthKey(month)] ?? MonthSummary()
+        summaries[DartCalendar.monthKey(month)] ?? MonthSummary()
     }
 
     /// `getRecentTransactions(limit)`.
