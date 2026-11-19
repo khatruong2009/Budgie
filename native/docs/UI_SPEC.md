@@ -198,7 +198,18 @@ keeps its pattern and day wheels.
   full-width filled pill (52pt) for the primary action, an outlined pill
   for the secondary. Safe to spend shows its total on the feature card
   above the six breakdown rows (mono values: income in `income`, zeros in
-  `textSecondary`, expenses in `textPrimary`).
+  `textSecondary`, expenses in `textPrimary`). When a fold moves a sheet
+  sideways or changes its width (the Duo in Book puts it in the leading
+  half), its content ignores taps for 0.8s, so a tap meant for the scrim
+  can't pick a row that moved under it.
+- Floating action buttons (`floatingActionInset`): over the page,
+  bottom-trailing, 20pt in, above a bottom tab bar. Beside the 27.1 rail
+  (`toolbarVerticalEdge` set, on the Duo) they never cover content: in
+  regular width (Open, Book) a column on the trailing edge narrows the
+  page; in compact width (Closed) a band along the bottom, in the page
+  background, holds them side by side (Home's mic left of add). A fold
+  that changes the placement plays the FAB's entry again (none with Reduce
+  Motion).
 - Dialogs: `budgieDialog` cards over the `scrim` token, one plain drop
   shadow for every dialog (the glow API is gone); title in `sheetTitle`;
   fields on `fieldFill`; Cancel outlined in `textPrimary`, the primary

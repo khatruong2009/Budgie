@@ -10,6 +10,10 @@ extension View {
     /// sheet, on the Duo's inner display) is rounded on all corners and
     /// has no grab handle, which only a bottom sheet is dragged by; its
     /// inset stays, so detent maths is the same.
+    /// When the system moves the sheet sideways or resizes its width (a fold:
+    /// on the Duo in Book it moves to the leading half), its content ignores
+    /// taps until it has settled, so a tap aimed at the scrim where it was
+    /// can't pick a row that has just moved under the finger.
     /// Apply to the root view inside `.sheet`.
     func budgieSheetChrome(radius: CGFloat = Metrics.sheetRadius) -> some View {
         modifier(SheetChrome(radius: radius))
@@ -20,6 +24,12 @@ private struct SheetChrome: ViewModifier {
     let radius: CGFloat
     @Environment(\.sheetHostSize) private var host
     @State private var sheetWidth: CGFloat = 0
+    @State private var moves = 0
+    @State private var settling = false
+
+    /// How long content ignores taps after the sheet moves: the system's
+    /// move (about 0.4s) and the time a tap already on its way takes to land.
+    private static let settle: Duration = .milliseconds(800)
 
     /// A bottom sheet is at most a few points narrower than the window (the
     /// floating inset); a form sheet is much narrower.
@@ -28,6 +38,23 @@ private struct SheetChrome: ViewModifier {
     func body(content: Content) -> some View {
         let formSheet = isFormSheet
         content
+            .allowsHitTesting(!settling)
+            .background {
+                // Only the horizontal placement: detents and the keyboard
+                // move the sheet vertically, under the user's own action.
+                GeometryReader { proxy in
+                    let frame = proxy.frame(in: .global)
+                    Color.clear.onChange(of: [frame.minX, frame.width]) {
+                        settling = true
+                        moves += 1
+                    }
+                }
+            }
+            .task(id: moves) {
+                guard moves > 0 else { return }
+                try? await Task.sleep(for: Self.settle)
+                if !Task.isCancelled { settling = false }
+            }
             .safeAreaInset(edge: .top, spacing: 0) {
                 Capsule()
                     .fill(BudgieColor.hairline)
@@ -122,19 +149,107 @@ private struct PushedTitleText: View {
 // MARK: - Floating action button inset
 
 extension View {
-    /// A bottom-trailing floating action button in a bottom safe-area inset
-    /// (it follows the tab bar and clears the scroll content), `fabInset`
-    /// from the trailing and bottom edges. While `visible` is false the
-    /// inset is empty (it takes no room).
+    /// The floating action button(s), `fabInset` from the trailing and
+    /// bottom edges, in a safe-area inset (it follows the tab bar and clears
+    /// the scroll content). With a bottom tab bar it floats over the page,
+    /// bottom-trailing. Beside a vertical tab bar (the 27.1 rail, on the Duo)
+    /// it never covers content: in regular width it sits in a column beside
+    /// the rail, which narrows the page; in compact width in a band at the
+    /// bottom, filled with the page background, where Home's two buttons sit
+    /// side by side (`FloatingActionStack`). A fold that changes the
+    /// placement brings the button in again with its entry animation
+    /// (none with Reduce Motion). While `visible` is false the inset is
+    /// empty (it takes no room).
     func floatingActionInset<Content: View>(visible: Bool = true, @ViewBuilder _ content: () -> Content) -> some View {
-        safeAreaInset(edge: .bottom, spacing: 0) {
-            if visible {
-                content()
-                    .padding(.trailing, Metrics.fabInset)
-                    .padding(.bottom, Metrics.fabInset)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-            }
+        modifier(FloatingActionInset(visible: visible, fab: content()))
+    }
+}
+
+extension EnvironmentValues {
+    /// How a group of floating action buttons is stacked: vertically, or
+    /// side by side in the compact rail layout's bottom band.
+    @Entry var floatingActionAxis: Axis = .vertical
+}
+
+/// Floating action buttons stacked along `floatingActionAxis`, 12pt apart
+/// and centred on each other.
+struct FloatingActionStack<Content: View>: View {
+    @Environment(\.floatingActionAxis) private var axis
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        let layout = axis == .horizontal ? AnyLayout(HStackLayout(spacing: 12)) : AnyLayout(VStackLayout(spacing: 12))
+        layout { content }
+    }
+}
+
+private enum FloatingActionPlacement {
+    /// Over the page, bottom-trailing, above a bottom tab bar.
+    case overlay
+    /// A column on the trailing edge, beside the rail (regular width).
+    case column
+    /// An opaque band along the bottom (compact width beside the rail).
+    case band
+}
+
+private struct FloatingActionInset<Fab: View>: ViewModifier {
+    let visible: Bool
+    let fab: Fab
+
+    func body(content: Content) -> some View {
+        if #available(iOS 27.1, *) {
+            content.modifier(RailAwareFloatingActionInset(visible: visible, fab: fab))
+        } else {
+            content.modifier(FloatingActionLayout(placement: .overlay, visible: visible, fab: fab))
         }
+    }
+}
+
+@available(iOS 27.1, *)
+private struct RailAwareFloatingActionInset<Fab: View>: ViewModifier {
+    let visible: Bool
+    let fab: Fab
+    /// Set while the tab bar is a vertical rail.
+    @Environment(\.toolbarVerticalEdge) private var railEdge
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    func body(content: Content) -> some View {
+        let placement: FloatingActionPlacement =
+            railEdge == nil ? .overlay : sizeClass == .regular ? .column : .band
+        content.modifier(FloatingActionLayout(placement: placement, visible: visible, fab: fab))
+    }
+}
+
+private struct FloatingActionLayout<Fab: View>: ViewModifier {
+    let placement: FloatingActionPlacement
+    let visible: Bool
+    let fab: Fab
+
+    func body(content: Content) -> some View {
+        content
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if visible && placement != .column {
+                    fab
+                        .environment(\.floatingActionAxis, placement == .band ? .horizontal : .vertical)
+                        .padding(.top, placement == .band ? Metrics.hairlineInset : 0)
+                        .padding(.trailing, Metrics.fabInset)
+                        .padding(.bottom, Metrics.fabInset)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .background {
+                            if placement == .band {
+                                BudgieColor.background.ignoresSafeArea(edges: .bottom)
+                            }
+                        }
+                }
+            }
+            .safeAreaInset(edge: .trailing, spacing: 0) {
+                // The page's own trailing padding separates it from the column.
+                if visible && placement == .column {
+                    fab
+                        .padding(.bottom, Metrics.fabInset)
+                        .frame(maxHeight: .infinity, alignment: .bottom)
+                }
+            }
     }
 }
 

@@ -5,6 +5,9 @@ import SwiftUI
 /// no glows). Over 1.4s the mark lifts to 1.03, "Budgie" and "BUDGET IN
 /// BALANCE" fade up, then three dots pulse. Reduce Motion shows the final
 /// state without the pulse.
+/// The mark starts at the window centre, where the launch screen draws it,
+/// and glides to the centre of the horizontal safe area (the Duo's status
+/// column or rail) as it lifts, so the handoff doesn't jump.
 struct OpeningView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var start = Date()
@@ -17,13 +20,24 @@ struct OpeningView: View {
             let t = min(elapsed / 1.4, 1)
             GeometryReader { geometry in
                 let size = geometry.size
-                let lift = 1 + 0.03 * FlutterCurve.interval(t, 0, 0.55, FlutterCurve.easeOutCubic)
+                let insets = geometry.safeAreaInsets
+                let windowHeight = size.height + insets.top + insets.bottom
+                let rise = FlutterCurve.interval(t, 0, 0.55, FlutterCurve.easeOutCubic)
+                let lift = 1 + 0.03 * rise
                 let nameIn = FlutterCurve.interval(t, 0.2, 0.55, FlutterCurve.easeOut)
                 let nameRise = 1 - FlutterCurve.interval(t, 0.2, 0.55, FlutterCurve.easeOutCubic)
                 let taglineIn = FlutterCurve.interval(t, 0.35, 0.7, FlutterCurve.easeOut)
                 let taglineRise = 1 - FlutterCurve.interval(t, 0.35, 0.7, FlutterCurve.easeOutCubic)
                 let loaderIn = FlutterCurve.interval(t, 0.8, 1, FlutterCurve.easeOut)
-                let center = CGPoint(x: size.width / 2, y: size.height / 2)
+                // Laid out in the safe area. The window's centre, in this
+                // view's coordinates, is where the launch screen draws the mark.
+                let windowCenter = CGPoint(
+                    x: (size.width + insets.trailing - insets.leading) / 2,
+                    y: windowHeight / 2 - insets.top)
+                // Horizontally the safe area's centre; vertically the
+                // window's, as on every iPhone.
+                let center = CGPoint(x: size.width / 2, y: windowCenter.y)
+                let logoX = windowCenter.x + (center.x - windowCenter.x) * rise
 
                 ZStack {
                     BudgieColor.background.ignoresSafeArea()
@@ -31,7 +45,7 @@ struct OpeningView: View {
                         .resizable().scaledToFit()
                         .frame(width: Self.logoSize, height: Self.logoSize)
                         .scaleEffect(lift)
-                        .position(center)
+                        .position(x: logoX, y: center.y)
                     VStack(spacing: Metrics.spacingS) {
                         Text("Budgie")
                             .textStyle(.pageTitle)
@@ -49,13 +63,10 @@ struct OpeningView: View {
                     .position(x: center.x, y: center.y + Self.logoSize / 2 + Metrics.spacingL + 30)
                     dots(phase: reduceMotion ? nil : elapsed.truncatingRemainder(dividingBy: 1.2) / 1.2)
                         .opacity(loaderIn)
-                        .position(x: center.x, y: size.height * 0.92)
+                        .position(x: center.x, y: windowHeight * 0.92 - insets.top)
                 }
             }
         }
-        // Horizontal safe areas (the Duo's status column or rail) centre the
-        // bird; vertically it stays centred in the window, as on every iPhone.
-        .ignoresSafeArea(.container, edges: .vertical)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Budgie is opening")
     }
