@@ -30,9 +30,7 @@ struct BudgetPickerSheet: View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 0) {
                 Text(title)
-                    .textStyle(.sheetTitle)
-                    .foregroundStyle(BudgieColor.textPrimary)
-                    .accessibilityAddTraits(.isHeader)
+                    .sheetTitleStyle()
                 Text(subtitle(hasBudgets: !categories.isEmpty))
                     .textStyle(.sheetBlurb)
                     .foregroundStyle(BudgieColor.textSecondary)

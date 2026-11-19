@@ -55,8 +55,7 @@ struct BudgetLimitSheet: View {
             .overlay(alignment: .top) { content }
             .budgieSheetChrome()
             .presentationDetents([
-                .height(
-                    BudgetSheetLayout.handleHeight + (contentHeight > 0 ? contentHeight : estimatedHeight) - keyboardSlack)
+                .height(BudgetSheetLayout.height(measured: contentHeight, estimate: estimatedHeight) - keyboardSlack)
             ])
             .interactiveDismissDisabled(saving)
     }
@@ -182,6 +181,6 @@ struct BudgetLimitSheet: View {
     /// always parses the text.
     nonisolated static func limit(text: String, prefill: String, currentLimit: Double?, formatter: MoneyFormatter) -> Double? {
         if let currentLimit, text == prefill { return currentLimit }
-        return AmountInput.parse(text, formatter: formatter).flatMap { $0 > 0 ? $0 : nil }
+        return AmountParser.parse(text, formatter: formatter).flatMap { $0 > 0 ? $0 : nil }
     }
 }

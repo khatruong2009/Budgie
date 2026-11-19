@@ -68,15 +68,7 @@ struct DeleteGoalDialog: View {
     var body: some View {
         VStack(spacing: 0) {
             DialogTitle(text: "Delete savings goal?")
-            DialogScroll {
-                Text("This removes \"\(goal.name)\" and its saved progress from your goals.")
-                    .textStyle(GoalText.body)
-                    .foregroundStyle(BudgieColor.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(.top, 12)
+            DialogMessage(text: "This removes \"\(goal.name)\" and its saved progress from your goals.", style: GoalText.body)
             DialogButtons(
                 cancelId: "goals.delete.cancel", submitTitle: "Delete", submitId: "goals.delete.confirm",
                 color: BudgieColor.danger, cancel: onCancel, submit: onDelete)

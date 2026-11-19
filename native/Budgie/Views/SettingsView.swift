@@ -41,10 +41,7 @@ struct SettingsView: View {
         // pushed pages) but is not drawn: the 26pt title sits at the
         // leading edge instead.
         .navigationTitle("Settings")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.visible, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarBackground(BudgieColor.background, for: .navigationBar)
+        .budgieInlineBar()
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Color.clear.frame(width: 1, height: 1).accessibilityHidden(true)
@@ -92,8 +89,7 @@ struct SettingsView: View {
             section("About", rows: aboutRows)
         }
         .padding(.bottom, Metrics.spacingL)
-        .frame(maxWidth: Metrics.maxContentWidth)
-        .frame(maxWidth: .infinity)
+        .budgieContentColumn()
     }
 
     private func personalizationRows(_ data: FinancialData) -> [AnyView] {
@@ -199,17 +195,17 @@ struct SettingsView: View {
     private var aboutRows: [AnyView] {
         var rows: [AnyView] = [
             AnyView(SettingsRow(
-                symbol: "info.circle", color: BudgieColor.versionIcon, tile: BudgieColor.versionTile,
+                symbol: "info.circle", color: BudgieColor.textSecondary, tile: BudgieColor.versionTile,
                 iconSize: SettingsGlyph.full, title: "Version",
                 subtitle: "Budgie \(Self.version)", action: nil, trailing: { EmptyView() })),
             AnyView(SettingsRow(
-                symbol: "list.bullet.rectangle", color: BudgieColor.versionIcon, tile: BudgieColor.versionTile,
+                symbol: "list.bullet.rectangle", color: BudgieColor.textSecondary, tile: BudgieColor.versionTile,
                 title: "Data diagnostics", subtitle: "What this device loaded",
                 identifier: "settings.diagnostics",
                 action: { destination = .diagnostics }
             )),
             AnyView(SettingsRow(
-                symbol: "doc.text", color: BudgieColor.versionIcon, tile: BudgieColor.versionTile,
+                symbol: "doc.text", color: BudgieColor.textSecondary, tile: BudgieColor.versionTile,
                 title: "Licences", subtitle: "Fonts (SIL Open Font License)",
                 identifier: "settings.licences",
                 action: { destination = .licences }
@@ -217,7 +213,7 @@ struct SettingsView: View {
         ]
         #if DEBUG
         rows.append(AnyView(SettingsRow(
-            symbol: "paintpalette", color: BudgieColor.versionIcon, tile: BudgieColor.versionTile,
+            symbol: "paintpalette", color: BudgieColor.textSecondary, tile: BudgieColor.versionTile,
             title: "Design gallery", subtitle: "Debug builds only",
             action: { destination = .designGallery })))
         #endif

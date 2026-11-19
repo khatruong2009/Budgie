@@ -169,7 +169,7 @@ private struct ToastView: View {
         let foreground = toast.style == .neutral ? BudgieColor.background : BudgieColor.onAccent
         HStack(spacing: 12) {
             Text(toast.message)
-                .textStyle(.bodySmall)
+                .textStyle(.caption)
                 .foregroundStyle(foreground)
                 .frame(maxWidth: .infinity, alignment: .leading)
             if toast.action == .retrySaves {

@@ -33,16 +33,12 @@ private struct FlowTransactionRow: View {
     let action: () -> Void
 
     @Environment(AppModel.self) private var model
-    @State private var taps = 0
 
     var body: some View {
         let isIncome = record.type == .income
         let day = DartDateFormat.MMMd(record.date)
         let info = model.categoryInfo(named: record.category, type: record.type)
-        Button {
-            taps += 1
-            action()
-        } label: {
+        HapticButton(action: action) {
             TransactionRowLayout(
                 // Flutter shows a blank line for an empty description.
                 title: record.description.isEmpty ? " " : record.description, isRecurring: record.isRecurring,
@@ -55,7 +51,6 @@ private struct FlowTransactionRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(PressScaleStyle(scale: 1))
-        .sensoryFeedback(.impact(weight: .light), trigger: taps)
         // Read like Home's recent-activity rows: the description, then the rest.
         .accessibilityLabel(record.description.isEmpty ? "Transaction" : record.description)
         .accessibilityValue(

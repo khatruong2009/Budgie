@@ -112,7 +112,7 @@ struct UnsavedChangesBanner: View {
         HStack(spacing: 12) {
             Image(systemName: "icloud.slash").font(.system(size: 17, weight: .semibold)).accessibilityHidden(true)
             Text("Some changes are not saved to this device yet.")
-                .textStyle(.bodySmall)
+                .textStyle(.caption)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Button {
                 retrying = true

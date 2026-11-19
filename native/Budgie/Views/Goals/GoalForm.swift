@@ -147,6 +147,6 @@ struct GoalFormDialog: View {
     /// The stored amount while the field reads its prefill, else the parse.
     private func amount(_ text: String, prefill: String, stored: Double?) -> Double? {
         if let stored, text == prefill { return stored }
-        return AmountInput.parse(text, formatter: formatter)
+        return AmountParser.parse(text, formatter: formatter)
     }
 }

@@ -90,6 +90,38 @@ private struct SheetChrome: ViewModifier {
 enum BudgetSheetLayout {
     /// `budgieSheetChrome`'s grab-handle inset: 10 + 4 + 6.
     static let handleHeight: CGFloat = 20
+
+    /// A `.height` detent: the handle plus the content's `measured` height,
+    /// or `estimate` until it is measured (0).
+    static func height(measured: CGFloat, estimate: CGFloat) -> CGFloat {
+        handleHeight + (measured > 0 ? measured : estimate)
+    }
+}
+
+extension View {
+    /// Sizes a sheet to its content (Flutter's modal sheet wraps a
+    /// `mainAxisSize.min` column) and applies the sheet chrome. Until the
+    /// content is measured the detent uses `estimate`, the content's height
+    /// at the default text size, so the sheet opens at its final height
+    /// instead of resizing from `.medium`. The system adds the bottom safe
+    /// area (Flutter's `SafeArea`) itself.
+    func budgieSheetFit(estimate: CGFloat) -> some View {
+        modifier(SheetFit(estimate: estimate))
+    }
+}
+
+private struct SheetFit: ViewModifier {
+    let estimate: CGFloat
+    @State private var contentHeight: CGFloat = 0
+
+    func body(content: Content) -> some View {
+        ScrollView {
+            content.onGeometryChangeCompat { contentHeight = $0.height }
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        .budgieSheetChrome()
+        .presentationDetents([.height(BudgetSheetLayout.height(measured: contentHeight, estimate: estimate))])
+    }
 }
 
 // MARK: - Pushed page title
@@ -105,15 +137,20 @@ extension View {
         _ title: String, style: TextSpec = .cardTitle, scales: Bool = false, singleLine: Bool = false
     ) -> some View {
         navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar(.visible, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarBackground(BudgieColor.background, for: .navigationBar)
+            .budgieInlineBar()
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     PushedTitleText(title: title, style: style, scales: scales, singleLine: singleLine)
                 }
             }
+    }
+
+    /// An inline navigation bar that stays visible on the background colour.
+    func budgieInlineBar() -> some View {
+        navigationBarTitleDisplayMode(.inline)
+            .toolbar(.visible, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarBackground(BudgieColor.background, for: .navigationBar)
     }
 }
 
@@ -124,25 +161,17 @@ private struct PushedTitleText: View {
     let singleLine: Bool
 
     var body: some View {
-        if scales {
-            Text(title)
-                .textStyle(style)
-                .foregroundStyle(BudgieColor.textPrimary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-                .accessibilityAddTraits(.isHeader)
-        } else if singleLine {
-            Text(title)
-                .textStyle(style)
-                .foregroundStyle(BudgieColor.textPrimary)
-                .singleLine()
-                .accessibilityAddTraits(.isHeader)
-        } else {
-            Text(title)
-                .textStyle(style)
-                .foregroundStyle(BudgieColor.textPrimary)
-                .accessibilityAddTraits(.isHeader)
+        let text = Text(title).textStyle(style).foregroundStyle(BudgieColor.textPrimary)
+        Group {
+            if scales {
+                text.lineLimit(1).minimumScaleFactor(0.8)
+            } else if singleLine {
+                text.singleLine()
+            } else {
+                text
+            }
         }
+        .accessibilityAddTraits(.isHeader)
     }
 }
 
@@ -321,10 +350,8 @@ extension View {
     /// Prefer this whenever the content depends on state set just before
     /// presenting: the item is read here, in the modifier's body, so the
     /// cover always gets the current value. A content closure that reads
-    /// the presenting view's `@State` instead is evaluated outside that
-    /// view's body and, unless something else re-rendered the view first,
-    /// reads the value from before the tap: the Worth editor opened empty
-    /// (a scrim over a zero-height card) that way.
+    /// the presenting view's `@State` is evaluated before the tap and showed
+    /// a stale or empty value.
     func budgieDialog<Item: Identifiable, Dialog: View>(
         item: Binding<Item?>, padding: CGFloat = Metrics.cardPadding, placement: DialogPlacement = .center,
         @ViewBuilder content: @escaping (Item) -> Dialog
@@ -512,18 +539,12 @@ struct DialogTitle: View {
     var centersLines = true
 
     var body: some View {
-        let title = Text(text)
+        Text(text)
             .textStyle(.sheetTitle)
             .foregroundStyle(BudgieColor.textPrimary)
-        Group {
-            if centersLines {
-                title.multilineTextAlignment(.center)
-            } else {
-                title
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .accessibilityAddTraits(.isHeader)
+            .multilineTextAlignment(centersLines ? .center : .leading)
+            .frame(maxWidth: .infinity)
+            .accessibilityAddTraits(.isHeader)
     }
 }
 
@@ -554,19 +575,14 @@ struct DialogButtons: View {
         .padding(.top, top)
     }
 
-    @ViewBuilder private var submitButton: some View {
-        let pill = PillButton(
-            title: submitTitle, symbol: symbol, color: color, filled: true, height: 44, loading: busy, action: submit)
-        if let submitEnabled {
-            pill
-                .disabled(busy || !submitEnabled)
-                .opacity(submitEnabled ? 1 : Metrics.opacityDisabled)
-                .accessibilityIdentifier(submitId)
-        } else {
-            pill
-                .disabled(busy)
-                .accessibilityIdentifier(submitId)
-        }
+    private var submitButton: some View {
+        let enabled = submitEnabled ?? true
+        return PillButton(
+            title: submitTitle, symbol: symbol, color: color, filled: true, height: 44, loading: busy, action: submit
+        )
+        .disabled(busy || !enabled)
+        .opacity(enabled ? 1 : Metrics.opacityDisabled)
+        .accessibilityIdentifier(submitId)
     }
 }
 
@@ -603,6 +619,31 @@ struct DialogScroll<Content: View>: View {
     }
 }
 
+/// A dialog's centred message in the secondary colour, in a `DialogScroll`;
+/// `identifier` goes on the text itself.
+struct DialogMessage: View {
+    let text: String
+    var style: TextSpec = .bodyMedium
+    var identifier: String? = nil
+
+    var body: some View {
+        let message = Text(text)
+            .textStyle(style)
+            .foregroundStyle(BudgieColor.textSecondary)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity)
+            .fixedSize(horizontal: false, vertical: true)
+        DialogScroll {
+            if let identifier {
+                message.accessibilityIdentifier(identifier)
+            } else {
+                message
+            }
+        }
+        .padding(.top, 12)
+    }
+}
+
 /// Offers its one subview the proposed width and takes the subview's ideal
 /// height, capped at the proposed height.
 private struct FitToContent: Layout {
@@ -626,7 +667,7 @@ private struct FitToContent: Layout {
 /// `ViewThatFits` the same subviews are kept when it switches, so
 /// VoiceOver and the accessibility audit follow them across Dynamic Type
 /// sizes (ViewThatFits swaps in a new copy, which the audit reported as
-/// "Dynamic Type partially unsupported", budgie-ou0.12).
+/// "Dynamic Type partially unsupported").
 struct RowOrColumn: Layout {
     var rowSpacing: CGFloat = 8
     var columnSpacing: CGFloat = 8
@@ -864,6 +905,47 @@ extension View {
                     .onAppear { action(proxy.size) }
                     .onChange(of: proxy.size) { _, size in action(size) }
             })
+    }
+}
+
+// MARK: - Page layout
+
+extension View {
+    /// Fills the page from the top on the background colour.
+    func budgiePageBackground() -> some View {
+        frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top).background(BudgieColor.background)
+    }
+
+    /// A column at most `Metrics.maxContentWidth` wide, centred in the page.
+    func budgieContentColumn() -> some View {
+        frame(maxWidth: Metrics.maxContentWidth).frame(maxWidth: .infinity)
+    }
+}
+
+extension UIApplication {
+    /// Ends editing wherever the keyboard is (a field's focus is its own).
+    static func dismissKeyboard() {
+        shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
+
+// MARK: - Path helpers
+
+extension Path {
+    /// A circle of `radius` around `center`.
+    init(circleAt center: CGPoint, radius: CGFloat) {
+        self.init(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2))
+    }
+
+    /// fl_chart's `generateNormalBarPath`: a cubic through `points` with
+    /// `CashFlowMath.trendControlPoints` (0 smoothness is straight segments).
+    init(smoothCurveThrough points: [CGPoint], smoothness: Double = CashFlowMath.trendCurveSmoothness) {
+        self.init()
+        guard let first = points.first else { return }
+        move(to: first)
+        for (index, control) in CashFlowMath.trendControlPoints(points, smoothness: smoothness).enumerated() {
+            addCurve(to: points[index + 1], control1: control.0, control2: control.1)
+        }
     }
 }
 

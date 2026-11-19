@@ -37,8 +37,7 @@ enum BudgieColor {
     /// Income, money kept and good changes.
     static let income = dynamic(light: PaletteHex.income.light, dark: PaletteHex.income.dark)
     /// Money spent on charts (Home's ring, legend and Expenses sparkline):
-    /// terracotta in light mode (owner's call 2026-10-04; was ink), coral
-    /// in dark mode.
+    /// terracotta in light mode, coral in dark mode.
     static let spent = dynamic(light: 0xA63D24, dark: 0xFF8B7B)
     /// Expense, over-limit and errors (`getDanger`).
     static let danger = dynamic(light: PaletteHex.danger.light, dark: PaletteHex.danger.dark)
@@ -83,16 +82,12 @@ enum BudgieColor {
     static let chartBaseline = overlay(dark: 0.12, light: 0.12)
     /// The trend's dashed zero line: white 8% dark, black 12% light.
     static let chartZeroLine = overlay(dark: 0.08, light: 0.12)
-    /// The end dot on the trend and growth lines.
-    static let trendDot = textPrimary
 
     // Worth editor dialog
     /// The 32pt close circle: white 8% dark, black 6% light.
     static let dialogCloseFill = overlay(dark: 0.08, light: 0.06)
 
     // Settings
-    /// The Version row's icon.
-    static let versionIcon = textSecondary
     /// The Version row's tile: white 6% dark, black 6% light.
     static let versionTile = overlay(dark: 0.06, light: 0.06)
 
@@ -113,9 +108,6 @@ enum BudgieColor {
         [0x5EE6B0, 0xB3ADFF, 0xFF8B7B, 0xFFC861, 0x7CC8FF, 0xF7A1D8, 0x4FD1C5, 0xA3F0D2, 0xD6D2FF, 0xFFB8AD, 0xFFDE9C,
          0xB4DFFF, 0xFAC8E8, 0x93E4DB]
     ).map { dynamic(light: $0, dark: $1) }
-
-    // The Spend donut's rank palette: the slices are graphics, not text.
-    static let chartAccent = purple
 
     /// A category `colorToken` (`category_settings_page.dart` `_tokenColor`);
     /// unknown tokens use the accent.
@@ -167,7 +159,7 @@ private enum LegibleColor {
     static func mix(_ base: UIColor, towards ink: UIColor, on card: UIColor, tint: Double) -> UIColor {
         for step in 0...20 {
             let candidate = blend(base, ink, Double(step) / 20)
-            if contrast(candidate, tinted(candidate, over: card, alpha: tint)) >= 4.5 { return candidate }
+            if contrast(candidate, blend(card, candidate, tint)) >= 4.5 { return candidate }
         }
         return ink
     }
@@ -182,8 +174,6 @@ private enum LegibleColor {
         let (ar, ag, ab) = components(a), (br, bg, bb) = components(b)
         return UIColor(red: ar + (br - ar) * t, green: ag + (bg - ag) * t, blue: ab + (bb - ab) * t, alpha: 1)
     }
-
-    private static func tinted(_ color: UIColor, over card: UIColor, alpha: Double) -> UIColor { blend(card, color, alpha) }
 
     private static func luminance(_ color: UIColor) -> Double {
         func lin(_ v: Double) -> Double { v <= 0.04045 ? v / 12.92 : pow((v + 0.055) / 1.055, 2.4) }

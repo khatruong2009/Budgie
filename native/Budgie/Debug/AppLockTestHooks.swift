@@ -23,10 +23,7 @@ enum AppLockTestHooks {
 
     static func authenticationOutcome() -> DeviceAuth.Outcome? {
         guard let allowed = environment["BUDGIE_UITEST_AUTH_SUCCESSES"].flatMap(Int.init) else { return nil }
-        let count = authentications.withLock { count -> Int in
-            count += 1
-            return count
-        }
+        let count = authentications.withLock { $0 += 1; return $0 }
         return count <= allowed ? .success : .failed
     }
 }

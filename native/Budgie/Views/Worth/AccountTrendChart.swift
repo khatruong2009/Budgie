@@ -153,10 +153,8 @@ struct AccountTrendPlot: View {
             if let last = points.last {
                 // `FlDotCirclePainter(radius 5, stroke 3)`: the ring is
                 // centred 1.5pt outside the fill.
-                Path(ellipseIn: CGRect(x: last.x - 6.5, y: last.y - 6.5, width: 13, height: 13))
-                    .stroke(color.opacity(0.5), lineWidth: 3)
-                Path(ellipseIn: CGRect(x: last.x - 5, y: last.y - 5, width: 10, height: 10))
-                    .fill(BudgieColor.trendDot)
+                Path(circleAt: last, radius: 6.5).stroke(color.opacity(0.5), lineWidth: 3)
+                Path(circleAt: last, radius: 5).fill(BudgieColor.textPrimary)
             }
             if let touched {
                 indicator(at: points[touched], plotHeight: plot.height, dotRadius: 7.2, color: color)
@@ -174,9 +172,7 @@ struct AccountTrendPlot: View {
                 path.addLine(to: CGPoint(x: point.x, y: min(plotHeight, point.y + dotRadius)))
             }
             .stroke(color, lineWidth: 4)
-            Path(ellipseIn: CGRect(
-                x: point.x - dotRadius, y: point.y - dotRadius, width: dotRadius * 2, height: dotRadius * 2))
-                .fill(color)
+            Path(circleAt: point, radius: dotRadius).fill(color)
         }
     }
 
@@ -210,19 +206,10 @@ struct AccountTrendPlot: View {
 
     // MARK: Geometry (fl_chart)
 
-    /// `generateNormalBarPath`: fl_chart's cubic through
-    /// `CashFlowMath.trendControlPoints` (`curveSmoothness` 0.28; 0, i.e.
-    /// straight segments, when the line is not curved).
+    /// The line through `points`: `curveSmoothness` 0.28, or straight
+    /// segments when it is not curved.
     private static func linePath(_ points: [CGPoint], curved: Bool) -> Path {
-        var path = Path()
-        guard let first = points.first else { return path }
-        path.move(to: first)
-        let controls = CashFlowMath.trendControlPoints(
-            points, smoothness: curved ? NetWorthPresentation.curveSmoothness : 0)
-        for (index, control) in controls.enumerated() {
-            path.addCurve(to: points[index + 1], control1: control.0, control2: control.1)
-        }
-        return path
+        Path(smoothCurveThrough: points, smoothness: curved ? NetWorthPresentation.curveSmoothness : 0)
     }
 }
 

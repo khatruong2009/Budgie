@@ -80,7 +80,7 @@ private struct VoiceSheetBody: View {
         .scrollClipDisabled()
         .budgieSheetChrome()
         .presentationDetents([
-            .height(BudgetSheetLayout.handleHeight + (contentHeight > 0 ? contentHeight : estimatedHeight))
+            .height(BudgetSheetLayout.height(measured: contentHeight, estimate: estimatedHeight))
         ])
         .interactiveDismissDisabled(entry.isProcessing)
         .sensoryFeedback(.impact(weight: .medium), trigger: entry.recordingStarts)

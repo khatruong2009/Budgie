@@ -26,7 +26,7 @@ struct FlowChip: View {
     }
 
     var body: some View {
-        GlowCard(padding: 16, radius: Metrics.statCardRadius) {
+        GlowCard(padding: 16) {
             VStack(alignment: .leading, spacing: 0) {
                 Text(label)
                     .textStyle(.noteStrong)
@@ -119,7 +119,7 @@ struct SafeToSpendCard: View {
             }
             .featureCard()
         }
-        .buttonStyle(PressScaleStyle(scale: 0.98))
+        .buttonStyle(PressScaleStyle())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(card.accessibilityLabel)
         .accessibilityAddTraits(.isButton)
@@ -143,14 +143,10 @@ struct RecentActivityCard: View {
         if rows.isEmpty {
             // The empty-state pattern (dashed card, accent tile) in a compact
             // form: a full 72pt tile and padding is too heavy under the hero.
-            let shape = RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous)
             VStack(spacing: 10) {
-                Image(systemName: "tray")
-                    .font(.system(size: 22, weight: .medium))
-                    .foregroundStyle(BudgieColor.accent)
-                    .frame(width: 48, height: 48)
-                    .background(BudgieColor.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: Metrics.radiusL, style: .continuous))
-                    .accessibilityHidden(true)
+                IconTile(
+                    symbol: "tray", color: BudgieColor.accent, size: 48, radius: Metrics.radiusL, iconSize: 22,
+                    background: BudgieColor.accent.opacity(0.12))
                 Text("No transactions yet.")
                     .textStyle(Self.empty)
                     .foregroundStyle(BudgieColor.textSecondary)
@@ -159,7 +155,7 @@ struct RecentActivityCard: View {
             .padding(.vertical, Metrics.spacingL)
             .padding(.horizontal, Metrics.spacingL)
             .frame(maxWidth: .infinity)
-            .overlay(shape.strokeBorder(BudgieColor.textTertiary.opacity(0.6), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])))
+            .dashedBorder(RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
             .accessibilityElement(children: .combine)
         } else {
             GlowListCard(rows: rows.map { row in

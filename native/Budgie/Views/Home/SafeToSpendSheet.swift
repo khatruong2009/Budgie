@@ -11,15 +11,8 @@ struct SafeToSpendSheet: View {
     let breakdown: SafeToSpendBreakdown
     let formatter: MoneyFormatter
 
-    @State private var contentHeight: CGFloat = 0
-
     private static let blurb = TextSpec(face: .gabaritoRegular, size: 14, height: 1.4, relativeTo: .subheadline)
-    private static let featureLabel = TextSpec(face: .gabaritoSemiBold, size: 13, height: 1.3, relativeTo: .footnote)
-    private static let featureTotal = TextSpec(
-        face: .gabaritoExtraBold, size: 40, tracking: -1.2, height: 1.1, tabular: true, relativeTo: .largeTitle)
     private static let featureSubtitle = TextSpec(face: .gabaritoRegular, size: 13, height: 1.3, relativeTo: .footnote)
-    private static let label = TextSpec(face: .gabaritoRegular, size: 15, height: 1.3, relativeTo: .subheadline)
-    private static let value = TextSpec(face: .monoSemiBold, size: 14, height: 1.3, tabular: true, relativeTo: .footnote)
 
     var body: some View {
         let isOver = breakdown.isOverCommitted
@@ -30,48 +23,39 @@ struct SafeToSpendSheet: View {
             breakdown.actualIncome, breakdown.expectedIncome, breakdown.actualExpenses,
             breakdown.upcomingRecurringExpenses, breakdown.flexibleBudgetReserve, breakdown.plannedGoalContributions,
         ]
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                Text(sheet.title)
-                    .textStyle(.sheetTitle)
-                    .foregroundStyle(BudgieColor.textPrimary)
-                    .accessibilityAddTraits(.isHeader)
-                Text(sheet.blurb)
-                    .textStyle(Self.blurb)
-                    .foregroundStyle(BudgieColor.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 6)
-                total(sheet: sheet, subtitle: card.subtitle, isOver: isOver)
-                    .padding(.top, 18)
-                GlowCard(padding: 0) {
-                    VStack(spacing: 0) {
-                        ForEach(sheet.rows.indices, id: \.self) { index in
-                            if index > 0 { Hairline() }
-                            row(
-                                sheet.rows[index].label, sheet.rows[index].value,
-                                color: amounts[index] == 0
-                                    ? BudgieColor.textSecondary : index < 2 ? BudgieColor.income : BudgieColor.textPrimary)
-                        }
+        VStack(alignment: .leading, spacing: 0) {
+            Text(sheet.title)
+                .sheetTitleStyle()
+            Text(sheet.blurb)
+                .textStyle(Self.blurb)
+                .foregroundStyle(BudgieColor.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 6)
+            total(sheet: sheet, subtitle: card.subtitle, isOver: isOver)
+                .padding(.top, 18)
+            GlowCard(padding: 0) {
+                VStack(spacing: 0) {
+                    ForEach(sheet.rows.indices, id: \.self) { index in
+                        if index > 0 { Hairline() }
+                        row(
+                            sheet.rows[index].label, sheet.rows[index].value,
+                            color: amounts[index] == 0
+                                ? BudgieColor.textSecondary : index < 2 ? BudgieColor.income : BudgieColor.textPrimary)
                     }
-                    .padding(.horizontal, Metrics.spacingM)
-                    .padding(.vertical, Metrics.spacingXXS)
                 }
-                .padding(.top, Metrics.spacingM)
-                Text(sheet.footer)
-                    .textStyle(.rowSubtitle)
-                    .foregroundStyle(BudgieColor.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(EdgeInsets(top: 14, leading: 4, bottom: 0, trailing: 4))
+                .padding(.horizontal, Metrics.spacingM)
+                .padding(.vertical, Metrics.spacingXXS)
             }
-            .padding(EdgeInsets(top: 12, leading: Metrics.pageHorizontal, bottom: 24, trailing: Metrics.pageHorizontal))
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .onGeometryChangeCompat { contentHeight = $0.height }
+            .padding(.top, Metrics.spacingM)
+            Text(sheet.footer)
+                .textStyle(.rowSubtitle)
+                .foregroundStyle(BudgieColor.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(EdgeInsets(top: 14, leading: 4, bottom: 0, trailing: 4))
         }
-        .scrollBounceBehavior(.basedOnSize)
-        .budgieSheetChrome()
-        .presentationDetents([
-            .height(BudgetSheetLayout.handleHeight + (contentHeight > 0 ? contentHeight : estimatedHeight))
-        ])
+        .padding(EdgeInsets(top: 12, leading: Metrics.pageHorizontal, bottom: 24, trailing: Metrics.pageHorizontal))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .budgieSheetFit(estimate: estimatedHeight)
     }
 
     /// The content's height at the default text size, so the sheet opens at
@@ -93,10 +77,10 @@ struct SafeToSpendSheet: View {
     private func total(sheet: HomeSummary.BreakdownSheet, subtitle: String, isOver: Bool) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(sheet.totalLabel)
-                .textStyle(Self.featureLabel)
+                .textStyle(.featureLabel)
                 .foregroundStyle(BudgieColor.featureSecondary)
             Text(sheet.totalValue)
-                .textStyle(Self.featureTotal)
+                .textStyle(.featureTotal)
                 .foregroundStyle(isOver ? BudgieColor.featureDanger : BudgieColor.featureAmount)
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
@@ -115,11 +99,11 @@ struct SafeToSpendSheet: View {
     private func row(_ label: String, _ text: String, color: Color) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
             Text(label)
-                .textStyle(Self.label)
+                .textStyle(.sheetRowLabel)
                 .foregroundStyle(BudgieColor.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Text(text)
-                .textStyle(Self.value)
+                .textStyle(.sheetRowValue)
                 .foregroundStyle(color)
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)

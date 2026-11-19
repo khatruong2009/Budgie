@@ -22,9 +22,7 @@ struct SpendMonthSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Select month")
-                .textStyle(.sheetTitle)
-                .foregroundStyle(BudgieColor.textPrimary)
-                .accessibilityAddTraits(.isHeader)
+                .sheetTitleStyle()
                 .padding(.horizontal, Metrics.pageHorizontal)
                 .padding(.top, 12)
             GlowCard(padding: 0) {
@@ -50,7 +48,7 @@ struct SpendMonthSheet: View {
         .onGeometryChangeCompat { contentHeight = $0.height }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .budgieSheetChrome()
-        .presentationDetents([.height(BudgetSheetLayout.handleHeight + (contentHeight > 0 ? contentHeight : estimatedHeight))])
+        .presentationDetents([.height(BudgetSheetLayout.height(measured: contentHeight, estimate: estimatedHeight))])
         .accessibilityIdentifier("spend.monthSheet")
     }
 

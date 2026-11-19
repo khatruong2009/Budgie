@@ -7,9 +7,9 @@ private enum GalleryScreen: String, Identifiable {
 }
 
 /// Every design-system component on one scrolling page, for screenshot
-/// comparison with `docs/research/screenshots` in light and dark. Opened
-/// with `BUDGIE_DESIGN_GALLERY=1` (launch environment) or from Settings in
-/// DEBUG builds. Sample values only; nothing reads or writes the store.
+/// comparison in light and dark. Opened with `BUDGIE_DESIGN_GALLERY=1`
+/// (launch environment) or from Settings in DEBUG builds. Sample values
+/// only; nothing reads or writes the store.
 struct DesignGalleryView: View {
     @Environment(AppModel.self) private var model
     @State private var segment = 2
@@ -55,7 +55,7 @@ struct DesignGalleryView: View {
         .sheet(isPresented: $sheet) {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Safe to spend").textStyle(.sheetTitle).foregroundStyle(BudgieColor.textPrimary)
-                Text("A forward-looking estimate for the rest of this month.").textStyle(.bodySmall)
+                Text("A forward-looking estimate for the rest of this month.").textStyle(.caption)
                     .foregroundStyle(BudgieColor.textSecondary)
                 PillButton(title: "Done", filled: true, height: Metrics.pillButtonHeight) { sheet = false }
                     .padding(.top, 12)
@@ -205,7 +205,7 @@ struct DesignGalleryView: View {
     }
 
     private func statCard(title: String, dot: Color, value: String, delta: String) -> some View {
-        GlowCard(padding: 16, radius: Metrics.statCardRadius) {
+        GlowCard(padding: 16) {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 8) {
                     Circle().fill(dot).frame(width: 8, height: 8)

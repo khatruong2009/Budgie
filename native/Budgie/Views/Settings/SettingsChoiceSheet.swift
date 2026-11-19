@@ -24,9 +24,7 @@ struct SettingsChoiceSheet<Value: Hashable & Sendable>: View {
     var body: some View {
         VStack(spacing: 0) {
             Text(title)
-                .textStyle(.sheetTitle)
-                .foregroundStyle(BudgieColor.textPrimary)
-                .accessibilityAddTraits(.isHeader)
+                .sheetTitleStyle()
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(EdgeInsets(top: 12, leading: Metrics.pageHorizontal, bottom: Metrics.spacingM, trailing: Metrics.pageHorizontal))
                 .fixedSize(horizontal: false, vertical: true)

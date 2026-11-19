@@ -62,12 +62,10 @@ struct TagsRulesView: View {
                 .padding(.top, 12)
             }
             .padding(EdgeInsets(top: Metrics.spacingM, leading: Metrics.pageHorizontal, bottom: Metrics.spacingXL, trailing: Metrics.pageHorizontal))
-            .frame(maxWidth: Metrics.maxContentWidth)
-            .frame(maxWidth: .infinity)
+            .budgieContentColumn()
         }
         .accessibilityIdentifier("tagsRules.list")
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(BudgieColor.background)
+        .budgiePageBackground()
         .budgiePushedTitle("Tags & rules", singleLine: true)
         .budgieDialog(item: $dialog) { presented in
             switch presented {

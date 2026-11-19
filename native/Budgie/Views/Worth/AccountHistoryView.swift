@@ -47,8 +47,7 @@ struct AccountHistoryView: View {
                     .accessibilityIdentifier("worth.history.missing")
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(BudgieColor.background)
+        .budgiePageBackground()
         .budgiePushedTitle(entry?.name ?? "", singleLine: true)
         .toolbar {
             if let entry {
@@ -141,8 +140,7 @@ struct AccountHistoryView: View {
             // Flutter's (20, 8, 20, 32); the scroll view's safe area keeps
             // the last row clear of the tab bar (Flutter's sits under the dock).
             .padding(EdgeInsets(top: 8, leading: Metrics.pageHorizontal, bottom: 32, trailing: Metrics.pageHorizontal))
-            .frame(maxWidth: Metrics.maxContentWidth)
-            .frame(maxWidth: .infinity)
+            .budgieContentColumn()
         }
         .accessibilityIdentifier("worth.history")
     }
