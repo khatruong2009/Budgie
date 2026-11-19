@@ -47,6 +47,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     /// The privacy cover and lock screen, above the app window and every
     /// presentation in it (`AppLockWindow`).
     private var lockWindow: AppLockWindow?
+    /// Toasts, above the app window and its presentations (`ToastWindow`).
+    private var toastWindow: ToastWindow?
+    private let toastLayout = MainActor.assumeIsolated { ToastLayout() }
     private let sceneState = MainActor.assumeIsolated { SceneState() }
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
@@ -55,13 +58,15 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             let model = AppDelegate.model
             let window = UIWindow(windowScene: windowScene)
             window.rootViewController = UIHostingController(
-                rootView: AppRoot(model: model, sceneState: sceneState) { [weak self, weak window] style in
+                rootView: AppRoot(model: model, sceneState: sceneState, toastLayout: toastLayout) { [weak self, weak window] style in
                     window?.overrideUserInterfaceStyle = style
+                    self?.toastWindow?.applyInterfaceStyle(style)
                     self?.lockWindow?.applyInterfaceStyle(style)
                 })
             window.makeKeyAndVisible()
             self.window = window
             // Created after the app window, which stays the key window.
+            toastWindow = ToastWindow(windowScene: windowScene, model: model, layout: toastLayout)
             lockWindow = AppLockWindow(windowScene: windowScene, mainWindow: window, model: model, sceneState: sceneState)
             if let url = connectionOptions.urlContexts.first?.url { model.open(url) }
             if let shortcut = connectionOptions.shortcutItem { model.handleShortcut(shortcut.type) }
@@ -119,6 +124,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 struct AppRoot: View {
     let model: AppModel
     let sceneState: SceneState
+    let toastLayout: ToastLayout
     let applyInterfaceStyle: (UIUserInterfaceStyle) -> Void
 
     var body: some View {
@@ -127,6 +133,7 @@ struct AppRoot: View {
             // Unstyled text uses Gabarito, as Flutter's ThemeData.fontFamily.
             .font(TextSpec.bodyLarge.font())
             .environment(model)
+            .environment(toastLayout)
             .environment(\.scenePhase, sceneState.phase)
             .onChange(of: model.themeMode, initial: true) { _, mode in
                 applyInterfaceStyle(mode == .light ? .light : mode == .dark ? .dark : .unspecified)

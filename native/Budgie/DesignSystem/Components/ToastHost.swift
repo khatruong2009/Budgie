@@ -1,39 +1,157 @@
 import SwiftUI
+import UIKit
 
 extension View {
-    /// Hosts `model.toast` along the bottom edge (floating, radius 12,
-    /// success, danger or neutral fill), dismissing it after its duration. VoiceOver
-    /// announces it. The overlay sits inside the safe area, so a tab bar on
-    /// any edge keeps it clear; only one host per screen should be active.
-    func toastHost(isActive: Bool = true) -> some View {
-        modifier(ToastHost(isActive: isActive))
+    /// Reports the safe-area insets this screen keeps clear (the home
+    /// indicator, plus the tab bar on the tabs, on whichever edge it sits) so
+    /// `ToastWindow` keeps toasts inside them. Only the screen on show should
+    /// be active.
+    func toastClearance(isActive: Bool = true) -> some View {
+        modifier(ToastClearanceReporter(isActive: isActive))
     }
 }
 
-private struct ToastHost: ViewModifier {
-    @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+/// The safe-area insets the screen under the toast keeps clear, in points
+/// from the window's edges.
+@MainActor
+@Observable
+final class ToastLayout {
+    var clearance = EdgeInsets()
+}
+
+private struct ToastClearanceReporter: ViewModifier {
+    @Environment(ToastLayout.self) private var layout: ToastLayout?
     let isActive: Bool
 
     func body(content: Content) -> some View {
-        content
-            .overlay(alignment: .bottom) {
-                if isActive, let toast = model.toast {
-                    ToastView(toast: toast)
-                        .padding(.horizontal, Metrics.spacingM)
-                        .padding(.bottom, Metrics.spacingS)
-                        .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
-                        .id(toast.id)
-                        .task(id: toast.id) {
-                            AccessibilityNotification.Announcement(toast.message).post()
-                            // A cancelled wait (the view went away) must not
-                            // cut the toast short.
-                            guard (try? await Task.sleep(for: .seconds(toast.duration))) != nil else { return }
-                            model.dismissToast(toast.id)
-                        }
-                }
+        content.background {
+            GeometryReader { proxy in
+                Color.clear
+                    .onAppear { report(proxy.safeAreaInsets) }
+                    .onChange(of: proxy.safeAreaInsets) { _, insets in report(insets) }
+                    .onChange(of: isActive) { _, _ in report(proxy.safeAreaInsets) }
             }
-            .motion(Motion.easeOut(0.25), value: model.toast?.id)
+        }
+    }
+
+    private func report(_ insets: EdgeInsets) {
+        if isActive { layout?.clearance = insets }
+    }
+}
+
+/// Hosts `model.toast` along the bottom edge (floating, radius 12, success,
+/// danger or neutral fill) in a passthrough window of the scene above the
+/// app's own, so a toast posted while a sheet, dialog or `AddFormHost` is up
+/// shows over it instead of under it: presentations live inside the app
+/// window, and an overlay on its content sits below them. Below
+/// `AppLockWindow` (`.alert + 1`), so the privacy cover and lock screen still
+/// hide it. The window is shown only while there is a toast, takes touches
+/// only on the toast itself, and never becomes key (a focused field keeps
+/// its keyboard). The toast keeps inside the larger of this window's safe
+/// area (the keyboard included) and the insets the screen underneath reports
+/// (`toastClearance`, which include the tab bar on any edge), and is
+/// dismissed after its duration. VoiceOver announces it.
+@MainActor
+final class ToastWindow {
+    private let model: AppModel
+    private let window: PassthroughWindow
+    private var hide: Task<Void, Never>?
+
+    init(windowScene: UIWindowScene, model: AppModel, layout: ToastLayout) {
+        self.model = model
+        window = PassthroughWindow(windowScene: windowScene)
+        window.windowLevel = .normal + 1
+        let controller = UIHostingController(
+            rootView: ToastWindowRoot(model: model, layout: layout) { [weak window] frame in window?.touchFrame = frame })
+        controller.view.backgroundColor = .clear
+        window.rootViewController = controller
+        window.isHidden = true
+        track()
+    }
+
+    /// The app window's interface style (the theme preference).
+    func applyInterfaceStyle(_ style: UIUserInterfaceStyle) { window.overrideUserInterfaceStyle = style }
+
+    /// Shown with a toast; hidden once its exit transition has played.
+    private func sync() {
+        hide?.cancel()
+        if model.toast != nil {
+            window.isHidden = false
+            return
+        }
+        // The leaving toast takes no taps.
+        window.touchFrame = .null
+        hide = Task {
+            guard (try? await Task.sleep(for: .milliseconds(400))) != nil, model.toast == nil else { return }
+            window.isHidden = true
+        }
+    }
+
+    private func track() {
+        withObservationTracking {
+            _ = model.toast
+        } onChange: { [weak self] in
+            Task { @MainActor in
+                self?.sync()
+                self?.track()
+            }
+        }
+    }
+}
+
+/// A window that takes touches only inside `touchFrame` (the toast), so
+/// everything else reaches the app window beneath.
+final class PassthroughWindow: UIWindow {
+    var touchFrame: CGRect = .null
+
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        touchFrame.contains(point) ? super.hitTest(point, with: event) : nil
+    }
+}
+
+private struct ToastWindowRoot: View {
+    let model: AppModel
+    let layout: ToastLayout
+    let onTouchFrame: (CGRect) -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        GeometryReader { proxy in
+            Color.clear
+                .overlay(alignment: .bottom) {
+                    if let toast = model.toast {
+                        ToastView(toast: toast)
+                            .background {
+                                GeometryReader { toastProxy in
+                                    let frame = toastProxy.frame(in: .global)
+                                    Color.clear
+                                        .onAppear { onTouchFrame(frame) }
+                                        .onChange(of: frame) { _, frame in onTouchFrame(frame) }
+                                }
+                            }
+                            .padding(.leading, Metrics.spacingM + extra(\.leading, proxy))
+                            .padding(.trailing, Metrics.spacingM + extra(\.trailing, proxy))
+                            .padding(.bottom, Metrics.spacingS + extra(\.bottom, proxy))
+                            .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+                            .id(toast.id)
+                            .task(id: toast.id) {
+                                AccessibilityNotification.Announcement(toast.message).post()
+                                // A cancelled wait (the view went away) must not
+                                // cut the toast short.
+                                guard (try? await Task.sleep(for: .seconds(toast.duration))) != nil else { return }
+                                model.dismissToast(toast.id)
+                            }
+                    }
+                }
+        }
+        .motion(Motion.easeOut(0.25), value: model.toast?.id)
+        .font(TextSpec.bodyLarge.font())
+        .environment(model)
+    }
+
+    /// How far the reported clearance reaches past this window's own safe area.
+    private func extra(_ edge: KeyPath<EdgeInsets, CGFloat>, _ proxy: GeometryProxy) -> CGFloat {
+        max(0, layout.clearance[keyPath: edge] - proxy.safeAreaInsets[keyPath: edge])
     }
 }
 

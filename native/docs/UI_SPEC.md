@@ -89,8 +89,8 @@ down between the two). A route is taken only
 when there is a controller to present from; while one is mid-transition it
 stays queued and is retried every 150ms, so no route is lost or blocks the
 next. The screens beneath are hidden from VoiceOver while the host is up.
-Toasts float above the tab bar (`toastHost`), so a toast posted by a form
-opened over a sheet is under that sheet.
+Toasts float in their own window above the app's (`ToastWindow`), so a
+toast posted by a form opened over a sheet shows over that sheet.
 
 Dialogs (`budgieDialog`, centred or bottom) float over a dimmed scrim in a
 full-screen cover. A scrim tap closes the dialog unless its content sets
@@ -773,7 +773,14 @@ bounds and "Any type". No priority or reorder.
 `Toast.Style`: `.success` (income), `.danger` (danger) and `.neutral`
 (Flutter's default SnackBar: `textPrimary` fill with `background` text,
 standing in for M3 inverseSurface / onInverseSurface), all floating,
-radius 12, above the tab bar (`toastHost`).
+radius 12. `ToastWindow` hosts them in a passthrough window of the scene
+above the app window (level `.normal + 1`, below `AppLockWindow`), so they
+show over sheets, dialogs and `AddFormHost`. It is visible only while a
+toast is up, takes touches only on the toast and never becomes key. The
+toast keeps inside the insets the screen on show reports
+(`toastClearance`: the tab bar on any edge plus the home indicator) or the
+window's own safe area (the keyboard included), whichever is larger, so its
+position is the same with or without a sheet over the tabs.
 
 ## Recurring
 
@@ -1163,9 +1170,7 @@ the primary, income and expense button gradients were adjusted to WCAG AA
 and the ratios before and after are in the table under
 "Colour tokens meet WCAG AA" in `PARITY_GAPS.md` (the same table, kept there only).
 
-Also: `textSecondaryOnTint` (`#4B5563` light, `#BEBED2` dark) for text on a
-strongly tinted card (Spend drill-in total, Worth history hero);
-`BudgieColor.legible(_:tint:)` mixes a pale chart colour towards the primary
+Also: `BudgieColor.legible(_:tint:)` mixes a pale chart colour towards the primary
 text colour until it reads on its own tint (the Spend drill-in chips and the
 Worth history Asset / Liability chip); the Spend rank palette and the wash and
 glow of the Worth hero and editor banner keep Flutter's lighter values

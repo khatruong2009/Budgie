@@ -91,6 +91,17 @@ final class VoiceEntryModelTests: XCTestCase {
         XCTAssertEqual(delivered.count, 1)
     }
 
+    func testCountdownSplitsMinutesWhenTheCapIsOverAMinute() async {
+        let model = await recording(maxSeconds: 900)
+        XCTAssertEqual(model.countdownText, "15:00")
+        for _ in 0..<7 { model.tick() }
+        XCTAssertEqual(model.countdownText, "14:53")
+        for _ in 0..<833 { model.tick() }
+        XCTAssertEqual(model.countdownText, "1:00")
+        model.tick()
+        XCTAssertEqual(model.countdownText, "0:59")
+    }
+
     func testBackgroundingWhileRecordingStopsAndGoesOn() async {
         let model = await recording()
         model.appDidEnterBackground()

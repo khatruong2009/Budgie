@@ -26,7 +26,7 @@ struct MainView: View {
         Group {
             if model.showsOnboarding {
                 OnboardingView()
-                    .toastHost()
+                    .toastClearance()
             } else {
                 tabs
             }
@@ -59,23 +59,23 @@ struct MainView: View {
         TabView(selection: tabSelection) {
             NavigationStack { HomeView() }
                 // Inside the tab, so the toast clears the bar on any edge.
-                .toastHost(isActive: tab == .home)
+                .toastClearance(isActive: tab == .home)
                 .tabItem { Label("Home", systemImage: "dollarsign.circle") }
                 .tag(Tab.home)
             NavigationStack { WorthView() }
-                .toastHost(isActive: tab == .worth)
+                .toastClearance(isActive: tab == .worth)
                 .tabItem { Label("Worth", systemImage: "chart.line.uptrend.xyaxis") }
                 .tag(Tab.worth)
             NavigationStack { GoalsView() }
-                .toastHost(isActive: tab == .goals)
+                .toastClearance(isActive: tab == .goals)
                 .tabItem { Label("Goals", systemImage: "flag") }
                 .tag(Tab.goals)
             NavigationStack { SpendView() }
-                .toastHost(isActive: tab == .spend)
+                .toastClearance(isActive: tab == .spend)
                 .tabItem { Label("Spend", systemImage: "chart.pie") }
                 .tag(Tab.spend)
             NavigationStack { FlowView() }
-                .toastHost(isActive: tab == .flow)
+                .toastClearance(isActive: tab == .flow)
                 .tabItem { Label("Flow", systemImage: "chart.bar") }
                 .tag(Tab.flow)
         }

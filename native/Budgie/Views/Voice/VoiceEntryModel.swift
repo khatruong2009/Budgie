@@ -163,9 +163,14 @@ final class VoiceEntryModel {
 
     var isProcessing: Bool { stage == .processing }
 
-    /// `_formatElapsed`: "0:SS" of the time left, never below "0:00".
+    /// `_formatElapsed`: "M:SS" of the time left, never below "0:00". Flutter
+    /// always printed "0:" and the raw seconds, which only matches while the cap
+    /// is under a minute (it is 30 s; `BUDGIE_VOICE_MAX_SECONDS` can raise it).
     var remainingSeconds: Int { max(0, maxSeconds - secondsElapsed) }
-    var countdownText: String { "0:" + (remainingSeconds < 10 ? "0" : "") + String(remainingSeconds) }
+    var countdownText: String {
+        let seconds = remainingSeconds % 60
+        return String(remainingSeconds / 60) + ":" + (seconds < 10 ? "0" : "") + String(seconds)
+    }
 
     // MARK: Lifecycle
 
