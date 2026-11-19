@@ -83,12 +83,11 @@ struct OnboardingView: View {
                     .background(BudgieColor.accent, in: Capsule())
                     .contentShape(Capsule())
             }
-            .buttonStyle(PressScaleStyle(scale: 0.98))
+            .buttonStyle(PressScaleStyle())
             .accessibilityIdentifier("onboarding.next")
         }
         .padding(EdgeInsets(top: Metrics.spacingXS, leading: Metrics.spacingL, bottom: Metrics.spacingL, trailing: Metrics.spacingL))
-        .frame(maxWidth: Metrics.maxContentWidth)
-        .frame(maxWidth: .infinity)
+        .budgieContentColumn()
         .background(BudgieColor.background.ignoresSafeArea())
     }
 

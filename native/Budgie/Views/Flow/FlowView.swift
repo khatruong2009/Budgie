@@ -190,7 +190,7 @@ private struct MetricChip: View {
     let color: Color
 
     var body: some View {
-        GlowCard(padding: 16, radius: Metrics.statCardRadius) {
+        GlowCard(padding: 16) {
             VStack(alignment: .leading, spacing: Metrics.spacingS) {
                 Text(label)
                     .textStyle(.monoMetricLabel)

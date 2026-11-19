@@ -131,7 +131,7 @@ struct RuleEditorDialog: View {
             BudgieField(
                 title: "Merchant text", text: $pattern, prompt: "Whole Foods", capitalization: .never, autofocus: rule == nil)
                 .submitLabel(.done)
-                .onSubmit(Self.dismissKeyboard)
+                .onSubmit(UIApplication.dismissKeyboard)
                 .accessibilityIdentifier("rules.editor.pattern")
             MenuField(
                 title: "Type", options: Self.types.map(Self.typeLabel),
@@ -259,7 +259,7 @@ struct RuleEditorDialog: View {
     static func bound(_ text: String, prefill: String, stored: Double?, formatter: MoneyFormatter) -> Double?? {
         if let stored, text == prefill { return .some(stored) }
         if text.allSatisfy(\.isWhitespace) { return .some(nil) }
-        return AmountInput.parse(text, formatter: formatter).map { .some($0) }
+        return AmountParser.parse(text, formatter: formatter).map { .some($0) }
     }
 
     /// An edit's bound prefill: rounded to cents, locale-grouped
@@ -300,11 +300,6 @@ struct RuleEditorDialog: View {
     /// type has it, else the new type's first.
     static func categoryAfterTypeChange(_ picked: String?, from old: [String], to new: [String]) -> String {
         resolvedCategory(resolvedCategory(picked, in: old), in: new)
-    }
-
-    /// Ends editing wherever the keyboard is (the field's focus is its own).
-    static func dismissKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
     static func typeLabel(_ type: TransactionType?) -> String {
@@ -394,8 +389,7 @@ private struct MenuField: View {
                 }
                 .padding(.horizontal, 14)
                 .frame(minHeight: 52)
-                .background(BudgieColor.fieldFill, in: shape)
-                .overlay(shape.strokeBorder(BudgieColor.cardBorder, lineWidth: Metrics.borderThin))
+                .modifier(FieldBox(radius: Metrics.fieldRadius))
                 .contentShape(shape)
             }
             .buttonStyle(.plain)
@@ -422,7 +416,7 @@ private struct MenuField: View {
     private func tap() {
         if keyboardUp {
             opening = true
-            RuleEditorDialog.dismissKeyboard()
+            UIApplication.dismissKeyboard()
         } else {
             open = true
         }

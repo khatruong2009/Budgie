@@ -35,7 +35,6 @@ struct BudgieField: View {
 
     @FocusState private var focused: Bool
 
-    private static let amountLabel = TextSpec(face: .gabaritoSemiBold, size: 13, relativeTo: .footnote)
     private static let amountPrefix = TextSpec(face: .gabaritoBold, size: 24, relativeTo: .title2)
     private static let amountValue = TextSpec(
         face: .gabaritoExtraBold, size: 36, tracking: -1.08, tabular: true, relativeTo: .largeTitle)
@@ -82,7 +81,7 @@ struct BudgieField: View {
     private var amountBox: some View {
         HStack(alignment: .top, spacing: 8) {
             Text(title)
-                .textStyle(Self.amountLabel)
+                .textStyle(.footnoteSemiBold)
                 .foregroundStyle(error != nil ? BudgieColor.danger : BudgieColor.textSecondary)
                 .fixedSize(horizontal: true, vertical: false)
                 .padding(.top, 8)
@@ -159,10 +158,10 @@ private struct AmountValueLayout: Layout {
 
 /// The field box: `fieldFill` and a 1pt card border, 2pt accent while
 /// focused, 2pt danger with an error.
-private struct FieldBox: ViewModifier {
+struct FieldBox: ViewModifier {
     let radius: CGFloat
-    let focused: Bool
-    let error: Bool
+    var focused = false
+    var error = false
 
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
@@ -201,8 +200,7 @@ struct FormRow<Content: View>: View {
     }
 
     private var row: some View {
-        let shape = RoundedRectangle(cornerRadius: Metrics.fieldRadius, style: .continuous)
-        return HStack(spacing: 12) {
+        HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 0) {
                 Text(label)
                     .textStyle(FormRowText.label)
@@ -225,31 +223,30 @@ struct FormRow<Content: View>: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
         .frame(minHeight: Metrics.formRowHeight)
-        .background(BudgieColor.fieldFill, in: shape)
-        .overlay(shape.strokeBorder(error ? BudgieColor.danger : BudgieColor.cardBorder, lineWidth: error ? Metrics.borderThick : Metrics.borderThin))
-        .contentShape(shape)
+        .modifier(FieldBox(radius: Metrics.fieldRadius, error: error))
+        .contentShape(RoundedRectangle(cornerRadius: Metrics.fieldRadius, style: .continuous))
     }
 }
 
+/// Static stored properties are not allowed in the generic `FormRow`.
 private enum FormRowText {
     static let label = TextSpec(face: .gabaritoSemiBold, size: 13, height: 1.15, relativeTo: .footnote)
     static let note = TextSpec(face: .gabaritoRegular, size: 11, height: 1.15, relativeTo: .caption2)
 }
 
 /// Date row (`_DatePickerTile`) as a `FormRow`: the label in the label
-/// column, the value 15 w600, a trailing calendar symbol (or the Worth
-/// editor's `chevron.down`). With `error` the label and border turn danger
-/// (the recurring form's start date). One accessibility element, a button
-/// named by the label with the date as its value.
+/// column, the value 15 w600, a trailing calendar symbol. With `error` the
+/// label and border turn danger (the recurring form's start date). One
+/// accessibility element, a button named by the label with the date as its
+/// value.
 struct DateTile: View {
     let label: String
     let value: String
-    var trailingSymbol = "calendar"
     var error = false
     let action: () -> Void
 
     var body: some View {
-        FormRow(label: label, trailingSymbol: trailingSymbol, error: error, action: action) {
+        FormRow(label: label, trailingSymbol: "calendar", error: error, action: action) {
             Text(value).textStyle(.rowTitle).foregroundStyle(BudgieColor.textPrimary)
         }
         .accessibilityElement(children: .ignore)
@@ -273,7 +270,6 @@ struct EmptyStateView: View {
     var title: String? = nil
     var message: String? = nil
     var actionTitle: String? = nil
-    var actionSymbol: String? = "plus"
     var actionIdentifier: String? = nil
     var horizontalInset: CGFloat = Metrics.pageHorizontal
     var action: (() -> Void)? = nil
@@ -283,14 +279,9 @@ struct EmptyStateView: View {
 
     var body: some View {
         let tint = kind == .error ? BudgieColor.danger : BudgieColor.accent
-        let shape = RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous)
         VStack(spacing: 12) {
-            Image(systemName: symbol ?? defaultSymbol)
-                .font(.system(size: 32, weight: .medium))
-                .foregroundStyle(tint)
-                .frame(width: 72, height: 72)
-                .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-                .accessibilityHidden(true)
+            IconTile(
+                symbol: symbol ?? defaultSymbol, color: tint, size: 72, radius: 22, iconSize: 32, background: tint.opacity(0.12))
             Text(title ?? defaultTitle)
                 .textStyle(Self.titleText)
                 .foregroundStyle(BudgieColor.textPrimary)
@@ -303,7 +294,7 @@ struct EmptyStateView: View {
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 280)
             if let actionTitle, let action {
-                PillButton(title: actionTitle, symbol: actionSymbol, filled: true, height: 48, action: action)
+                PillButton(title: actionTitle, symbol: "plus", filled: true, height: 48, action: action)
                     .fixedSize(horizontal: true, vertical: false)
                     .accessibilityIdentifier(actionIdentifier ?? "")
                     .padding(.top, 8)
@@ -312,7 +303,7 @@ struct EmptyStateView: View {
         .padding(.vertical, 36)
         .padding(.horizontal, 24)
         .frame(maxWidth: .infinity)
-        .overlay(shape.strokeBorder(BudgieColor.textTertiary.opacity(0.6), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])))
+        .dashedBorder(RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous))
         .padding(.horizontal, horizontalInset)
         .accessibilityElement(children: .contain)
     }
@@ -339,6 +330,13 @@ struct EmptyStateView: View {
         case .noResults: "Try adjusting your search or filters"
         case .error: "We encountered an error. Please try again"
         }
+    }
+}
+
+extension View {
+    /// A 1.5pt dashed border in `textTertiary` at 60% (empty states).
+    func dashedBorder(_ shape: some InsettableShape, dash: [CGFloat] = [6, 4]) -> some View {
+        overlay(shape.strokeBorder(BudgieColor.textTertiary.opacity(0.6), style: StrokeStyle(lineWidth: 1.5, dash: dash)))
     }
 }
 

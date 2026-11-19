@@ -105,7 +105,7 @@ private struct BudgetTile: View {
     var body: some View {
         let color = statusColor
         let (subtitle, chip) = HomeSummary.budgetRow(item, formatter: formatter)
-        let shape = RoundedRectangle(cornerRadius: Metrics.statCardRadius, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous)
         HapticButton(action: action) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
@@ -174,10 +174,10 @@ private struct AddBudgetButton: View {
                 Text("Add a budget").textStyle(.rowTitle).foregroundStyle(BudgieColor.textPrimary)
             }
             .frame(maxWidth: .infinity, minHeight: 52)
-            .overlay(shape.strokeBorder(BudgieColor.textTertiary.opacity(0.6), style: StrokeStyle(lineWidth: 1.5, dash: [5, 4])))
+            .dashedBorder(shape, dash: [5, 4])
             .contentShape(shape)
         }
-        .buttonStyle(PressScaleStyle(scale: 0.98))
+        .buttonStyle(PressScaleStyle())
         .accessibilityHint(hint)
     }
 }

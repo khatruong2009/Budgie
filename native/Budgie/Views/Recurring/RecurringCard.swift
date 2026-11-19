@@ -103,7 +103,7 @@ struct RecurringCard: View {
             }
             .foregroundStyle(BudgieColor.textSecondary)
             Text(value)
-                .textStyle(.bodySmall)
+                .textStyle(.caption)
                 .foregroundStyle(BudgieColor.textPrimary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

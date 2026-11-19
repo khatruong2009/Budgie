@@ -33,16 +33,7 @@ struct DataImportDialog: View {
             DialogTitle(text: title)
                 .accessibilityIdentifier("\(identifier).title")
             if let message {
-                DialogScroll {
-                    Text(message)
-                        .textStyle(.bodyMedium)
-                        .foregroundStyle(BudgieColor.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .accessibilityIdentifier("\(identifier).message")
-                }
-                .padding(.top, 12)
+                DialogMessage(text: message, identifier: "\(identifier).message")
             }
             HStack(spacing: 12) {
                 PillButton(title: CSVImport.cancelButtonTitle, color: BudgieColor.textPrimary, height: 44, action: onCancel)

@@ -34,9 +34,7 @@ struct RangeSheet: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         // 12, the eyebrow line, 12, the card (2, 48pt rows with 1pt
         // hairlines, 2, the border), 24.
-        .modifier(
-            FlowSheetFit(
-                estimate: 12 + 14 + 12 + (4 + CGFloat(options.count) * 49 - 1 + 2) + Metrics.spacingL))
+        .budgieSheetFit(estimate: 12 + 14 + 12 + (4 + CGFloat(options.count) * 49 - 1 + 2) + Metrics.spacingL)
     }
 }
 
@@ -50,19 +48,13 @@ struct MonthDetailSheet: View {
     let detail: CashFlowMath.MonthDetail
     let formatter: MoneyFormatter
 
-    private static let featureLabel = TextSpec(face: .gabaritoSemiBold, size: 13, height: 1.3, relativeTo: .footnote)
-    private static let featureTotal = TextSpec(
-        face: .gabaritoExtraBold, size: 40, tracking: -1.2, height: 1.1, tabular: true, relativeTo: .largeTitle)
-
     var body: some View {
         let netColor = detail.netIsPositive ? BudgieColor.income : BudgieColor.danger
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 14) {
                 IconTile(symbol: "chart.bar.fill", color: netColor, size: 44)
                 Text(detail.title)
-                    .textStyle(.sheetTitle)
-                    .foregroundStyle(BudgieColor.textPrimary)
-                    .accessibilityAddTraits(.isHeader)
+                    .sheetTitleStyle()
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             net.padding(.top, 18)
@@ -77,14 +69,13 @@ struct MonthDetailSheet: View {
             }
             .padding(.top, Metrics.spacingM)
         }
-        // Top: 12 + the chrome's handle inset, as the other sheets.
         .padding(EdgeInsets(top: 12, leading: Metrics.pageHorizontal, bottom: Metrics.spacingL, trailing: Metrics.pageHorizontal))
         // A container: the identifier must not replace the rows' elements.
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("flow.monthDetail")
         // 12, the 44pt tile, 18, the feature card (18 + 17 + 44 + 18 + 2),
         // 16, the rows card (2 + two 48pt rows + 1 + 2 + 2), 24.
-        .modifier(FlowSheetFit(estimate: 12 + 44 + 18 + (18 + 17 + 44 + 18 + 2) + 16 + (2 + 96 + 1 + 2 + 2) + 24))
+        .budgieSheetFit(estimate: 12 + 44 + 18 + (18 + 17 + 44 + 18 + 2) + 16 + (2 + 96 + 1 + 2 + 2) + 24)
     }
 
     /// The net on the feature card: "Net cash flow" and `formatSigned(net)`,
@@ -94,10 +85,10 @@ struct MonthDetailSheet: View {
         let text = detail.netText(formatter)
         return VStack(alignment: .leading, spacing: 0) {
             Text("Net cash flow")
-                .textStyle(Self.featureLabel)
+                .textStyle(.featureLabel)
                 .foregroundStyle(BudgieColor.featureSecondary)
             Text(text)
-                .textStyle(Self.featureTotal)
+                .textStyle(.featureTotal)
                 .foregroundStyle(detail.netIsPositive ? BudgieColor.featureAmount : BudgieColor.featureDanger)
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
@@ -117,17 +108,14 @@ private struct MonthDetailRow: View {
     let amount: String
     let color: Color
 
-    private static let labelText = TextSpec(face: .gabaritoRegular, size: 15, height: 1.3, relativeTo: .subheadline)
-    private static let valueText = TextSpec(face: .monoSemiBold, size: 14, height: 1.3, tabular: true, relativeTo: .footnote)
-
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
             Text(label)
-                .textStyle(Self.labelText)
+                .textStyle(.sheetRowLabel)
                 .foregroundStyle(BudgieColor.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Text(amount)
-                .textStyle(Self.valueText)
+                .textStyle(.sheetRowValue)
                 .foregroundStyle(color)
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
@@ -138,27 +126,5 @@ private struct MonthDetailRow: View {
         .accessibilityLabel(label)
         .accessibilityValue(amount)
         .accessibilityAddTraits(.isStaticText)
-    }
-}
-
-// MARK: - Sheet sizing
-
-/// Sizes a Flow sheet to its content (Flutter's modal sheet wraps a
-/// `mainAxisSize.min` column) and applies the redesign's sheet chrome. The
-/// detent is the grab handle's inset plus the content: the system adds the
-/// bottom safe area (Flutter's `SafeArea`) itself. Until the content is measured it uses `estimate`, the content's
-/// height at the default text size, so the sheet opens at its final height
-/// instead of resizing from `.medium`.
-private struct FlowSheetFit: ViewModifier {
-    let estimate: CGFloat
-    @State private var contentHeight: CGFloat = 0
-
-    func body(content: Content) -> some View {
-        ScrollView {
-            content.onGeometryChangeCompat { contentHeight = $0.height }
-        }
-        .scrollBounceBehavior(.basedOnSize)
-        .budgieSheetChrome()
-        .presentationDetents([.height(BudgetSheetLayout.handleHeight + (contentHeight > 0 ? contentHeight : estimate))])
     }
 }

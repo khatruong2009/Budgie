@@ -155,9 +155,8 @@ struct WorthView: View {
 enum WorthStyle {
     /// `rowSubtitle` w600 (labels).
     static let label = TextSpec(face: .gabaritoSemiBold, size: 12, height: 1.25, relativeTo: .caption)
-    /// `rowTitle` at 14, w700 or w600 (toggles and dialog buttons).
+    /// `rowTitle` at 14, w700 (toggles and dialog buttons; w600 is `chipLabel`).
     static let chipBold = TextSpec(face: .gabaritoBold, size: 14, height: 1.25, relativeTo: .subheadline)
-    static let chip = TextSpec(face: .gabaritoSemiBold, size: 14, height: 1.25, relativeTo: .subheadline)
 }
 
 // MARK: - Hero
@@ -215,9 +214,6 @@ private struct DeltaPill: View {
     let previousNetWorth: Double
     let formatter: MoneyFormatter
 
-    /// `badge` at 13.
-    private static let text = TextSpec(face: .gabaritoBold, size: 13, relativeTo: .footnote)
-
     var body: some View {
         let color = change >= 0 ? BudgieColor.income : BudgieColor.danger
         let label = NetWorthText.deltaPill(change: change, previousNetWorth: previousNetWorth, formatter: formatter)
@@ -228,7 +224,7 @@ private struct DeltaPill: View {
                 .frame(width: 15, height: 15)
                 .accessibilityHidden(true)
             Text(label)
-                .textStyle(Self.text)
+                .textStyle(.footnoteBold)
                 .singleLine()
                 .truncationMode(.tail)
         }

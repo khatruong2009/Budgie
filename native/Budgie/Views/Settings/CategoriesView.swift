@@ -46,8 +46,7 @@ struct CategoriesView: View {
                     ) { perform($0, on: item.element) }
                 })
                 .padding(EdgeInsets(top: 0, leading: Metrics.pageHorizontal, bottom: Metrics.spacingXL, trailing: Metrics.pageHorizontal))
-                .frame(maxWidth: Metrics.maxContentWidth)
-                .frame(maxWidth: .infinity)
+                .budgieContentColumn()
             }
             // A new list per type, starting at the top: the kept offset of a
             // scrolled Expenses list left the shorter Income list above the
@@ -55,8 +54,7 @@ struct CategoriesView: View {
             .id(typeIndex)
             .accessibilityIdentifier("categories.list")
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(BudgieColor.background)
+        .budgiePageBackground()
         .budgiePushedTitle("Categories", singleLine: true)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -97,8 +95,7 @@ struct CategoriesView: View {
         }
         .padding(.horizontal, Metrics.pageHorizontal + Metrics.spacingXS)
         .frame(minHeight: 56)
-        .frame(maxWidth: Metrics.maxContentWidth)
-        .frame(maxWidth: .infinity)
+        .budgieContentColumn()
     }
 
     // MARK: - Row actions

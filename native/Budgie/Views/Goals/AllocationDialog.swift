@@ -82,7 +82,7 @@ struct AllocationDialog: View {
     private var amount: Double? {
         let finish = goal.finishAmount
         if finish > 0, text == formatter.formatNumber(finish, decimalDigits: 2) { return finish }
-        return AmountInput.parse(text, formatter: formatter).flatMap { $0 > 0 ? $0 : nil }
+        return AmountParser.parse(text, formatter: formatter).flatMap { $0 > 0 ? $0 : nil }
     }
 
     private func submit() {

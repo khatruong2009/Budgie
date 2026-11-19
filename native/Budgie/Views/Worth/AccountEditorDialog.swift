@@ -115,9 +115,7 @@ struct AccountEditorDialog: View {
             IconTile(symbol: type == .asset ? "arrow.up.right" : "arrow.down.left", color: accent, size: 44, iconSize: 22)
             VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
                 Text(isEditing ? "Edit account" : "Add account")
-                    .textStyle(.sheetTitle)
-                    .foregroundStyle(BudgieColor.textPrimary)
-                    .accessibilityAddTraits(.isHeader)
+                    .sheetTitleStyle()
                 Text(DartDateFormat.yMMMM(entryMonth))
                     .textStyle(.rowSubtitle)
                     .foregroundStyle(BudgieColor.textSecondary)
@@ -174,7 +172,7 @@ struct AccountEditorDialog: View {
         let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
         return Button {
             monthTaps += 1
-            if !pickingMonth { RuleEditorDialog.dismissKeyboard() }
+            if !pickingMonth { UIApplication.dismissKeyboard() }
             pickingMonth.toggle()
         } label: {
             HStack(spacing: Metrics.spacingS) {
@@ -192,8 +190,7 @@ struct AccountEditorDialog: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 6)
             .frame(minHeight: Metrics.touchTarget)
-            .background(BudgieColor.fieldFill, in: shape)
-            .overlay(shape.strokeBorder(BudgieColor.cardBorder, lineWidth: Metrics.borderThin))
+            .modifier(FieldBox(radius: 14))
             .contentShape(shape)
         }
         .buttonStyle(.plain)
@@ -288,14 +285,12 @@ private struct TypeToggle: View {
     let onTap: () -> Void
 
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
         HStack(spacing: Metrics.spacingXXS) {
             segment(.asset, "Asset", symbol: "arrow.up.right", color: BudgieColor.income)
             segment(.liability, "Liability", symbol: "arrow.down.left", color: BudgieColor.danger)
         }
         .padding(3)
-        .background(BudgieColor.fieldFill, in: shape)
-        .overlay(shape.strokeBorder(BudgieColor.cardBorder, lineWidth: Metrics.borderThin))
+        .modifier(FieldBox(radius: 14))
     }
 
     private func segment(_ value: NetWorthEntryType, _ title: String, symbol: String, color: Color) -> some View {
@@ -345,7 +340,6 @@ private struct BalanceMonthGrid: View {
     }
 
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
         VStack(spacing: Metrics.spacingS) {
             HStack(spacing: 0) {
                 stepButton("chevron.left", label: "Previous year", enabled: year > 1970) { year -= 1 }
@@ -364,8 +358,7 @@ private struct BalanceMonthGrid: View {
             }
         }
         .padding(10)
-        .background(BudgieColor.fieldFill, in: shape)
-        .overlay(shape.strokeBorder(BudgieColor.cardBorder, lineWidth: Metrics.borderThin))
+        .modifier(FieldBox(radius: 14))
     }
 
     private func monthButton(_ month: DartDateTime) -> some View {
@@ -376,7 +369,7 @@ private struct BalanceMonthGrid: View {
             pick(month)
         } label: {
             Text(DartDateFormat.MMM(month))
-                .textStyle(isSelected ? WorthStyle.chipBold : WorthStyle.chip)
+                .textStyle(isSelected ? WorthStyle.chipBold : .chipLabel)
                 .foregroundStyle(
                     isSelected ? BudgieColor.selectionText : enabled ? BudgieColor.textPrimary : BudgieColor.textTertiary)
                 .frame(maxWidth: .infinity, minHeight: 36)

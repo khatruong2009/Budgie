@@ -25,7 +25,7 @@ struct AccountsToggle: View {
             if !selected { isAssetsTab = assets }
         } label: {
             Text(title)
-                .textStyle(selected ? WorthStyle.chipBold : WorthStyle.chip)
+                .textStyle(selected ? WorthStyle.chipBold : .chipLabel)
                 .foregroundStyle(selected ? BudgieColor.selectionText : BudgieColor.textSecondary)
                 .frame(maxWidth: .infinity, minHeight: 40)
                 .background(selected ? BudgieColor.selectionFill : .clear, in: Capsule())

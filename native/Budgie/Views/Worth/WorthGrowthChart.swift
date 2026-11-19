@@ -212,13 +212,7 @@ private struct GrowthPlot: View, Animatable {
             }
             context.stroke(grid, with: .color(BudgieColor.hairline), lineWidth: 1)
 
-            var curve = Path()
-            curve.move(to: first)
-            for (index, controls) in CashFlowMath.trendControlPoints(spots, smoothness: NetWorthPresentation.curveSmoothness)
-                .enumerated()
-            {
-                curve.addCurve(to: spots[index + 1], control1: controls.0, control2: controls.1)
-            }
+            let curve = Path(smoothCurveThrough: spots, smoothness: NetWorthPresentation.curveSmoothness)
             var area = curve
             area.addLine(to: CGPoint(x: last.x, y: bottom))
             area.addLine(to: CGPoint(x: first.x, y: bottom))
@@ -238,11 +232,8 @@ private struct GrowthPlot: View, Animatable {
                 let center = spots[index]
                 // `FlDotCirclePainter`: the stroke circle at radius 5 + 3/2.
                 context.stroke(
-                    Path(ellipseIn: CGRect(x: center.x - 6.5, y: center.y - 6.5, width: 13, height: 13)),
-                    with: .color(green.opacity(white ? 0.5 : 0.25)), lineWidth: 3)
-                context.fill(
-                    Path(ellipseIn: CGRect(x: center.x - 5, y: center.y - 5, width: 10, height: 10)),
-                    with: .color(white ? BudgieColor.trendDot : green))
+                    Path(circleAt: center, radius: 6.5), with: .color(green.opacity(white ? 0.5 : 0.25)), lineWidth: 3)
+                context.fill(Path(circleAt: center, radius: 5), with: .color(white ? BudgieColor.textPrimary : green))
             }
         }
         .padding(-Self.overhang)

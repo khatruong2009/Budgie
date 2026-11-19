@@ -579,9 +579,6 @@ struct TagChip: View {
     /// A selected chip leads with a check (the merchant rule editor's).
     var showsCheck = false
 
-    private static let selectedText = TextSpec(face: .gabaritoBold, size: 13, relativeTo: .footnote)
-    private static let text = TextSpec(face: .gabaritoSemiBold, size: 13, relativeTo: .footnote)
-
     var body: some View {
         label
             .padding(.horizontal, 14)
@@ -600,7 +597,7 @@ struct TagChip: View {
                     .accessibilityHidden(true)
             }
             Text(name)
-                .textStyle(selected ? Self.selectedText : Self.text)
+                .textStyle(selected ? .footnoteBold : .footnoteSemiBold)
                 .singleLine()
         }
         .foregroundStyle(selected ? BudgieColor.accent : BudgieColor.textSecondary)
@@ -618,7 +615,7 @@ struct FormFooter<Content: View>: View {
         }
         .padding(EdgeInsets(top: 10, leading: Metrics.pageHorizontal, bottom: 6, trailing: Metrics.pageHorizontal))
         .overlay(alignment: .top) {
-            BudgieColor.hairline.frame(height: Metrics.borderThin).accessibilityHidden(true)
+            Hairline()
         }
     }
 }

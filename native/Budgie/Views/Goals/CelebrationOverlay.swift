@@ -33,9 +33,7 @@ struct CelebrationOverlay: View {
                         let radius = 3 + Double(i % 3) * 1.5
                         let point = CGPoint(x: center.x + cos(angle) * distance, y: center.y + sin(angle) * distance)
                         let color = i.isMultiple(of: 2) ? BudgieColor.income : BudgieColor.accent
-                        canvas.fill(
-                            Path(ellipseIn: CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2)),
-                            with: .color(color.opacity(1 - v)))
+                        canvas.fill(Path(circleAt: point, radius: radius), with: .color(color.opacity(1 - v)))
                     }
                 }
                 card.scaleEffect(0.7 + 0.3 * Self.easeOutBack.value(at: min(v, 0.8) / 0.8))

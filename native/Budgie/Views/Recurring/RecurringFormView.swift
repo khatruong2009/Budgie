@@ -266,7 +266,7 @@ struct RecurringFormView: View {
             VStack(alignment: .leading, spacing: Metrics.spacingXS) {
                 ForEach(lines.indices, id: \.self) { index in
                     Text(lines[index])
-                        .textStyle(.bodySmall)
+                        .textStyle(.caption)
                         .foregroundStyle(BudgieColor.textPrimary)
                         .accessibilityIdentifier("recurring.form.preview.date")
                 }
