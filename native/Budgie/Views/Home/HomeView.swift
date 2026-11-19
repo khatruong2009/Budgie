@@ -34,9 +34,9 @@ struct HomeView: View {
         .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(item: $page) { _ in TransactionsView() }
         .floatingActionInset {
-            // The mic over the add button, centred on it (Flutter's Column).
-            // An inset follows the tab bar on any edge and clears the scroll.
-            VStack(spacing: 12) {
+            // The mic over the add button, centred on it (Flutter's Column);
+            // beside it in the compact rail layout's bottom band.
+            FloatingActionStack {
                 GlowFab(symbol: "mic.fill", size: Metrics.micFabSize, label: "Add by voice") {
                     model.pendingAdd = .voice
                 }
