@@ -35,11 +35,11 @@ struct TransactionFormView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var type: TransactionType
-    @State private var amountText: String
-    @State private var descriptionText: String
-    @State private var category: String
+    @State private var amountText = ""
+    @State private var descriptionText = ""
+    @State private var category = ""
     /// Tag ids in insertion order; an edit keeps ids whose tag is gone.
-    @State private var selectedTagIds: [String]
+    @State private var selectedTagIds: [String] = []
     /// The ids the last rule suggestion put in `selectedTagIds` and the user
     /// has not toggled since; a type switch drops them.
     @State private var ruleTagIds: Set<String> = []
@@ -67,10 +67,6 @@ struct TransactionFormView: View {
         switch mode {
         case .add(let type):
             _type = State(initialValue: type)
-            _amountText = State(initialValue: "")
-            _descriptionText = State(initialValue: "")
-            _category = State(initialValue: "")
-            _selectedTagIds = State(initialValue: [])
         case .edit(let record):
             _type = State(initialValue: record.type)
             _amountText = State(initialValue: DartFixed.toStringAsFixed(record.amount, 2))
@@ -82,7 +78,6 @@ struct TransactionFormView: View {
             _amountText = State(initialValue: Self.prefillAmountText(draft.amount))
             _descriptionText = State(initialValue: draft.description)
             _category = State(initialValue: draft.category)
-            _selectedTagIds = State(initialValue: [])
             _pickedDate = State(initialValue: draft.date)
         }
     }
@@ -95,6 +90,15 @@ struct TransactionFormView: View {
     private var prefill: VoiceDraft? {
         if case .prefill(let draft) = mode { return draft }
         return nil
+    }
+
+    /// The edited record's or voice draft's own type and category; nil for a new entry.
+    private var ownCategory: (type: TransactionType, name: String)? {
+        switch mode {
+        case .add: nil
+        case .edit(let record): (record.type, record.category)
+        case .prefill(let draft): (draft.type, draft.category)
+        }
     }
 
     var body: some View {
@@ -118,11 +122,8 @@ struct TransactionFormView: View {
     /// catalog no longer lists it (Flutter keeps and saves a prefill's).
     private var categoryRows: [(name: String, info: CategoryInfo?)] {
         var rows: [(name: String, info: CategoryInfo?)] = (options[type] ?? []).map { ($0.name, $0) }
-        if let record = editing, record.type == type, !rows.contains(where: { DartString.equal($0.name, record.category) }) {
-            rows.append((record.category, recordInfo))
-        }
-        if let draft = prefill, draft.type == type, !rows.contains(where: { DartString.equal($0.name, draft.category) }) {
-            rows.append((draft.category, recordInfo))
+        if let own = ownCategory, own.type == type, !rows.contains(where: { DartString.equal($0.name, own.name) }) {
+            rows.append((own.name, recordInfo))
         }
         return rows
     }
@@ -185,9 +186,7 @@ struct TransactionFormView: View {
         .sheet(isPresented: $showingDatePicker) {
             DayPickerSheet(
                 initial: resolvedDate(), earliest: earliestDay, latest: latestDay, calendar: model.calendar
-            ) { day in
-                pickedDate = day
-            }
+            ) { pickedDate = $0 }
         }
         .alert("Delete Transaction", isPresented: $confirmingDelete) {
             Button("Cancel", role: .cancel) {}
@@ -274,16 +273,9 @@ struct TransactionFormView: View {
 
     private func loadCategories() {
         guard !loaded else { return }
-        for kind in TransactionType.allCases {
-            options[kind] = model.categories(for: kind)
-        }
-        if let record = editing {
-            recordInfo = model.categoryInfo(named: record.category, type: record.type)
-        }
-        if let draft = prefill {
-            recordInfo = model.categoryInfo(named: draft.category, type: draft.type)
-        }
-        if editing == nil, prefill == nil, let initialCategory, let row = categoryRows.first(where: { DartString.equal($0.name, initialCategory) }) {
+        options = Dictionary(uniqueKeysWithValues: TransactionType.allCases.map { ($0, model.categories(for: $0)) })
+        if let own = ownCategory { recordInfo = model.categoryInfo(named: own.name, type: own.type) }
+        if ownCategory == nil, let initialCategory, let row = categoryRows.first(where: { DartString.equal($0.name, initialCategory) }) {
             category = row.name
         }
         if !hasCategory(category) { category = categoryRows.first?.name ?? "" }
@@ -304,10 +296,8 @@ struct TransactionFormView: View {
     /// applied go (the record's stored ids and manual picks stay), then the
     /// new type's rules run on the current description and amount.
     private func typeChanged() {
-        if let record = editing, record.type == type {
-            category = record.category
-        } else if let draft = prefill, draft.type == type {
-            category = draft.category
+        if let own = ownCategory, own.type == type {
+            category = own.name
         } else if !hasCategory(category) {
             category = categoryRows.first?.name ?? ""
         }
@@ -334,9 +324,8 @@ struct TransactionFormView: View {
 
     /// The rule's tag ids in order, each once (Flutter puts them in a Set).
     nonisolated static func distinctTagIds(_ ids: [String]) -> [String] {
-        var tags: [String] = []
-        for id in ids where !tags.contains(id) { tags.append(id) }
-        return tags
+        var seen = Set<String>()
+        return ids.filter { seen.insert($0).inserted }
     }
 
     /// The prefilled Amount text (transaction_form.dart:68-70): two
@@ -603,25 +592,18 @@ struct TagChip: View {
             .tapArea(vertical: 5)
     }
 
-    @ViewBuilder private var label: some View {
-        if showsCheck {
-            HStack(spacing: 6) {
-                if selected {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 12, weight: .bold))
-                        .accessibilityHidden(true)
-                }
-                Text(name)
-                    .textStyle(selected ? Self.selectedText : Self.text)
-                    .singleLine()
+    private var label: some View {
+        HStack(spacing: 6) {
+            if showsCheck && selected {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 12, weight: .bold))
+                    .accessibilityHidden(true)
             }
-            .foregroundStyle(selected ? BudgieColor.accent : BudgieColor.textSecondary)
-        } else {
             Text(name)
                 .textStyle(selected ? Self.selectedText : Self.text)
-                .foregroundStyle(selected ? BudgieColor.accent : BudgieColor.textSecondary)
                 .singleLine()
         }
+        .foregroundStyle(selected ? BudgieColor.accent : BudgieColor.textSecondary)
     }
 }
 

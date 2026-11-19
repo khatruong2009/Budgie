@@ -55,29 +55,23 @@ struct MainView: View {
             })
     }
 
+    private func tabPage<Content: View>(
+        _ page: Tab, _ title: String, _ symbol: String, @ViewBuilder _ content: () -> Content
+    ) -> some View {
+        NavigationStack { content() }
+            // Inside the tab, so the toast clears the bar on any edge.
+            .toastClearance(isActive: tab == page)
+            .tabItem { Label(title, systemImage: symbol) }
+            .tag(page)
+    }
+
     private var tabs: some View {
         TabView(selection: tabSelection) {
-            NavigationStack { HomeView() }
-                // Inside the tab, so the toast clears the bar on any edge.
-                .toastClearance(isActive: tab == .home)
-                .tabItem { Label("Home", systemImage: "dollarsign.circle") }
-                .tag(Tab.home)
-            NavigationStack { WorthView() }
-                .toastClearance(isActive: tab == .worth)
-                .tabItem { Label("Worth", systemImage: "chart.line.uptrend.xyaxis") }
-                .tag(Tab.worth)
-            NavigationStack { GoalsView() }
-                .toastClearance(isActive: tab == .goals)
-                .tabItem { Label("Goals", systemImage: "flag") }
-                .tag(Tab.goals)
-            NavigationStack { SpendView() }
-                .toastClearance(isActive: tab == .spend)
-                .tabItem { Label("Spend", systemImage: "chart.pie") }
-                .tag(Tab.spend)
-            NavigationStack { FlowView() }
-                .toastClearance(isActive: tab == .flow)
-                .tabItem { Label("Flow", systemImage: "chart.bar") }
-                .tag(Tab.flow)
+            tabPage(.home, "Home", "dollarsign.circle") { HomeView() }
+            tabPage(.worth, "Worth", "chart.line.uptrend.xyaxis") { WorthView() }
+            tabPage(.goals, "Goals", "flag") { GoalsView() }
+            tabPage(.spend, "Spend", "chart.pie") { SpendView() }
+            tabPage(.flow, "Flow", "chart.bar") { FlowView() }
         }
         .tint(BudgieColor.accent)
         .sensoryFeedback(.selection, trigger: tab)
@@ -94,10 +88,6 @@ struct MainView: View {
             if model.hasUnsavedChanges { UnsavedChangesBanner() }
         }
     }
-}
-
-extension AddRoute: Identifiable {
-    var id: Self { self }
 }
 
 /// Shown while a change is only in memory (Flutter `UnsavedChangesBanner`):

@@ -5,24 +5,16 @@ import UIKit
 extension AppModel {
     // MARK: - Routing
 
-    func setEnablingAppLock(_ enabling: Bool) { isEnablingAppLock = enabling }
-
     /// The App Lock setting is on (this session may already be unlocked).
     var appLockEnabled: Bool { data?.appSettings.appLockEnabled == true }
 
     /// App Lock is on and this session has not authenticated.
     var isLocked: Bool { appLockEnabled && !sessionUnlocked }
 
-    func markUnlocked() { sessionUnlocked = true }
-
-    /// After the lock timeout in the background.
-    func relock() { sessionUnlocked = false }
-
     /// Routes open only over unlocked, onboarded data: a quick action or
-    /// deep link on a locked launch waits for the unlock (it used to open
-    /// the form above the lock screen). One arriving during a restore waits
-    /// for it to end (the form would edit data the restore is replacing);
-    /// `MainView` opens it when this turns true.
+    /// deep link on a locked launch waits for the unlock. One arriving
+    /// during a restore waits for it to end (the form would edit data the
+    /// restore is replacing); `MainView` opens it when this turns true.
     var canOpenRoutes: Bool { phase == .ready && !isLocked && !showsOnboarding && !isRestoring }
 
     /// The pending add route, cleared, when it may open now; otherwise nil

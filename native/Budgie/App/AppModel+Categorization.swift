@@ -96,16 +96,14 @@ extension AppModel {
     var rules: [CategorizationRuleRecord] { data?.rulesByPriority ?? [] }
 
     /// The error adding this tag name would give, else nil.
-    func validateTagName(_ name: String) -> CategorizationEditError? {
-        data?.validateTagName(name)
-    }
+    func validateTagName(_ name: String) -> CategorizationEditError? { data?.validateTagName(name) }
 
     /// Dart `addTag`: the trimmed name, "accent" colour. Writes
     /// `transactionTags`.
     @discardableResult
     func addTag(name: String, colorToken: String = "accent") async -> EditOutcome<CategorizationEditError> {
         let id = newID()
-        return await editTagsAndRules { data throws(CategorizationEditError) in
+        return await editCopy { data throws(CategorizationEditError) in
             try data.addTag(name: name, colorToken: colorToken, id: id)
             return [Section.transactionTags]
         }
@@ -116,7 +114,7 @@ extension AppModel {
     /// `categorizationRules` (Flutter makes two).
     @discardableResult
     func deleteTag(id: String) async -> EditOutcome<CategorizationEditError> {
-        await editTagsAndRules { data in data.deleteTag(id: id) }
+        await editCopy { data throws(CategorizationEditError) in data.deleteTag(id: id) }
     }
 
     /// Dart `addRule` with a new id. The Flutter dialog's rule sets only
@@ -125,7 +123,7 @@ extension AppModel {
     @discardableResult
     func addRule(_ draft: RuleDraft) async -> EditOutcome<CategorizationEditError> {
         let id = newID()
-        return await editTagsAndRules { data throws(CategorizationEditError) in
+        return await editCopy { data throws(CategorizationEditError) in
             try data.addRule(draft, id: id)
             return [Section.categorizationRules]
         }
@@ -134,7 +132,7 @@ extension AppModel {
     /// Dart `deleteRule`. Writes `categorizationRules`.
     @discardableResult
     func deleteRule(id: String) async -> EditOutcome<CategorizationEditError> {
-        await editTagsAndRules { data in data.deleteRule(id: id) ? [Section.categorizationRules] : [] }
+        await editCopy { data throws(CategorizationEditError) in data.deleteRule(id: id) ? [Section.categorizationRules] : [] }
     }
 
     /// Swift-only rule edit: in place (id and stored position kept), only
@@ -142,7 +140,7 @@ extension AppModel {
     /// `.unchanged` when the draft matches the rule.
     @discardableResult
     func updateRule(id: String, _ draft: RuleDraft) async -> EditOutcome<CategorizationEditError> {
-        await editTagsAndRules { data throws(CategorizationEditError) in
+        await editCopy { data throws(CategorizationEditError) in
             try data.updateRule(id: id, draft) ? [Section.categorizationRules] : []
         }
     }
@@ -151,15 +149,7 @@ extension AppModel {
     /// `.unchanged` when the rule is unknown or already so.
     @discardableResult
     func setRuleEnabled(id: String, _ enabled: Bool) async -> EditOutcome<CategorizationEditError> {
-        await editTagsAndRules { data in data.setRuleEnabled(id: id, enabled) ? [Section.categorizationRules] : [] }
-    }
-
-    /// One tag or rule edit through `editCopy` (the sections it returns in
-    /// one commit; Flutter is silent on a failed write, the callers toast).
-    private func editTagsAndRules(
-        _ edit: (inout FinancialData) throws(CategorizationEditError) -> [String]
-    ) async -> EditOutcome<CategorizationEditError> {
-        await editCopy(edit)
+        await editCopy { data throws(CategorizationEditError) in data.setRuleEnabled(id: id, enabled) ? [Section.categorizationRules] : [] }
     }
 
     /// The form's auto-categorisation (`applySuggestion`,

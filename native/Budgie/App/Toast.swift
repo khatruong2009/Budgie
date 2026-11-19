@@ -2,13 +2,10 @@ import BudgieCore
 import Foundation
 
 /// A floating message at the bottom of the app (Flutter's floating
-/// SnackBars; `.neutral` is the default `SnackBar` look, for messages
-/// Flutter shows without a colour, such as a refused Categories row
-/// action). One at a time; a new one replaces the
-/// current one. Every value is a new toast with its own id (the presets
-/// are computed), so showing the same message twice restarts its timer: a
-/// shared id kept the first one's timer, and the second toast vanished
-/// early.
+/// SnackBars; `.neutral` is the default `SnackBar` look). One at a time; a
+/// new one replaces the current one. Every value is a new toast with its
+/// own id (the presets are computed), so the same message twice restarts
+/// its timer.
 struct Toast: Identifiable, Equatable {
     enum Style: Equatable {
         /// Income green (`AppColors.getIncome`).

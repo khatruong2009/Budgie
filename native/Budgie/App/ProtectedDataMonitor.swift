@@ -12,7 +12,6 @@ final class ProtectedDataMonitor: ProtectedDataAvailability, @unchecked Sendable
     private let lock = NSLock()
     private var available: Bool
     private var waiters: [CheckedContinuation<Void, Never>] = []
-    private var observers: [NSObjectProtocol] = []
 
     @MainActor
     init() {
@@ -26,12 +25,12 @@ final class ProtectedDataMonitor: ProtectedDataAvailability, @unchecked Sendable
         }
         #endif
         let center = NotificationCenter.default
-        observers.append(center.addObserver(
+        center.addObserver(
             forName: UIApplication.protectedDataDidBecomeAvailableNotification, object: nil, queue: .main
-        ) { [weak self] _ in self?.set(true) })
-        observers.append(center.addObserver(
+        ) { [weak self] _ in self?.set(true) }
+        center.addObserver(
             forName: UIApplication.protectedDataWillBecomeUnavailableNotification, object: nil, queue: .main
-        ) { [weak self] _ in self?.set(false) })
+        ) { [weak self] _ in self?.set(false) }
     }
 
     var isProtectedDataAvailable: Bool {

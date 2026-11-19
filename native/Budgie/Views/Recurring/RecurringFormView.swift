@@ -344,7 +344,7 @@ struct RecurringFormView: View {
         }
         // The template went while the form was open (deleted elsewhere):
         // nothing to save and nothing failed.
-        if let template, !(model.data?.templates.contains { $0.id == template.id } ?? false) {
+        if let template, !model.hasTemplate(template.id) {
             dismiss()
             return
         }

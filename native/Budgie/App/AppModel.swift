@@ -2,7 +2,6 @@ import BudgieCore
 import Foundation
 import Observation
 import os
-import UIKit
 import WidgetKit
 
 /// The app's single source of truth. Owns the bootstrap (MIGRATION_SPEC
@@ -89,10 +88,6 @@ final class AppModel {
     /// False for a scratch directory (tests): the App Group widget values
     /// and timelines belong to the installed app.
     private let syncsWidget: Bool
-
-    // Stored state of the features in the `AppModel+*.swift` extensions
-    // (an extension cannot hold stored properties). Each comment is the
-    // feature's own.
 
     /// Bumped by every change to the accounts or the selected Worth month
     /// (and by the load); keys `worthCache`.
@@ -234,16 +229,13 @@ final class AppModel {
         let snapshot: FinancialSnapshot
         let read = Signpost.launch.beginInterval("store.read")
         do {
+            defer { Signpost.launch.endInterval("store.read", read) }
             snapshot = try await store.read()
-            Signpost.launch.endInterval("store.read", read)
-            LaunchLog.storeLoaded(revision: Int(snapshot.revision))
         } catch .dataUnreadable(let files) {
-            Signpost.launch.endInterval("store.read", read)
             LaunchLog.storeLoadFailed("dataUnreadable")
             phase = .blocked(.dataUnreadable(files))
             return
         } catch .protectedDataUnavailable {
-            Signpost.launch.endInterval("store.read", read)
             LaunchLog.storeLoadFailed("protectedDataUnavailable")
             // The device locked between the check and the read: wait again.
             await waitForUnlock()
@@ -251,11 +243,11 @@ final class AppModel {
             await bootstrap()
             return
         } catch {
-            Signpost.launch.endInterval("store.read", read)
             LaunchLog.storeLoadFailed("readFailed")
             phase = .blocked(.readFailed(String(describing: error)))
             return
         }
+        LaunchLog.storeLoaded(revision: Int(snapshot.revision))
         loadReport = await store.lastLoadReport
 
         let incompatible = FinancialData.incompatibleSectionNames(in: snapshot)
@@ -501,13 +493,20 @@ final class AppModel {
         return true
     }
 
-    /// `applyMutation`, then the awaited write of `sections`. False for a
-    /// refused edit (nothing written) and for a failed write alike.
+    /// `applyMutation`, then the awaited write of `sections`: `.rejected` for
+    /// a refused edit (nothing written), else whether the write was verified.
+    func mutateOutcome(
+        _ sections: [String], _ body: (inout FinancialData) -> Bool, after: () -> Void = {}
+    ) async -> SaveOutcome {
+        guard applyMutation(body, after: after) else { return .rejected }
+        return await persist(sections) ? .saved : .failed
+    }
+
+    /// `mutateOutcome` as a Bool: false for a refused edit and a failed write alike.
     func mutate(
         _ sections: [String], _ body: (inout FinancialData) -> Bool, after: () -> Void = {}
     ) async -> Bool {
-        guard applyMutation(body, after: after) else { return false }
-        return await persist(sections)
+        await mutateOutcome(sections, body, after: after) == .saved
     }
 
     /// `mutate` for the accounts and the selected Worth month: bumps

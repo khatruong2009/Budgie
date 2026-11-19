@@ -1,7 +1,5 @@
 import BudgieCore
 import SwiftUI
-import UIKit
-import UniformTypeIdentifiers
 
 /// Settings (Flutter's "More" tab, `settings_page.dart:579-911`), pushed
 /// from the Home gear (D2): the title sits in the navigation bar beside the
@@ -201,7 +199,7 @@ struct SettingsView: View {
             AnyView(SettingsRow(
                 symbol: "info.circle", color: BudgieColor.versionIcon, tile: BudgieColor.versionTile,
                 iconSize: SettingsGlyph.full, title: "Version",
-                subtitle: "Budgie \(Self.version)", action: nil, trailing: { EmptyView() })),
+                subtitle: "Budgie \(AppModel.appVersion)", action: nil, trailing: { EmptyView() })),
             AnyView(SettingsRow(
                 symbol: "list.bullet.rectangle", color: BudgieColor.versionIcon, tile: BudgieColor.versionTile,
                 title: "Data diagnostics", subtitle: "What this device loaded",
@@ -250,19 +248,12 @@ struct SettingsView: View {
         return "\(active.count) active · \(active.prefix(3).map(\.description).joined(separator: ", "))"
     }
 
-    /// The marketing version only (Flutter's `PackageInfo.version`, falling
-    /// back to 2.0.0).
-    private static let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "2.0.0"
-
     // MARK: - Controls
-
-    /// Light | Dark | Auto, in Flutter's order.
-    private static let themeModes: [ThemeMode] = [.light, .dark, .system]
 
     private var themeSelection: Binding<Int> {
         Binding(
-            get: { Self.themeModes.firstIndex(of: model.themeMode) ?? 2 },
-            set: { model.setThemeMode(Self.themeModes[$0]) })
+            get: { ThemeMode.allCases.firstIndex(of: model.themeMode) ?? 2 },
+            set: { model.setThemeMode(ThemeMode.allCases[$0]) })
     }
 
     /// Turning the lock on authenticates first and keeps this session
@@ -277,16 +268,16 @@ struct SettingsView: View {
                     return
                 }
                 guard !model.isEnablingAppLock else { return }
-                model.setEnablingAppLock(true)
+                model.isEnablingAppLock = true
                 Task {
                     switch await DeviceAuth.authenticate(reason: "Turn on App Lock") {
                     case .success:
-                        model.markUnlocked()
+                        model.sessionUnlocked = true
                         await model.setAppLockEnabled(true)
                     case .failed: break
                     case .unavailable: notice = "Set a passcode in the Settings app to use App Lock."
                     }
-                    model.setEnablingAppLock(false)
+                    model.isEnablingAppLock = false
                 }
             })
     }
