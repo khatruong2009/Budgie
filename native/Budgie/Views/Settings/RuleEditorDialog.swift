@@ -24,7 +24,7 @@ import SwiftUI
 /// starts at the first expense category) when the new list has that name
 /// (UTF-16), else takes its first; the tag selection stays.
 ///
-/// Amounts parse with the money format's separators (`AmountInput`, D6);
+/// Amounts parse with the money format's separators (`AmountParser`, D6);
 /// empty is no bound; an edit prefills a bound rounded to cents and a
 /// field left as prefilled keeps the stored value exactly. Checked on
 /// Add / Save, inline under the field: not an amount of 0 or more, and a
@@ -246,7 +246,7 @@ struct RuleEditorDialog: View {
     static let amountError = "Enter an amount of 0 or more"
 
     /// A bound field: `.some(nil)` when empty (no bound), the stored value
-    /// while the text is its prefill, else the parse (`AmountInput`: 0 or
+    /// while the text is its prefill, else the parse (`AmountParser`: 0 or
     /// more, finite, the format's separators); nil when it does not parse.
     static func bound(_ text: String, prefill: String, stored: Double?, formatter: MoneyFormatter) -> Double?? {
         if let stored, text == prefill { return .some(stored) }
