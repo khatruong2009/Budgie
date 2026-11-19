@@ -24,7 +24,7 @@ struct PersistenceTrackerTests {
     @Test("a failed save is flagged, carried by the next save, and cleared by it")
     func failureAndHealing() async throws {
         let fs = FlakyFileSystem()
-        let store = FinancialStore(fileSystem: fs, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow)
+        let store = testStore(fs)
         let tracker = PersistenceTracker(store: store)
         var memory: [String: JSONValue] = ["transactions": .array([]), "recurringTransactions": .array([])]
         let serialize: (String) -> JSONValue = { memory[$0] ?? .null }
@@ -42,7 +42,7 @@ struct PersistenceTrackerTests {
         #expect(!tracker.hasUnsavedChanges)
         #expect(tracker.lastError == nil)
 
-        let reloaded = try await FinancialStore(fileSystem: fs, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow).read()
+        let reloaded = try await testStore(fs).read()
         #expect(reloaded.sections["transactions"] == .array([.string("t1")]), "the flagged section was healed by the later save")
         #expect(reloaded.sections["recurringTransactions"] == .array([.string("r1")]))
     }
@@ -50,7 +50,7 @@ struct PersistenceTrackerTests {
     @Test("retry writes the current in-memory value of every flagged section")
     func retry() async throws {
         let fs = FlakyFileSystem()
-        let store = FinancialStore(fileSystem: fs, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow)
+        let store = testStore(fs)
         let tracker = PersistenceTracker(store: store)
         var memory: [String: JSONValue] = [:]
         fs.broken = true
@@ -60,14 +60,14 @@ struct PersistenceTrackerTests {
         #expect(await tracker.retry(serialize: { memory[$0] ?? .null }) == false)
         fs.broken = false
         #expect(await tracker.retry(serialize: { memory[$0] ?? .null }))
-        let reloaded = try await FinancialStore(fileSystem: fs, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow).read()
+        let reloaded = try await testStore(fs).read()
         #expect(reloaded.sections["transactions"] == .int(2))
     }
 
     @Test("flag marks sections unsaved without writing; the next retry writes them")
     func flagWithoutWriting() async throws {
         let fs = FlakyFileSystem()
-        let store = FinancialStore(fileSystem: fs, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow)
+        let store = testStore(fs)
         let tracker = PersistenceTracker(store: store)
         let memory: [String: JSONValue] = ["transactions": .int(7)]
         tracker.flag(["transactions"], because: .writeFailed(name: "transactions", reason: "held"))
@@ -77,7 +77,7 @@ struct PersistenceTrackerTests {
         #expect(await tracker.retry(serialize: { memory[$0] ?? .null }))
         #expect(!tracker.hasUnsavedChanges)
         #expect(tracker.lastError == nil)
-        let reloaded = try await FinancialStore(fileSystem: fs, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow).read()
+        let reloaded = try await testStore(fs).read()
         #expect(reloaded.sections["transactions"] == .int(7))
     }
 }

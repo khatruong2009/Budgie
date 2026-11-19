@@ -7,10 +7,6 @@ import Testing
 /// midnight (Santiago).
 private let monthListZones = ["America/New_York", "America/Santiago"]
 
-private func fixture(_ zone: String, _ file: String) throws -> J {
-    try Fixtures.json("\(Fixtures.zonePath("monthlist", zone))/\(file)")
-}
-
 // MARK: - The one view expression the helpers do not cover
 
 private enum ViewExpr {
@@ -22,11 +18,7 @@ private enum ViewExpr {
 
 private func load(_ c: J, _ calendar: DartCalendar) throws -> (FinancialData, MoneyFormatter, LedgerIndex) {
     let sections = try JSONParser.parse(c["sections"].string!).objectValue!
-    let now = calendar.date(2026, 9, 28, 9, 15)
-    let data = FinancialData.load(
-        FinancialSnapshot(revision: 1, sections: sections), preferences: InMemoryPreferences([:]), calendar: calendar,
-        now: { now }, newID: { UUID().uuidString.lowercased() }
-    ).data
+    let data = loadFinancialData(sections, calendar: calendar, now: calendar.date(2026, 9, 28, 9, 15)).data
     let formatter = MoneyFormatter(currencyCode: c["currency"].string!, locale: c["locale"].string, hideBalances: c["hide"].bool!)
     return (data, formatter, LedgerIndex.build(data.transactions, calendar: calendar))
 }
@@ -39,7 +31,7 @@ struct MonthListParityTests {
     /// (`MonthListCopy`) that the views render.
     @Test("SEE ALL page", arguments: monthListZones)
     func page(zone: String) throws {
-        let f = try fixture(zone, "page.json")
+        let f = try Fixtures.json("monthlist", zone: zone, "page.json")
         #expect(f["tz"].string == zone)
         let tz = TimeZone(identifier: zone)!
         let calendar = DartCalendar(timeZone: tz)
@@ -114,7 +106,7 @@ struct MonthListParityTests {
     /// newest first, or the empty message.
     @Test("category drill-in", arguments: monthListZones)
     func drillIn(zone: String) throws {
-        let f = try fixture(zone, "drillin.json")
+        let f = try Fixtures.json("monthlist", zone: zone, "drillin.json")
         #expect(f["tz"].string == zone)
         let calendar = DartCalendar(timeZone: TimeZone(identifier: zone)!)
         let cases = f["cases"].array

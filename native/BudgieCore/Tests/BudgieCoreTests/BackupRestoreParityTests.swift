@@ -30,11 +30,7 @@ struct BackupRestoreParityTests {
                 fileSystem: scenario.fileSystem, preferences: scenario.preferences, protectedData: AlwaysAvailable(),
                 clock: { now }
             ).read()
-            var counter = 0
-            func newID() -> String {
-                counter += 1
-                return "swift-new-\(counter)"
-            }
+            let newID = sequentialIDs("swift-new-")
             let current = FinancialData.load(
                 snapshot, preferences: scenario.preferences, calendar: calendar, now: { now }, newID: newID, matchesPaddedCategoryNames: false
             ).data

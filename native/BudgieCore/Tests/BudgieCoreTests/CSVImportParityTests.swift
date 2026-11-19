@@ -3,22 +3,9 @@ import Testing
 
 @testable import BudgieCore
 
-private func fixture(_ name: String) throws -> J {
-    try Fixtures.json("csvimport/\(name)")
-}
-
 private func units(_ value: J) -> [UInt16] { value.array.map { UInt16($0.int!) } }
 
 private func bytes(_ base64: J) -> [UInt8] { [UInt8](Data(base64Encoded: base64.string!)!) }
-
-/// Same UTF-16 code units (Swift `==` on String is canonical equivalence).
-private func same(_ a: String?, _ b: String?) -> Bool {
-    switch (a, b) {
-    case (nil, nil): true
-    case (let a?, let b?): DartString.equal(a, b)
-    default: false
-    }
-}
 
 /// D6 singular forms: Flutter's text with "1 transactions", "1 duplicates"
 /// and "1 rows" in the singular, which is what Swift shows.
@@ -49,10 +36,7 @@ let csvImportZones = ["America/New_York", "UTC", "Australia/Lord_Howe", "Asia/Ko
 private func load(_ sections: JSONObject, prefs: [String: PreferenceValue] = [:], calendar: DartCalendar, now: DartDateTime)
     -> FinancialData
 {
-    FinancialData.load(
-        FinancialSnapshot(revision: 1, sections: sections), preferences: InMemoryPreferences(prefs), calendar: calendar,
-        now: { now }, newID: { UUID().uuidString.lowercased() }, matchesPaddedCategoryNames: false
-    ).data
+    loadFinancialData(sections, preferences: prefs, calendar: calendar, now: now, matchesPaddedCategoryNames: false).data
 }
 
 private func transactionsSection(_ text: String) throws -> JSONObject {
@@ -76,26 +60,26 @@ private func expectSummary(_ summary: CSVImport.Summary, _ expected: J, messages
         #expect(summary.emptyResultMessage == nil, "\(label) empty")
     } else {
         let empty = summary.emptyResultMessage
-        #expect(same(empty?.text, csvImportSingular(messages["empty"]["text"].string!)), "\(label) empty text")
+        #expect(dartEqual(empty?.text, csvImportSingular(messages["empty"]["text"].string!)), "\(label) empty text")
         #expect(empty?.tone == (messages["empty"]["red"].bool! ? .error : .neutral), "\(label) empty tone")
     }
-    #expect(same(summary.confirmTitle, csvImportSingular(messages["confirmTitle"].string!)), "\(label) confirm title")
-    #expect(same(summary.confirmMessage, messages["confirmContent"].string.map(csvImportSingular)), "\(label) confirm body")
-    #expect(same(summary.successMessage.text, csvImportSingular(messages["success"].string!)), "\(label) success")
+    #expect(dartEqual(summary.confirmTitle, csvImportSingular(messages["confirmTitle"].string!)), "\(label) confirm title")
+    #expect(dartEqual(summary.confirmMessage, messages["confirmContent"].string.map(csvImportSingular)), "\(label) confirm body")
+    #expect(dartEqual(summary.successMessage.text, csvImportSingular(messages["success"].string!)), "\(label) success")
     #expect(summary.successMessage.tone == .success)
 }
 
 private func expectFailure(_ failure: CSVImport.Failure?, _ item: J, _ label: String) {
     #expect(failure == .notATransactionsCSV, "\(label) throws")
-    #expect(same(failure?.flutterDescription, item["error"].string), "\(label) error")
-    #expect(same(failure.map { CSVImport.failureMessage($0).text }, csvImportBareFailure(item["failure"].string!)), "\(label) failure")
+    #expect(dartEqual(failure?.flutterDescription, item["error"].string), "\(label) error")
+    #expect(dartEqual(failure.map { CSVImport.failureMessage($0).text }, csvImportBareFailure(item["failure"].string!)), "\(label) failure")
 }
 
 @Suite("CSV import: parser, decode, validation, dedupe, copy and commit match Flutter (Fixtures/csvimport)")
 struct CSVImportParityTests {
     @Test("csv 6.0.0 on the corpus and 3000 random strings; utf8.decode(allowMalformed) on 2000 byte strings")
     func parser() throws {
-        let f = try fixture("parser.json")
+        let f = try Fixtures.json("csvimport/parser.json")
         let cases = f["cases"].array
         #expect(cases.count > 3000)
         var mismatches: [String] = []
@@ -127,7 +111,7 @@ struct CSVImportParityTests {
     /// launch clock) and the categories Dart's next launch writes.
     @Test("adversarial corpus and 600 random files", arguments: csvImportZones)
     func imports(_ zone: String) throws {
-        let f = try Fixtures.json("\(Fixtures.zonePath("csvimport", zone))/import.json")
+        let f = try Fixtures.json("csvimport", zone: zone, "import.json")
         #expect(f["tz"].string == zone)
         let calendar = DartCalendar(timeZone: TimeZone(identifier: zone)!)
         let now = try calendar.parse(f["now"].string!)
@@ -154,7 +138,7 @@ struct CSVImportParityTests {
             }
             #expect(item["error"].isNull, "\(label) Dart threw \(item["error"].string ?? "")")
             expectSummary(summary, item["summary"], messages: item["messages"], label)
-            if !same(summary.confirmTitle + (summary.confirmMessage ?? "") + summary.successMessage.text,
+            if !dartEqual(summary.confirmTitle + (summary.confirmMessage ?? "") + summary.successMessage.text,
                      item["messages"]["confirmTitle"].string! + (item["messages"]["confirmContent"].string ?? "")
                         + item["messages"]["success"].string!)
             {
@@ -251,8 +235,8 @@ struct CSVImportParityTests {
     /// exactly when Swift would commit.
     @Test("the real Settings page's dialog and SnackBars")
     func page() throws {
-        let f = try fixture("page.json")
-        let calendar = DartCalendar(timeZone: TimeZone(identifier: "America/New_York")!)
+        let f = try Fixtures.json("csvimport/page.json")
+        let calendar = DartCalendar(timeZone: newYorkZone)
         let now = calendar.date(2026, 9, 28, 9, 15, 30, 250, 125)
         let cases = f["cases"].array
         #expect(cases.count == 14)
@@ -274,24 +258,24 @@ struct CSVImportParityTests {
             } catch {
                 let message = CSVImport.failureMessage(error)
                 #expect(dialog.isNull, "\(label)")
-                #expect(same(message.text, csvImportBareFailure(snackbar["text"].string!)) && message.tone == .error, "\(label)")
+                #expect(dartEqual(message.text, csvImportBareFailure(snackbar["text"].string!)) && message.tone == .error, "\(label)")
                 #expect(snackbar["color"].string == "expense", "\(label)")
                 continue
             }
             if let empty = summary.emptyResultMessage {
                 #expect(dialog.isNull, "\(label)")
-                #expect(same(empty.text, csvImportSingular(snackbar["text"].string!)), "\(label)")
+                #expect(dartEqual(empty.text, csvImportSingular(snackbar["text"].string!)), "\(label)")
                 #expect(snackbar["color"].string == (empty.tone == .error ? "expense" : "default"), "\(label)")
                 #expect(item["storeWritten"].bool == false, "\(label)")
                 continue
             }
-            #expect(same(summary.confirmTitle, csvImportSingular(dialog["title"].string!)), "\(label)")
-            #expect(same(summary.confirmMessage, dialog["content"].string.map(csvImportSingular)), "\(label)")
+            #expect(dartEqual(summary.confirmTitle, csvImportSingular(dialog["title"].string!)), "\(label)")
+            #expect(dartEqual(summary.confirmMessage, dialog["content"].string.map(csvImportSingular)), "\(label)")
             #expect(dialog["buttons"].array.map(\.string) == [CSVImport.cancelButtonTitle, CSVImport.importButtonTitle], "\(label)")
             if cancel {
                 #expect(snackbar.isNull && item["storeWritten"].bool == false, "\(label)")
             } else {
-                #expect(same(summary.successMessage.text, csvImportSingular(snackbar["text"].string!)), "\(label)")
+                #expect(dartEqual(summary.successMessage.text, csvImportSingular(snackbar["text"].string!)), "\(label)")
                 #expect(snackbar["color"].string == "income", "\(label)")
                 #expect(item["storeWritten"].bool == true, "\(label)")
             }

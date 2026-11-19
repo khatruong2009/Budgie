@@ -14,11 +14,7 @@ struct BackupEncodeParityTests {
         let exportedAt = try DartDateTime.parse(fixture["exportedAt"].string!, timeZone: timeZone)
         let appVersion = fixture["appVersion"].string!
         #expect(fixture["cases"].array.count >= 18)
-        var counter = 0
-        func newID() -> String {
-            counter += 1
-            return "swift-new-\(counter)"
-        }
+        let newID = sequentialIDs("swift-new-")
         for item in fixture["cases"].array {
             let name = item["name"].string!
             let snapshot: FinancialSnapshot
@@ -88,10 +84,7 @@ struct BackupEncodeParityTests {
               {"id":"b","type":"expense","amount":1.0,"category":"General","date":"2026-09-01"},
               {"id":"c","type":"expense","description":"inf","amount":1e999,"category":"General","date":"2026-09-01"}]}
             """#).objectValue!
-        let data = FinancialData.load(
-            FinancialSnapshot(revision: 1, sections: sections), preferences: InMemoryPreferences(), calendar: calendar,
-            now: { now }, newID: { "new" }
-        ).data
+        let data = loadFinancialData(sections, calendar: calendar, now: now, newID: { "new" }).data
         #expect(data.transactionRows.count == 3 && data.transactions.count == 2)
         #expect(throws: BackupExportError.self) {
             try BackupEnvelope.encode(data: data, themeMode: "system", appVersion: "4.0.0", now: now)

@@ -3,16 +3,7 @@ import Testing
 
 @testable import BudgieCore
 
-private func fixture(_ name: String) throws -> J {
-    try Fixtures.json("worth/\(name)")
-}
-
-private func hex(_ value: Double) -> String {
-    let text = String(value.bitPattern, radix: 16)
-    return String(repeating: "0", count: 16 - text.count) + text
-}
-
-private func ohex(_ value: Double?) -> String? { value.map { hex($0) } }
+private func ohex(_ value: Double?) -> String? { value.map(hex) }
 
 /// One line per entry, as the harness writes the model's memory.
 private func memoryLines(_ data: FinancialData) -> [String] {
@@ -31,13 +22,6 @@ private func memoryLines(_ memory: J) -> [String] {
         }
 }
 
-private func load(_ sections: JSONObject, calendar: DartCalendar, now: DartDateTime) -> FinancialData {
-    FinancialData.load(
-        FinancialSnapshot(revision: 1, sections: sections), preferences: InMemoryPreferences([:]), calendar: calendar,
-        now: { now }, newID: { UUID().uuidString.lowercased() }
-    ).data
-}
-
 @Suite("Worth: net worth mutations, queries and display strings match the Flutter code (Fixtures/worth)")
 struct WorthParityTests {
     /// Real `TransactionModel` calls through a real store, replayed on
@@ -47,7 +31,7 @@ struct WorthParityTests {
     /// is. Whatever Swift wrote loads back to the same memory.
     @Test("mutation scenarios", arguments: dstFixtureZones)
     func mutations(zone: String) throws {
-        let f = try Fixtures.json("\(Fixtures.zonePath("worth", zone))/mutations.json")
+        let f = try Fixtures.json("worth", zone: zone, "mutations.json")
         #expect(f["tz"].string == zone)
         let calendar = DartCalendar(timeZone: TimeZone(identifier: zone)!)
         let scenarios = f["scenarios"].array
@@ -57,7 +41,7 @@ struct WorthParityTests {
             let byteComparable = s["byteComparable"].bool!
             var now = try calendar.parse(s["launch"].string!)
             let initial = try s["initial"].string.map { try JSONParser.parse($0).objectValue! } ?? JSONObject()
-            var data = load(initial, calendar: calendar, now: now)
+            var data = loadFinancialData(initial, calendar: calendar, now: now).data
             #expect(memoryLines(data) == memoryLines(s["loaded"]), "\(label) load")
 
             for (index, step) in s["steps"].array.enumerated() {
@@ -116,7 +100,7 @@ struct WorthParityTests {
                 var written = JSONObject()
                 written[Section.netWorthEntries] = data.netWorthSection()
                 written[Section.selectedNetWorthMonth] = data.selectedNetWorthMonthSection()
-                #expect(memoryLines(load(written, calendar: calendar, now: now)) == memoryLines(data), "\(at) reload")
+                #expect(memoryLines(loadFinancialData(written, calendar: calendar, now: now).data) == memoryLines(data), "\(at) reload")
             }
             try checkQueries(data, s["queries"], now: now, label: label)
         }
@@ -183,7 +167,7 @@ struct WorthParityTests {
             #expect(points.map { $0.date.toIso8601String() } == expected["dates"].array.map { $0.string! }, "\(label) \(range) dates")
             let values = points.map(\.netWorth)
             let scale = NetWorthChartScale.growth(values)
-            #expect([scale?.min, scale?.max].compactMap { $0 }.map { hex($0) } == expected["scale"].array.map { $0.string! },
+            #expect([scale?.min, scale?.max].compactMap { $0 }.map(hex) == expected["scale"].array.map { $0.string! },
                     "\(label) \(range) scale")
             for (i, h) in expected["hover"].array.enumerated() {
                 let a = NetWorthPresentation.hoverAlignment(index: i, values: values)
@@ -205,7 +189,7 @@ struct WorthParityTests {
             #expect(history.totalChangeIsPositive == a["totalChangeIsPositive"].bool, "\(at) overall sign")
             #expect(ohex(history.peak) == a["peak"].string && ohex(history.low) == a["low"].string, "\(at) peak/low")
             let scale = NetWorthChartScale.account(history.chart.map(\.amount))
-            #expect([scale?.min, scale?.max].compactMap { $0 }.map { hex($0) } == a["scale"].array.map { $0.string! }, "\(at) scale")
+            #expect([scale?.min, scale?.max].compactMap { $0 }.map(hex) == a["scale"].array.map { $0.string! }, "\(at) scale")
         }
         #expect(data.netWorthEntryHistory(id: "no-such-id").count == q["missingHistory"].int)
     }
@@ -214,7 +198,7 @@ struct WorthParityTests {
 
     @Test("compact currency and history deltas (intl 3 significant digits)")
     func compact() throws {
-        let cases = try fixture("formatting.json")["compact"].array
+        let cases = try Fixtures.json("worth/formatting.json")["compact"].array
         #expect(cases.count > 200)
         for c in cases {
             let formatter = MoneyFormatter(currencyCode: c["currency"].string!, locale: c["locale"].string, hideBalances: c["hidden"].bool!)
@@ -227,7 +211,7 @@ struct WorthParityTests {
 
     @Test("hero delta pill and accessibility label")
     func deltaPills() throws {
-        for c in try fixture("formatting.json")["deltaPills"].array {
+        for c in try Fixtures.json("worth/formatting.json")["deltaPills"].array {
             let formatter = MoneyFormatter(currencyCode: c["currency"].string!, locale: c["locale"].string, hideBalances: c["hidden"].bool!)
             let change = bits(c["change"])!, previous = bits(c["previous"])!
             #expect(NetWorthText.deltaPill(change: change, previousNetWorth: previous, formatter: formatter) == c["text"].string,
@@ -238,7 +222,7 @@ struct WorthParityTests {
 
     @Test("editor amount: prefill, input formatter, save parse")
     func amountInput() throws {
-        let f = try fixture("formatting.json")
+        let f = try Fixtures.json("worth/formatting.json")
         for c in f["prefill"].array {
             #expect(NetWorthAmountInput.prefill(bits(c["value"])!) == c["text"].string, "prefill \(bits(c["value"])!)")
         }
@@ -255,7 +239,7 @@ struct WorthParityTests {
 
     @Test("row percent strings, chart scales, hover alignment, split bar, icons")
     func presentation() throws {
-        let f = try fixture("formatting.json")
+        let f = try Fixtures.json("worth/formatting.json")
         for c in f["percents"].array {
             #expect(NetWorthText.rowChange(bits(c["value"])!) == c["change"].string)
             #expect(NetWorthText.rowShare(bits(c["share"])!, isAssetsTab: true) == c["shareAssets"].string)
@@ -284,8 +268,8 @@ struct WorthParityTests {
 
     @Test("date-based display strings")
     func texts() throws {
-        let calendar = DartCalendar(timeZone: TimeZone(identifier: "America/New_York")!)
-        for c in try fixture("formatting.json")["texts"].array {
+        let calendar = DartCalendar(timeZone: newYorkZone)
+        for c in try Fixtures.json("worth/formatting.json")["texts"].array {
             let p = c["date"].array.map { $0.int! }
             let d = calendar.date(p[0], p[1], p[2], p[3], p[4])
             #expect(NetWorthText.heroEyebrow(month: d) == c["eyebrow"].string)
@@ -309,7 +293,7 @@ struct WorthParityTests {
     /// `gridLines`), bit for bit.
     @Test("chart grid lines (fl_chart multiples of the interval from 0)")
     func gridLines() throws {
-        let cases = try fixture("formatting.json")["gridLines"].array
+        let cases = try Fixtures.json("worth/formatting.json")["gridLines"].array
         #expect(cases.count >= 8)
         for c in cases {
             let values = c["values"].array.map { bits($0)! }
@@ -323,7 +307,7 @@ struct WorthParityTests {
     /// (formatting.json `axisLabels`, 1 to 30 points).
     @Test("axis label indices")
     func axisLabels() throws {
-        let cases = try fixture("formatting.json")["axisLabels"].array
+        let cases = try Fixtures.json("worth/formatting.json")["axisLabels"].array
         #expect(cases.count == 30)
         for c in cases {
             let n = c["count"].int!

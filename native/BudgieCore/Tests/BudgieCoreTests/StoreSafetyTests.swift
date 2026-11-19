@@ -81,8 +81,15 @@ func typicalFiles() throws -> [String: [UInt8]] {
     return files
 }
 
-let testZone = TimeZone(identifier: "America/New_York")!
-let fixedNow: @Sendable () -> DartDateTime = { DartDateTime(2026, 9, 28, 12, timeZone: testZone)! }
+let fixedNow: @Sendable () -> DartDateTime = { DartDateTime(2026, 9, 28, 12, timeZone: newYorkZone)! }
+
+/// A store over `fileSystem` on the `fixedNow` clock.
+func testStore(
+    _ fileSystem: StoreFileSystem, preferences: PreferencesStore = InMemoryPreferences(),
+    protectedData: ProtectedDataAvailability = AlwaysAvailable()
+) -> FinancialStore {
+    FinancialStore(fileSystem: fileSystem, preferences: preferences, protectedData: protectedData, clock: fixedNow)
+}
 
 @Suite("Store safety: crashes, full disk, locked device, concurrency")
 struct StoreSafetyTests {
@@ -92,20 +99,16 @@ struct StoreSafetyTests {
             // Commit = backup stage + rename, primary stage + rename (4 ops).
             for failAt in 0..<4 {
                 let base = InMemoryFileSystem(files: try typicalFiles())
-                let before = try await FinancialStore(
-                    fileSystem: base, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow
-                ).read()
+                let before = try await testStore(base).read()
 
                 let faulty = FaultyFileSystem(base: base, failAt: failAt, fault: fault)
-                let store = FinancialStore(fileSystem: faulty, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow)
+                let store = testStore(faulty)
                 await #expect(throws: FinancialStoreError.self) {
                     try await store.updateSections([("probe", .string("after"))])
                 }
 
                 // Relaunch on whatever reached the disk.
-                let after = try await FinancialStore(
-                    fileSystem: base, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow
-                ).read()
+                let after = try await testStore(base).read()
                 if after.revision == before.revision {
                     #expect(after.sections == before.sections, "\(fault) at \(failAt): old state intact")
                 } else {
@@ -121,10 +124,10 @@ struct StoreSafetyTests {
     @Test("a crash after the primary rename but before verification still yields the new revision")
     func crashAfterRename() async throws {
         let base = InMemoryFileSystem(files: try typicalFiles())
-        let store = FinancialStore(fileSystem: base, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow)
+        let store = testStore(base)
         let start = try await store.read().revision
         try await store.updateSections([("probe", .int(1))])
-        let reloaded = try await FinancialStore(fileSystem: base, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow).read()
+        let reloaded = try await testStore(base).read()
         #expect(reloaded.revision == start + 1)
         // Backup holds the previous revision.
         #expect(StoreFile.verify(base.snapshot[StoreFile.backupName]!)!.revision == start)
@@ -136,7 +139,7 @@ struct StoreSafetyTests {
         let base = InMemoryFileSystem(files: try typicalFiles())
         let spy = FaultyFileSystem(base: base, failAt: nil)
         let prefs = InMemoryPreferences([PreferenceKey.transactions: .string("[]")])
-        let store = FinancialStore(fileSystem: spy, preferences: prefs, protectedData: gate, clock: fixedNow)
+        let store = testStore(spy, preferences: prefs, protectedData: gate)
         let original = base.snapshot
 
         await #expect(throws: FinancialStoreError.protectedDataUnavailable) { try await store.read() }
@@ -157,27 +160,27 @@ struct StoreSafetyTests {
     func lockDuringCommit() async throws {
         let gate = Switch(true)
         let base = InMemoryFileSystem(files: try typicalFiles())
-        let store = FinancialStore(fileSystem: base, preferences: InMemoryPreferences(), protectedData: gate, clock: fixedNow)
+        let store = testStore(base, protectedData: gate)
         let before = try await store.read()
         gate.set(false)
         await #expect(throws: FinancialStoreError.protectedDataUnavailable) {
             try await store.updateSections([("probe", .null)])
         }
         gate.set(true)
-        let after = try await FinancialStore(fileSystem: base, preferences: InMemoryPreferences(), protectedData: gate, clock: fixedNow).read()
+        let after = try await testStore(base, protectedData: gate).read()
         #expect(after == before)
     }
 
     @Test("concurrent edits are serialized: every one lands, revisions are sequential")
     func concurrency() async throws {
         let base = InMemoryFileSystem()
-        let store = FinancialStore(fileSystem: base, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow)
+        let store = testStore(base)
         await withTaskGroup(of: Void.self) { group in
             for i in 0..<50 {
                 group.addTask { _ = try? await store.updateSections([("k\(i)", .int(i))]) }
             }
         }
-        let final = try await FinancialStore(fileSystem: base, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow).read()
+        let final = try await testStore(base).read()
         #expect(final.revision == 50)
         for i in 0..<50 { #expect(final.sections["k\(i)"]?.numberValue?.intValue == Int64(i)) }
     }
@@ -187,8 +190,8 @@ struct StoreSafetyTests {
         var rng = SeededGenerator(seed: 20_260_928)
         for round in 0..<60 {
             let base = InMemoryFileSystem(files: round % 2 == 0 ? try typicalFiles() : [:])
-            var expected = try await FinancialStore(fileSystem: base, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow).read()
-            let store = FinancialStore(fileSystem: base, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow)
+            var expected = try await testStore(base).read()
+            let store = testStore(base)
             for _ in 0..<Int.random(in: 1...8, using: &rng) {
                 let key = ["transactions", "futureFeature", "appSettings", "x\(Int.random(in: 0...5, using: &rng))"].randomElement(using: &rng)!
                 let value = randomJSON(depth: 3, using: &rng)
@@ -196,7 +199,7 @@ struct StoreSafetyTests {
                 let written = try await store.updateSections([(key, value)])
                 #expect(written == expected)
             }
-            let reloaded = try await FinancialStore(fileSystem: base, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow).read()
+            let reloaded = try await testStore(base).read()
             #expect(reloaded == expected, "round \(round)")
         }
     }
@@ -207,7 +210,7 @@ struct StoreSafetyTests {
         for name in [StoreFile.primaryName, StoreFile.backupName] { files[name] = Array(files[name]!.dropLast()) }
         let base = InMemoryFileSystem(files: files)
         let prefs = InMemoryPreferences()
-        let store = FinancialStore(fileSystem: base, preferences: prefs, protectedData: AlwaysAvailable(), clock: fixedNow)
+        let store = testStore(base, preferences: prefs)
         var corrupt: [String] = []
         do {
             _ = try await store.read()
@@ -217,7 +220,7 @@ struct StoreSafetyTests {
         }
         #expect(corrupt.count == 2)
         // A relaunch still stops: the files are set aside, not forgotten.
-        let relaunch = FinancialStore(fileSystem: base, preferences: prefs, protectedData: AlwaysAvailable(), clock: fixedNow)
+        let relaunch = testStore(base, preferences: prefs)
         await #expect(throws: FinancialStoreError.dataUnreadable(corruptFiles: corrupt)) { try await relaunch.read() }
         try await relaunch.acknowledgeUnreadableData(corrupt)
         #expect(try await relaunch.read() == .empty)
@@ -229,12 +232,12 @@ struct StoreSafetyTests {
         let dir = TestDirectory.make("budgie-store").appendingPathComponent("financial_store")
         defer { try? FileManager.default.removeItem(at: dir.deletingLastPathComponent()) }
         let fs = DirectoryFileSystem(directory: dir)
-        let store = FinancialStore(fileSystem: fs, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow)
+        let store = testStore(fs)
         #expect(try await store.read() == .empty)
         #expect(try fs.list().isEmpty, "a fresh install writes nothing on load")
         try await store.updateSections([("a", .double(1200.0))])
         try await store.updateSections([("b", .string("😀"))])
-        let reloaded = try await FinancialStore(fileSystem: fs, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow).read()
+        let reloaded = try await testStore(fs).read()
         #expect(reloaded.revision == 2)
         #expect(reloaded.sections["a"]?.numberValue?.lexeme == "1200.0")
         #expect(try fs.list() == [StoreFile.backupName, StoreFile.primaryName])
@@ -242,7 +245,7 @@ struct StoreSafetyTests {
         let broken = TestDirectory.make("budgie-store")
         defer { try? FileManager.default.removeItem(at: broken) }
         try FileManager.default.createDirectory(at: broken.appendingPathComponent(StoreFile.primaryName), withIntermediateDirectories: true)
-        let failing = FinancialStore(fileSystem: DirectoryFileSystem(directory: broken), preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow)
+        let failing = testStore(DirectoryFileSystem(directory: broken))
         do {
             _ = try await failing.read()
             Issue.record("a directory must be a read error, never an empty store")

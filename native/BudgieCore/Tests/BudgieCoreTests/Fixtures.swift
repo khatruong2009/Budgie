@@ -35,6 +35,11 @@ enum Fixtures {
         "\(group)/tz/\(zone.replacingOccurrences(of: "/", with: "_"))"
     }
 
+    /// `json` for `<group>/tz/<zone>/<file>`.
+    static func json(_ group: String, zone: String, _ file: String) throws -> J {
+        try json("\(zonePath(group, zone))/\(file)")
+    }
+
     /// Scenario directories under `store/` or `legacy/`.
     static func scenarios(_ group: String) throws -> [URL] {
         try FileManager.default

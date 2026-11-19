@@ -6,21 +6,6 @@ import Testing
 /// Datasets written by native/ParityHarness/parity/flow_fixtures_test.dart.
 let flowDatasets = ["typical", "gaps", "cross_year", "empty", "one_month", "negative_tiny", "large"]
 
-private func flowFixture(_ relative: String) throws -> J {
-    try Fixtures.json("flow/" + relative)
-}
-
-private func flowZoneFixture(_ zone: String, _ name: String) throws -> J {
-    try Fixtures.json("\(Fixtures.zonePath("flow", zone))/\(name)")
-}
-
-private func hex(_ value: Double) -> String {
-    let text = String(value.bitPattern, radix: 16)
-    return String(repeating: "0", count: 16 - text.count) + text
-}
-
-private func utf16(_ strings: [String]) -> [[UInt16]] { strings.map { Array($0.utf16) } }
-
 private func idsFnv(_ ids: [String]) -> String {
     StoreFile.checksum(Array(ids.joined(separator: "\n").utf8))
 }
@@ -121,8 +106,8 @@ private func filter(_ spec: J, calendar: DartCalendar) -> TransactionFilter {
 struct FlowParityTests {
     @Test("series, windows, metrics, bars, YoY, trend curve and filters", arguments: fixtureZones, flowDatasets)
     func dataset(zone: String, name: String) throws {
-        let fixture = try flowZoneFixture(zone, name + ".json")
-        let specs = try flowZoneFixture(zone, "filter_specs.json")["specs"].array
+        let fixture = try Fixtures.json("flow", zone: zone, name + ".json")
+        let specs = try Fixtures.json("flow", zone: zone, "filter_specs.json")["specs"].array
         let calendar = DartCalendar(timeZone: TimeZone(identifier: zone)!)
         let formatter = MoneyFormatter()
         let rows = records(fixture, calendar: calendar)
@@ -145,7 +130,7 @@ struct FlowParityTests {
             #expect(ids == fixture["sortedIds"].array.map(\.string!), "\(context) order")
         }
         #expect(idsFnv(ids) == fixture["sortedIdsFnv"].string, "\(context) order hash")
-        #expect(utf16(index.categoryNames) == utf16(fixture["categoryOptions"].array.map(\.string!)), "\(context) category options")
+        same(index.categoryNames, fixture["categoryOptions"].array.map(\.string!), "\(context) category options")
 
         // Row strings (subtitle, amount), newest first.
         let rowTexts = index.newestFirst.map { [$0.flowSubtitle, $0.flowAmountText(formatter)] }
@@ -153,7 +138,7 @@ struct FlowParityTests {
             let want = fixture["rowTexts"].array.map { $0.array.map(\.string!) }
             #expect(want.count == rowTexts.count, "\(context) row texts")
             for (row, (got, expected)) in zip(index.newestFirst, zip(rowTexts, want)) {
-                #expect(utf16(got) == utf16(expected), "\(context) row \(row.id)")
+                same(got, expected, "\(context) row \(row.id)")
             }
         } else {
             let joined = rowTexts.map { $0.joined(separator: "\t") }.joined(separator: "\n")
@@ -235,11 +220,11 @@ struct FlowParityTests {
         for (spec, want) in zip(specs, results) {
             let f = filter(spec["spec"], calendar: calendar)
             let here = "\(context) filter \(spec["spec"].value.map { DartJSON.encodeString($0) } ?? "")"
-            #expect(Array(f.query.utf16) == Array(spec["query"].string!.utf16), "\(here) query")
+            same(f.query, spec["query"].string!, "\(here) query")
             #expect(f.minAmount.map(hex) == spec["min"].string && f.maxAmount.map(hex) == spec["max"].string, "\(here) amounts")
             #expect(f.from?.toIso8601String() == spec["start"].string && f.to?.toIso8601String() == spec["end"].string, "\(here) dates")
             #expect(f.isActive == spec["isActive"].bool, "\(here) active")
-            #expect(Array(f.signature.utf16) == Array(spec["signature"].string!.utf16), "\(here) signature \(f.signature)")
+            same(f.signature, spec["signature"].string!, "\(here) signature")
             let matches = f.apply(index)
             let matchIDs = matches.map(\.id)
             if want["ids"].value != nil {
@@ -282,7 +267,7 @@ struct FlowParityTests {
 
     @Test("percent deltas, metric strings, amount parsing and fl_chart curves")
     func formulas() throws {
-        let fixture = try flowFixture("formulas.json")
+        let fixture = try Fixtures.json("flow/formulas.json")
         let formatter = MoneyFormatter()
 
         let deltas = fixture["deltas"].array

@@ -45,11 +45,7 @@ struct CategoryRelaunchTests {
 
     private func load(_ sections: JSONObject) -> FinancialData.LoadResult {
         let calendar = DartCalendar(timeZone: Scenario.zone)
-        let now = calendar.date(2026, 9, 28)
-        var next = 0
-        return FinancialData.load(
-            FinancialSnapshot(schemaVersion: 2, revision: 1, sections: sections), preferences: InMemoryPreferences([:]),
-            calendar: calendar, now: { now }, newID: { next += 1; return "id\(next)" })
+        return loadFinancialData(sections, calendar: calendar, now: calendar.date(2026, 9, 28), newID: sequentialIDs("id"))
     }
 
     private func transaction(_ id: String, _ type: String, _ category: String) -> String {

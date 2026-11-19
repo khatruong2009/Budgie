@@ -17,7 +17,7 @@ struct MigrationAuditTests {
             ])
             let preferences = InMemoryPreferences(prefs)
             for _ in 0..<2 {
-                let store = FinancialStore(fileSystem: files, preferences: preferences, protectedData: AlwaysAvailable(), clock: fixedNow)
+                let store = testStore(files, preferences: preferences)
                 do {
                     _ = try await store.read()
                     Issue.record("Damaged files must block, including on relaunch")
@@ -42,7 +42,7 @@ struct MigrationAuditTests {
             ])
             let original = preferences.all
             let files = InMemoryFileSystem()
-            let store = FinancialStore(fileSystem: files, preferences: preferences, protectedData: AlwaysAvailable(), clock: fixedNow)
+            let store = testStore(files, preferences: preferences)
             do {
                 _ = try await store.read()
                 Issue.record("An existing unreadable ledger must block before committing")
@@ -83,7 +83,7 @@ struct MigrationAuditTests {
         ])
         let original = prefs.all
         let files = InMemoryFileSystem()
-        let store = FinancialStore(fileSystem: files, preferences: prefs, protectedData: AlwaysAvailable(), clock: fixedNow)
+        let store = testStore(files, preferences: prefs)
         await #expect(throws: FinancialStoreError.self) { try await store.read() }
         #expect(files.snapshot.isEmpty)
         #expect(prefs.all == original)
@@ -125,7 +125,7 @@ struct MigrationAuditTests {
         let base = InMemoryFileSystem(files: try typicalFiles())
         let prefs = InMemoryPreferences()
         let files = SubstitutingFileSystem(base: base)
-        let store = FinancialStore(fileSystem: files, preferences: prefs, protectedData: AlwaysAvailable(), clock: fixedNow)
+        let store = testStore(files, preferences: prefs)
         let before = try await store.read()
         await #expect(throws: FinancialStoreError.verificationFailed(expected: before.revision + 1, found: before.revision + 1)) {
             try await store.updateSections([("probe", .string("intended value"))])

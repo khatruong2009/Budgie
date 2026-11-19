@@ -13,7 +13,7 @@ func fixtureBytes(_ value: J) -> [UInt8] {
 let backupZones = ["America/New_York", "Australia/Lord_Howe", "UTC", "America/Santiago"]
 
 func backupFixture(_ zone: String, _ file: String) throws -> J {
-    try Fixtures.json("\(Fixtures.zonePath("backup", zone))/\(file)")
+    try Fixtures.json("backup", zone: zone, file)
 }
 
 /// Typed preferences (the harness `typedPrefs` form) as a fixture value.

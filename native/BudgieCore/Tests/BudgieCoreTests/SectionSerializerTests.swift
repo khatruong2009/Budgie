@@ -3,18 +3,11 @@ import Testing
 
 @testable import BudgieCore
 
-private func loadData(_ sections: JSONObject, preferences: InMemoryPreferences = InMemoryPreferences([:])) -> FinancialData {
+private func loadData(_ sections: JSONObject, preferences: [String: PreferenceValue] = [:]) -> FinancialData {
     let calendar = DartCalendar(timeZone: Scenario.zone)
-    let now = calendar.date(2026, 9, 28, 9, 15)
-    var counter = 0
-    return FinancialData.load(
-        FinancialSnapshot(schemaVersion: 2, revision: 1, sections: sections), preferences: preferences, calendar: calendar,
-        now: { now }, newID: { counter += 1; return "new-\(counter)" }
+    return loadFinancialData(
+        sections, preferences: preferences, calendar: calendar, now: calendar.date(2026, 9, 28, 9, 15), newID: sequentialIDs("new-")
     ).data
-}
-
-private func text(_ value: JSONValue?) -> String {
-    value.map { DartJSON.encodeString($0) } ?? "<nil>"
 }
 
 private func parse(_ json: String) -> JSONValue {
@@ -179,10 +172,10 @@ struct SectionSerializerTests {
 
     @Test("tags and rules fall back to the legacy preference when the section is not a list")
     func legacyPreferenceFallback() {
-        let prefs = InMemoryPreferences([
+        let prefs: [String: PreferenceValue] = [
             PreferenceKey.transactionTags: .string(#"[{"id":"t","name":"Legacy"}]"#),
             PreferenceKey.categorizationRules: .string("not json"),
-        ])
+        ]
         let data = loadData(JSONObject(ordered: [("transactionTags", .null)]), preferences: prefs)
         #expect(data.tags.map(\.name) == ["Legacy"])
         #expect(data.rules.isEmpty)
