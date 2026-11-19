@@ -506,10 +506,10 @@ public struct InsightPreferences: Sendable, Equatable {
         guard case .string(let raw)? = snoozed,
             let decoded = try? JSONParser.parse(Array(raw.utf8)), case .object(let object) = decoded
         else { return result }
-        for (key, value) in DartJSON.canonicalMembers(object) {
-            guard case .string(let text) = value else { break }
+        for member in DartJSON.canonicalMembers(object) {
+            guard case .string(let text) = member.value else { break }
             if let until = DartDateTime.tryParse(text.value, timeZone: timeZone) {
-                result.snoozed.append(Snooze(id: key.value, until: until))
+                result.snoozed.append(Snooze(id: member.key.value, until: until))
             }
         }
         return result

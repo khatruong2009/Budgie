@@ -87,9 +87,9 @@ public struct FinancialData: Sendable {
     /// repeated key keeps its first position and its last value, as Dart's
     /// `jsonDecode` map does.
     public var budgetLimits: [(String, Double)] {
-        DartJSON.canonicalMembers(budgetLimitsObject).compactMap { key, value in
-            guard let value = value.numberValue?.doubleValue, value > 0 else { return nil }
-            return (key.value, value)
+        DartJSON.canonicalMembers(budgetLimitsObject).compactMap { member in
+            guard let value = member.value.numberValue?.doubleValue, value > 0 else { return nil }
+            return (member.key.value, value)
         }
     }
 
