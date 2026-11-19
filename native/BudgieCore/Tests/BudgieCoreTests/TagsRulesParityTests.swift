@@ -3,10 +3,6 @@ import Testing
 
 @testable import BudgieCore
 
-private func fixture() throws -> J {
-    try Fixtures.json("tags/mutations.json")
-}
-
 private let sections = [Section.transactionTags, Section.categorizationRules]
 
 private func line(_ values: [JSONValue]) -> String { DartJSON.encodeString(.array(values)) }
@@ -32,12 +28,11 @@ private func memory(_ j: J) -> [String: [String]] {
 }
 
 private func load(_ sections: JSONObject, ids: [String] = []) -> FinancialData.LoadResult {
-    let calendar = DartCalendar(timeZone: TimeZone(identifier: "America/New_York")!)
-    let now = calendar.date(2026, 9, 28, 9, 15, 30, 250, 125)
+    let calendar = DartCalendar(timeZone: newYorkZone)
     var queue = ids
-    return FinancialData.load(
-        FinancialSnapshot(revision: 1, sections: sections), preferences: InMemoryPreferences([:]), calendar: calendar,
-        now: { now }, newID: { queue.isEmpty ? "unexpected-\(UUID().uuidString.lowercased())" : queue.removeFirst() })
+    return loadFinancialData(
+        sections, calendar: calendar, now: calendar.date(2026, 9, 28, 9, 15, 30, 250, 125),
+        newID: { queue.isEmpty ? "unexpected-\(UUID().uuidString.lowercased())" : queue.removeFirst() })
 }
 
 private func type(_ j: J) -> TransactionType? {
@@ -68,7 +63,7 @@ struct TagsRulesParityTests {
     /// reproduces that order (the `sort_*` scenarios).
     @Test("mutation scenarios")
     func mutations() throws {
-        let f = try fixture()
+        let f = try Fixtures.json("tags/mutations.json")
         #expect(f["tz"].string == "America/New_York")
         let scenarios = f["scenarios"].array
         #expect(scenarios.map { $0["name"].string! } == [
@@ -180,7 +175,7 @@ struct TagsRulesParityTests {
     /// (PARITY_GAPS); new rows are the same bytes Dart writes.
     @Test("malformed rows: Dart drops the whole list, Swift keeps every row")
     func malformed() throws {
-        let s = try fixture()["scenarios"].array.first { $0["name"].string == "malformed" }!
+        let s = try Fixtures.json("tags/mutations.json")["scenarios"].array.first { $0["name"].string == "malformed" }!
         let initial = try JSONParser.parse(s["initialSections"].string!).objectValue!
         var data = load(initial).data
         #expect(memory(s["launched"]["memory"]) == ["tags": [], "rules": []])
@@ -205,7 +200,7 @@ struct TagsRulesParityTests {
     /// `RuleDraft` makes; a case variant of a tag shows Flutter's copy.
     @Test("canary: the page's rule shape and duplicate-tag copy")
     func canary() throws {
-        let c = try fixture()["canary"]
+        let c = try Fixtures.json("tags/mutations.json")["canary"]
         let tagIDs = c["tagIds"].array.map { $0.string! }
         var data = load(JSONObject()).data
         try data.addTag(name: "Work", id: tagIDs[0])

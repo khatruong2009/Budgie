@@ -20,48 +20,8 @@ enum SwiftOutput {
         ProcessInfo.processInfo.environment["BUDGIE_SWIFT_OUT"].map { URL(fileURLWithPath: $0) }
     }
 
-    /// Saves the store files and prefs of `fileSystem`/`preferences` as a case.
-    /// `budgetLimits`, when given, is what Dart's `categoryBudgetLimits`
-    /// must hold after loading the case (the verifier checks key order and
-    /// values, the latter as Dart's `toString`). `netWorth`, when given, is
-    /// what Dart's `netWorthEntries` (order, ids, names, types, dates and
-    /// snapshot amounts as `toString`) and `selectedNetWorthMonth` must be.
-    /// `goals`, when given, is what Dart's `savingsGoals` must be (order,
-    /// ids, names, amounts as `toString`, and dates). `appSettings`, when
-    /// given, is what Dart's `AppSettingsProvider` must load, and
-    /// `themeMode` what its `ThemeProvider` must load (`light`, `dark` or
-    /// `system`). `categories`, when given, is what Dart's
-    /// `CategoryProvider` must hold after its launch pass (every field, in
-    /// stored order, followed by `categoriesAddedAtLaunch` without ids),
-    /// and the categories its transactions, templates and rules must carry.
-    /// `tagsRules`, when given, is what Dart's `CategorizationProvider` must
-    /// load (`tags`, and `rules` in its getter's order, bounds as
-    /// `toString`), and whose `suggest` must pick the rule Swift's does for
-    /// every `ruleProbes` probe; `newTagIDs` / `newRuleIDs` are rows Swift
-    /// made (edits included), whose
-    /// stored JSON must be Dart's `toJson` byte for byte. `backup`, when
-    /// given, is Swift's export of this store as the app would make it after
-    /// a launch (`backup.json`); the verifier compares it with Flutter's
-    /// export of the same store, decodes it, and restores it into an empty
-    /// store to export it again. `recurring`, when given, is what Dart's
-    /// `RecurringTransactionModel` must load (every field, stored order,
-    /// amounts as `toString`); `dartGenerateAddsNothing` asks the verifier
-    /// to run Dart's generator at the launch clock afterwards and fail if it
-    /// adds a row or moves a cursor (Swift already generated everything due).
-    /// `onboardingCompleted`, when given, is what Flutter's onboarding gate
-    /// must read from the preferences (true: no tour).
-    /// `insights`, when given, is what Flutter's insight
-    /// preference load must hold (`dismissed`, `snoozed` as [id, ISO]) and
-    /// the cards its engine and LocalInsightsSection must show at `now` for
-    /// `selectedMonth` (`visible` as [id, headline, explanation, action]).
-    /// `transactions`, when given, is what Dart's `TransactionModel` must
-    /// load (every field, stored order; description and category as UTF-16
-    /// code units, amounts as `toString`). Every date above is a cell
-    /// `[ISO text, epoch microseconds]` (`cell`): the text of an instant in
-    /// a repeated DST hour is the same for both occurrences, so the verifier
-    /// compares the instant too. `csv`, when given, is Swift's export of the
-    /// ledger (`export.csv`) and what the importer must make of it: Dart's
-    /// `parseTransactionsCsv` over this store's transactions and over none.
+    static func newID() -> String { UUID().uuidString.lowercased() }
+
     /// A date as the verifier compares it: its ISO text and its instant.
     static func cell(_ date: DartDateTime) -> [Any] {
         [date.toIso8601String(), date.microsecondsSinceEpoch]
@@ -110,6 +70,48 @@ enum SwiftOutput {
         return probes
     }
 
+    /// Saves the store files and prefs of `fileSystem`/`preferences` as a case.
+    /// `budgetLimits`, when given, is what Dart's `categoryBudgetLimits`
+    /// must hold after loading the case (the verifier checks key order and
+    /// values, the latter as Dart's `toString`). `netWorth`, when given, is
+    /// what Dart's `netWorthEntries` (order, ids, names, types, dates and
+    /// snapshot amounts as `toString`) and `selectedNetWorthMonth` must be.
+    /// `goals`, when given, is what Dart's `savingsGoals` must be (order,
+    /// ids, names, amounts as `toString`, and dates). `appSettings`, when
+    /// given, is what Dart's `AppSettingsProvider` must load, and
+    /// `themeMode` what its `ThemeProvider` must load (`light`, `dark` or
+    /// `system`). `categories`, when given, is what Dart's
+    /// `CategoryProvider` must hold after its launch pass (every field, in
+    /// stored order, followed by `categoriesAddedAtLaunch` without ids),
+    /// and the categories its transactions, templates and rules must carry.
+    /// `tagsRules`, when given, is what Dart's `CategorizationProvider` must
+    /// load (`tags`, and `rules` in its getter's order, bounds as
+    /// `toString`), and whose `suggest` must pick the rule Swift's does for
+    /// every `ruleProbes` probe; `newTagIDs` / `newRuleIDs` are rows Swift
+    /// made (edits included), whose
+    /// stored JSON must be Dart's `toJson` byte for byte. `backup`, when
+    /// given, is Swift's export of this store as the app would make it after
+    /// a launch (`backup.json`); the verifier compares it with Flutter's
+    /// export of the same store, decodes it, and restores it into an empty
+    /// store to export it again. `recurring`, when given, is what Dart's
+    /// `RecurringTransactionModel` must load (every field, stored order,
+    /// amounts as `toString`); `dartGenerateAddsNothing` asks the verifier
+    /// to run Dart's generator at the launch clock afterwards and fail if it
+    /// adds a row or moves a cursor (Swift already generated everything due).
+    /// `onboardingCompleted`, when given, is what Flutter's onboarding gate
+    /// must read from the preferences (true: no tour).
+    /// `insights`, when given, is what Flutter's insight
+    /// preference load must hold (`dismissed`, `snoozed` as [id, ISO]) and
+    /// the cards its engine and LocalInsightsSection must show at `now` for
+    /// `selectedMonth` (`visible` as [id, headline, explanation, action]).
+    /// `transactions`, when given, is what Dart's `TransactionModel` must
+    /// load (every field, stored order; description and category as UTF-16
+    /// code units, amounts as `toString`). Every date above is a cell
+    /// `[ISO text, epoch microseconds]` (`cell`): the text of an instant in
+    /// a repeated DST hour is the same for both occurrences, so the verifier
+    /// compares the instant too. `csv`, when given, is Swift's export of the
+    /// ledger (`export.csv`) and what the importer must make of it: Dart's
+    /// `parseTransactionsCsv` over this store's transactions and over none.
     static func emit(
         _ name: String, fileSystem: InMemoryFileSystem, preferences: InMemoryPreferences, snapshot: FinancialSnapshot,
         budgetLimits: [(String, Double)]? = nil, netWorth: FinancialData? = nil, goals: FinancialData? = nil,
@@ -234,7 +236,6 @@ enum SwiftOutput {
     /// Swift's export of `snapshot` after a launch (load, then the recurring
     /// generator), as the verifier makes Flutter's.
     static func backup(of snapshot: FinancialSnapshot, preferences: PreferencesStore, now: DartDateTime) throws -> Backup {
-        func newID() -> String { UUID().uuidString.lowercased() }
         var data = FinancialData.load(
             snapshot, preferences: preferences, calendar: DartCalendar(timeZone: Scenario.zone), now: { now }, newID: newID, matchesPaddedCategoryNames: false
         ).data
@@ -264,7 +265,7 @@ struct SwiftOutputForDartTests {
         let scenario = try Scenario(Fixtures.url("store/\(target)"))
         let now = scenario.launchNow
         let calendar = DartCalendar(timeZone: Scenario.zone)
-        func newID() -> String { UUID().uuidString.lowercased() }
+        let newID = SwiftOutput.newID
         let store = scenario.makeStore()
         let current = FinancialData.load(
             try await store.read(), preferences: scenario.preferences, calendar: calendar, now: { now }, newID: newID, matchesPaddedCategoryNames: false
@@ -362,14 +363,14 @@ struct SwiftOutputForDartTests {
             let now = scenario.launchNow
             let store = scenario.makeStore()
             _ = try await store.read()
-            func id() -> String { UUID().uuidString.lowercased() }
+            let newID = SwiftOutput.newID
             let storedTemplates = data.templates
 
             let added = data.addTransaction(
                 type: .expense, description: "Swift ☕️ \"quoted\", comma", amount: 1200, category: "Groceries",
-                date: calendar.date(2026, 9, 27, 18, 30), tagIds: ["tag-a", "tag-b"], id: id(), now: now)
+                date: calendar.date(2026, 9, 27, 18, 30), tagIds: ["tag-a", "tag-b"], id: newID(), now: now)
             _ = data.addTransaction(type: .income, description: "", amount: 0.1 + 0.2, category: "Salary",
-                                    date: now, id: id(), now: now)
+                                    date: now, id: newID(), now: now)
             if let first = data.transactions.first {
                 data.updateTransaction(id: first.id, .init(type: .expense, description: first.description + " (edited)", amount: 42,
                                                            category: "Health", date: calendar.date(2026, 2, 28)), now: now)
@@ -379,14 +380,14 @@ struct SwiftOutputForDartTests {
             if data.transactions.count > 3 { data.deleteTransaction(id: data.transactions[2].id) }
 
             let monthly = RecurringTemplate.make(
-                id: id(), type: .expense, description: "Swift rent", amount: 1500, category: "Housing", pattern: .monthly,
+                id: newID(), type: .expense, description: "Swift rent", amount: 1500, category: "Housing", pattern: .monthly,
                 startDate: calendar.date(2026, 1, 31), dayOfMonth: 31, dayOfWeek: nil)
             let weekly = RecurringTemplate.make(
-                id: id(), type: .income, description: "Swift pay", amount: 800, category: "Salary", pattern: .weekly,
+                id: newID(), type: .income, description: "Swift pay", amount: 800, category: "Salary", pattern: .weekly,
                 startDate: calendar.date(2026, 9, 1, 9), dayOfMonth: nil, dayOfWeek: calendar.date(2026, 9, 1).weekday)
             data.addTemplate(monthly)
             data.addTemplate(weekly)
-            _ = RecurringGenerator.generateDue(in: &data, now: now, clock: { now }, newID: id)
+            _ = RecurringGenerator.generateDue(in: &data, now: now, clock: { now }, newID: newID)
             data.updateTemplate(id: monthly.id, .init(type: .expense, description: "Swift rent (edited)", amount: 1550,
                                                       category: "Housing", pattern: .monthly, startDate: calendar.date(2026, 1, 15),
                                                       dayOfMonth: 15, dayOfWeek: nil))
@@ -395,7 +396,7 @@ struct SwiftOutputForDartTests {
             // the first occurrence on or after today (Swift only; the
             // manual generate below writes today's row if one is due).
             let resumed = RecurringTemplate.make(
-                id: id(), type: .expense, description: "Swift paused gym", amount: 20, category: "Health", pattern: .weekly,
+                id: newID(), type: .expense, description: "Swift paused gym", amount: 20, category: "Health", pattern: .weekly,
                 startDate: calendar.date(2026, 6, 1, 7, 45), dayOfMonth: nil, dayOfWeek: calendar.date(2026, 6, 1).weekday,
                 isActive: false)
             data.addTemplate(resumed)
@@ -409,10 +410,10 @@ struct SwiftOutputForDartTests {
             // the start day; weekly/biweekly store the start's weekday.
             func formAdd(_ edit: RecurringTemplate.Edit) -> RecurringTemplate {
                 let template = RecurringTemplate.make(
-                    id: id(), type: edit.type, description: edit.description, amount: edit.amount, category: edit.category,
+                    id: newID(), type: edit.type, description: edit.description, amount: edit.amount, category: edit.category,
                     pattern: edit.pattern, startDate: edit.startDate, dayOfMonth: edit.dayOfMonth, dayOfWeek: edit.dayOfWeek)
                 data.addTemplate(template)
-                _ = RecurringGenerator.generateDue(in: &data, now: now, clock: { now }, newID: id)
+                _ = RecurringGenerator.generateDue(in: &data, now: now, clock: { now }, newID: newID)
                 return template
             }
             let opened = now.adding(microseconds: -4_321_987)
@@ -441,7 +442,7 @@ struct SwiftOutputForDartTests {
                 dayOfMonth: 20))
             // The manual generate after every template edit above: Dart's
             // launch generator must then find nothing due.
-            _ = RecurringGenerator.generateDue(in: &data, now: now, clock: { now }, newID: id)
+            _ = RecurringGenerator.generateDue(in: &data, now: now, clock: { now }, newID: newID)
             #expect(data.transactions.filter { $0.recurringTemplateId == resumed.id }
                 .allSatisfy { !$0.date.isBefore(now) || calendar.isSameDay($0.date, now) }, "resume back-filled")
             // Template deletion (AppModel.deleteTemplate): a stored one and
@@ -475,8 +476,8 @@ struct SwiftOutputForDartTests {
             let stored = data.netWorthEntries
             let pastMonth = calendar.date(2026, 6)
             let brokerage = data.addNetWorthEntry(
-                name: " Swift Brokerage ☕️ ", type: .asset, amount: 1234.5, month: pastMonth, id: id(), now: now)!
-            let card = data.addNetWorthEntry(name: "Swift \"Card\"", type: .liability, amount: 0.1 + 0.2, id: id(), now: now)!
+                name: " Swift Brokerage ☕️ ", type: .asset, amount: 1234.5, month: pastMonth, id: newID(), now: now)!
+            let card = data.addNetWorthEntry(name: "Swift \"Card\"", type: .liability, amount: 0.1 + 0.2, id: newID(), now: now)!
             data.updateNetWorthEntry(id: brokerage.id, name: "Swift Brokerage", type: .asset, amount: 1300, month: pastMonth, now: now)
             data.updateNetWorthEntry(id: brokerage.id, name: "Swift Brokerage", type: .asset, amount: 1e-7, month: now, now: now)
             let july4 = calendar.date(2026, 7, 4, 12, 0, 0, 0, 5)
@@ -492,7 +493,7 @@ struct SwiftOutputForDartTests {
             }
             if stored.count > 1 { data.deleteNetWorthEntry(id: stored[stored.count - 1].id) }
             data.carryNetWorthMonthForward(calendar.date(2026, 10), now: now)
-            let doomed = data.addNetWorthEntry(name: "Swift Delete Me", type: .liability, amount: 5, id: id(), now: now)!
+            let doomed = data.addNetWorthEntry(name: "Swift Delete Me", type: .liability, amount: 5, id: newID(), now: now)!
             data.deleteNetWorthEntry(id: doomed.id)
             data.selectNetWorthMonth(calendar.date(2026, 7, 19, 8))
 
@@ -548,12 +549,12 @@ struct SwiftOutputForDartTests {
             // re-added under its id (moves to the end); deleting a tag the
             // rules use (typical's "Work" when present) and a rule.
             let tagsBefore = data.tags
-            let swiftTag = try data.addTag(name: " Swift ☕️ \"Tag\" ", id: id())
-            let plainTag = try data.addTag(name: "Swift Plain", colorToken: "cyan", id: id())
-            _ = try? data.addTag(name: "swift plain", id: id())
+            let swiftTag = try data.addTag(name: " Swift ☕️ \"Tag\" ", id: newID())
+            let plainTag = try data.addTag(name: "Swift Plain", colorToken: "cyan", id: newID())
+            _ = try? data.addTag(name: "swift plain", id: newID())
             var newRuleIDs: [String] = []
             func addRule(_ draft: RuleDraft, id ruleID: String? = nil) throws {
-                newRuleIDs.append(try data.addRule(draft, id: ruleID ?? id()).id)
+                newRuleIDs.append(try data.addRule(draft, id: ruleID ?? newID()).id)
             }
             try addRule(RuleDraft(
                 merchantPattern: "  Whole \"Foods\" ☕️ ", transactionType: .expense, category: "Groceries",
@@ -567,7 +568,7 @@ struct SwiftOutputForDartTests {
             try addRule(RuleDraft(
                 merchantPattern: "swift tiny", transactionType: .expense, minimumAmount: 1e-7, maximumAmount: 1e21,
                 category: "Eating Out", priority: -2))
-            let moved = id()
+            let moved = newID()
             try addRule(RuleDraft(merchantPattern: "swift first", transactionType: .expense, category: "Gift"), id: moved)
             try addRule(RuleDraft(merchantPattern: "swift moved", transactionType: .income, category: "Gift", tagIds: [plainTag.id]), id: moved)
             // Swift-only rule edits (in place, only the changed keys; Dart
@@ -577,7 +578,7 @@ struct SwiftOutputForDartTests {
             // income rule disabled; the disabled "swift rent" re-enabled;
             // and a stored (Dart-written) rule re-typed to any type, its
             // maximum set or cleared, and switched.
-            let editedRule = id()
+            let editedRule = newID()
             try addRule(RuleDraft(merchantPattern: "swift edit me", transactionType: .expense, category: "Groceries"), id: editedRule)
             var ruleEdit = try #require(data.rules.first { $0.id == editedRule }).draft
             ruleEdit.merchantPattern = " Swift Edited Café "
@@ -589,7 +590,7 @@ struct SwiftOutputForDartTests {
             ruleEdit.tagIds = [swiftTag.id]
             let ruleEdited = try data.updateRule(id: editedRule, ruleEdit)
             #expect(ruleEdited)
-            let disabledRule = id()
+            let disabledRule = newID()
             try addRule(
                 RuleDraft(merchantPattern: "swift bounded pay", transactionType: .income, maximumAmount: 100, category: "Salary"),
                 id: disabledRule)
@@ -614,7 +615,7 @@ struct SwiftOutputForDartTests {
                 let storedSwitched = data.setRuleEnabled(id: stored.id, !stored.isEnabled)
                 #expect(storedEdited && storedSwitched)
             }
-            let doomedRule = id()
+            let doomedRule = newID()
             try addRule(RuleDraft(merchantPattern: "swift delete me", transactionType: .expense, category: "Groceries"), id: doomedRule)
             data.deleteRule(id: doomedRule)
             data.deleteTag(id: tagsBefore.first?.id ?? swiftTag.id)
@@ -634,9 +635,9 @@ struct SwiftOutputForDartTests {
                 _ = try? data.updateCategory(
                     id: info.id, name: newName, iconIdentifier: icon ?? info.iconIdentifier, colorToken: color ?? info.colorToken, now: now)
             }
-            _ = try? data.addCategory(type: .expense, name: " Swift ☕️ \"Coffee\" ", iconIdentifier: "book", colorToken: "cyan", newID: id)
-            _ = try? data.addCategory(type: .income, name: "Swift ☕️ \"Coffee\"", iconIdentifier: "nope", colorToken: "green", newID: id)
-            _ = try? data.addCategory(type: .expense, name: "Gift!", iconIdentifier: "gift", colorToken: "teal", newID: id)
+            _ = try? data.addCategory(type: .expense, name: " Swift ☕️ \"Coffee\" ", iconIdentifier: "book", colorToken: "cyan", newID: newID)
+            _ = try? data.addCategory(type: .income, name: "Swift ☕️ \"Coffee\"", iconIdentifier: "nope", colorToken: "green", newID: newID)
+            _ = try? data.addCategory(type: .expense, name: "Gift!", iconIdentifier: "gift", colorToken: "teal", newID: newID)
             edit("Eating Out", .expense, to: "Eating Out", icon: "film", color: "red")
             edit("Groceries", .expense, to: "Food & Groceries")
             edit("Eating Out", .expense, to: "Dining")
@@ -676,10 +677,10 @@ struct SwiftOutputForDartTests {
                 + "\r\n2026-02-30,Expense,Food,bad date,1\r\n").utf8)
             let summary = try CSVImport.parse(bytes: file, existing: data.transactions, calendar: calendar)
             #expect(summary.drafts.count >= 5 && summary.rowErrors.count >= 1, "\(name) import")
-            data = data.importTransactions(summary, now: now, newID: id).data
+            data = data.importTransactions(summary, now: now, newID: newID).data
 
             // Dates only a DST zone makes hard (see `dstEdits`).
-            _ = try Self.dstEdits(&data, zone: Scenario.zone.identifier, now: now, newID: id)
+            _ = try Self.dstEdits(&data, zone: Scenario.zone.identifier, now: now, newID: newID)
 
             // Swift's own CSV export of the whole ledger (plus rows with
             // awkward fields that never get stored), read by Flutter's
@@ -693,7 +694,7 @@ struct SwiftOutputForDartTests {
             // does the same on the same bytes): a padded legacy name is
             // re-added at every launch (typical's "  Padded Cat "), so this
             // load uses Flutter's rule, not Swift's fix.
-            let relaunched = FinancialData.load(snapshot, preferences: scenario.preferences, calendar: calendar, now: { now }, newID: id, matchesPaddedCategoryNames: false).data
+            let relaunched = FinancialData.load(snapshot, preferences: scenario.preferences, calendar: calendar, now: { now }, newID: newID, matchesPaddedCategoryNames: false).data
             try SwiftOutput.emit(
                 "edited-\(name)", fileSystem: scenario.fileSystem, preferences: scenario.preferences, snapshot: snapshot,
                 budgetLimits: data.budgetLimits, netWorth: data, goals: data, categories: data,

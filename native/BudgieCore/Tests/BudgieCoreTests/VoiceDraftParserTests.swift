@@ -18,7 +18,7 @@ extension JSONValue: ExpressibleByStringLiteral {
     public init(stringLiteral value: String) { self = .string(JSONString(value)) }
 }
 
-let newYork = DartCalendar(timeZone: TimeZone(identifier: "America/New_York")!)
+let newYork = DartCalendar(timeZone: newYorkZone)
 
 /// The Dart tests' fixed "today": includes a time component so future-date
 /// clamping can be exercised against same-day dates that parse to midnight.

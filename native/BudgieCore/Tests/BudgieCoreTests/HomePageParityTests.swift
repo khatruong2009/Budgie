@@ -7,22 +7,13 @@ import Testing
 /// midnight (Santiago).
 private let homePageZones = ["America/New_York", "America/Santiago"]
 
-private func fixture(_ zone: String) throws -> J {
-    try Fixtures.json("\(Fixtures.zonePath("home", zone))/page.json")
-}
-
-private func hex(_ value: Double) -> String {
-    let text = String(value.bitPattern, radix: 16)
-    return String(repeating: "0", count: 16 - text.count) + text
-}
-
 @Suite("Home page: hero, gauge, chips, safe to spend, budgets and recent activity copy match the Flutter page (Fixtures/home/tz)")
 struct HomePageParityTests {
     /// Every text the real `SpendingPage` showed for each dataset, against
     /// the shared helpers (`HomeSummary`) that the Swift views render.
     @Test("page copy", arguments: homePageZones)
     func page(zone: String) throws {
-        let f = try fixture(zone)
+        let f = try Fixtures.json("home", zone: zone, "page.json")
         #expect(f["tz"].string == zone)
         let tz = TimeZone(identifier: zone)!
         let calendar = DartCalendar(timeZone: tz)
@@ -37,10 +28,7 @@ struct HomePageParityTests {
             let now = DartDateTime(microsecondsSinceEpoch: Int64(c["clockUs"].int!), timeZone: tz)
             #expect(now.toIso8601String() == c["clock"].string, "\(label) clock")
             let sections = try JSONParser.parse(c["sections"].string!).objectValue!
-            let data = FinancialData.load(
-                FinancialSnapshot(revision: 1, sections: sections), preferences: InMemoryPreferences([:]), calendar: calendar,
-                now: { now }, newID: { UUID().uuidString.lowercased() }
-            ).data
+            let data = loadFinancialData(sections, calendar: calendar, now: now).data
             let formatter = MoneyFormatter(
                 currencyCode: c["currency"].string!, locale: c["locale"].string, hideBalances: c["hide"].bool!)
             let month = try calendar.parse(c["month"].string!)
@@ -49,14 +37,14 @@ struct HomePageParityTests {
             let previous = HomeSummary.previousMonth(of: month, calendar: calendar)
             let previousTotals = ledger.summary(forMonth: previous)
             let previousName = DartDateFormat.MMMM(previous)
-            // HomeView.swift:108-110.
+            // As HomeView computes it.
             let breakdown = SafeToSpend.calculate(
                 transactions: data.transactions, templates: data.templates, budgetLimits: data.budgetLimits,
                 savingsGoals: data.savingsGoals, month: month, asOf: now, wallClock: now, calendar: calendar)
             let page = c["page"]
             if c["hide"].bool! { dots += 1 }
 
-            // Month pill (HomeView.swift:78).
+            // Month pill.
             same(DartDateFormat.yMMMM(month), page["pill"].string!, "\(label) pill")
             pill.insert(page["pill"].string!)
 

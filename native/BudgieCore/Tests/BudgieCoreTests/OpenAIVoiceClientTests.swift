@@ -86,14 +86,8 @@ final class VoiceStubProtocol: URLProtocol, @unchecked Sendable {
     override func stopLoading() {}
 }
 
-private let testBuiltInExpenses = [
-    "General", "Eating Out", "Groceries", "Housing", "Transportation", "Travel", "Clothing", "Gift", "Health",
-    "Entertainment", "Pets", "Family", "Loan Payment",
-]
-private let testBuiltInIncome = ["Salary", "Investment", "Gift", "Other"]
-
 /// Wednesday 2026-09-30, 14:05 in New York.
-private let wednesday = DartDateTime(2026, 9, 30, 14, 5, timeZone: TimeZone(identifier: "America/New_York")!)!
+private let wednesday = DartDateTime(2026, 9, 30, 14, 5, timeZone: newYorkZone)!
 
 private func json(_ text: String) -> Data { Data(text.utf8) }
 
@@ -143,7 +137,7 @@ struct OpenAIVoiceClientTests {
             If the phrase is not describing a transaction at all, return {"error":"not_a_transaction"}.
             """
         let actual = OpenAIVoiceClient.systemPrompt(
-            today: wednesday, expenseCategories: testBuiltInExpenses, incomeCategories: testBuiltInIncome)
+            today: wednesday, expenseCategories: flutterExpenseNames, incomeCategories: flutterIncomeNames)
         #expect(actual == expected)
         // No trailing newline, em dashes intact.
         #expect(!actual.hasSuffix("\n"))
@@ -244,7 +238,7 @@ struct OpenAIVoiceClientTests {
         let client = OpenAIVoiceClient(apiKey: "test-key", session: session)
         let result = try await client.draftJSON(
             transcript: "twelve fifty at \"Blue Bottle\" — coffee", today: wednesday,
-            expenseCategories: testBuiltInExpenses, incomeCategories: testBuiltInIncome)
+            expenseCategories: flutterExpenseNames, incomeCategories: flutterIncomeNames)
         #expect(result == output)
 
         let recorded = try #require(script.requests.first)
@@ -270,7 +264,7 @@ struct OpenAIVoiceClientTests {
         #expect(
             systemParts[0]["text"]
                 == OpenAIVoiceClient.systemPrompt(
-                    today: wednesday, expenseCategories: testBuiltInExpenses, incomeCategories: testBuiltInIncome))
+                    today: wednesday, expenseCategories: flutterExpenseNames, incomeCategories: flutterIncomeNames))
         let userParts = try #require(messages[1]["content"] as? [[String: String]])
         #expect(userParts == [["type": "text", "text": "twelve fifty at \"Blue Bottle\" — coffee"]])
     }

@@ -3,20 +3,10 @@ import Testing
 
 @testable import BudgieCore
 
-/// The logic fixtures (logic_fixtures_test.dart) in the zones whose DST
-/// change happens at midnight, and, for generator.json, safe_to_spend.json and
-/// safe_to_spend_random.json, in every logic zone (`logicZones`).
-/// Fixtures/logic/tz/<zone>/generator_dst.json and
-/// safe_to_spend_dst.json (templates, rows and clocks on, just before and
-/// just after each gap and fold, carrying epoch microseconds because a
-/// fold-hour wall time names two instants) are checked in every logic zone.
-private func logicFixture(_ zone: String, _ file: String) throws -> J {
-    try Fixtures.json(zoneDirectory(zone) + "/" + file)
-}
-
-private func instant(_ value: J, _ zone: TimeZone) -> DartDateTime {
-    DartDateTime(microsecondsSinceEpoch: Int64(value["us"].int!), timeZone: zone)
-}
+// The logic fixtures (logic_fixtures_test.dart) in every logic zone (`logicZones`).
+// generator_dst.json and safe_to_spend_dst.json hold templates, rows and clocks
+// on, just before and just after each gap and fold, with epoch microseconds
+// because a fold-hour wall time names two instants.
 
 /// `RecurringGenerator.generateDue` on one generator case. The clock is the
 /// exact instant Dart used; dates also compare as epoch microseconds when
@@ -24,15 +14,12 @@ private func instant(_ value: J, _ zone: TimeZone) -> DartDateTime {
 private func checkGeneratorCases(zone: String, file: String) throws {
     let tz = TimeZone(identifier: zone)!
     let calendar = DartCalendar(timeZone: tz)
-    let fixture = try logicFixture(zone, file)
+    let fixture = try Fixtures.json("logic", zone: zone, file)
     #expect(fixture["tz"].string == zone)
     #expect(!fixture["cases"].array.isEmpty)
     for c in fixture["cases"].array {
         let template = RecurringTemplate.parse(c["template"].value!, calendar: calendar, newID: { "x" })!
-        var data = FinancialData.load(
-            FinancialSnapshot(revision: 0, sections: JSONObject(ordered: [(Section.recurringTransactions, .array([.object(template.raw)]))])),
-            preferences: InMemoryPreferences(), calendar: calendar, now: { calendar.date(2026, 1, 1, 12) }, newID: { "id" }
-        ).data
+        var data = financialData(holding: template, calendar: calendar)
         let now = instant(c["now"], tz)
         #expect(now.toIso8601String() == c["now"]["iso"].string, "\(zone) now")
         _ = RecurringGenerator.generateDue(in: &data, now: now, clock: { now }, newID: { UUID().uuidString })
@@ -85,7 +72,7 @@ struct LogicDSTParityTests {
     func safeToSpend(zone: String) throws {
         let tz = TimeZone(identifier: zone)!
         let calendar = DartCalendar(timeZone: tz)
-        let fixture = try logicFixture(zone, "safe_to_spend.json")
+        let fixture = try Fixtures.json("logic", zone: zone, "safe_to_spend.json")
         let transactions = fixture["transactions"].array.map { TransactionRecord.parse($0.value!, calendar: calendar, newID: { "x" })! }
         let templates = fixture["recurring"].array.map { RecurringTemplate.parse($0.value!, calendar: calendar, newID: { "x" })! }
         let limits = fixture["limits"].keys.map { ($0, fixture["limits"][$0].double!) }
@@ -108,7 +95,7 @@ struct LogicDSTParityTests {
     @Test("400 random safe-to-spend scenarios", arguments: logicZones)
     func random(zone: String) throws {
         let calendar = DartCalendar(timeZone: TimeZone(identifier: zone)!)
-        let fixture = try logicFixture(zone, "safe_to_spend_random.json")
+        let fixture = try Fixtures.json("logic", zone: zone, "safe_to_spend_random.json")
         let cases = fixture["cases"].array
         #expect(cases.count == 400)
         var failures: [String] = []
@@ -136,7 +123,7 @@ struct LogicDSTParityTests {
     func safeToSpendDST(zone: String) throws {
         let tz = TimeZone(identifier: zone)!
         let calendar = DartCalendar(timeZone: tz)
-        let fixture = try logicFixture(zone, "safe_to_spend_dst.json")
+        let fixture = try Fixtures.json("logic", zone: zone, "safe_to_spend_dst.json")
         #expect(fixture["tz"].string == zone)
         let transactions = fixture["transactions"].array.map { TransactionRecord.parse($0.value!, calendar: calendar, newID: { "x" })! }
         let templates = fixture["recurring"].array.map { RecurringTemplate.parse($0.value!, calendar: calendar, newID: { "x" })! }
@@ -160,7 +147,7 @@ struct LogicDSTParityTests {
     func randomDST(zone: String) throws {
         let tz = TimeZone(identifier: zone)!
         let calendar = DartCalendar(timeZone: tz)
-        let fixture = try logicFixture(zone, "safe_to_spend_dst.json")
+        let fixture = try Fixtures.json("logic", zone: zone, "safe_to_spend_dst.json")
         let cases = fixture["randomCases"].array
         #expect(cases.count == 120)
         var failures: [String] = []

@@ -116,8 +116,3 @@ struct LedgerIndexTests {
         #expect(elapsed < .seconds(1))
     }
 }
-
-private func hex(_ value: Double) -> String {
-    let text = String(value.bitPattern, radix: 16)
-    return String(repeating: "0", count: 16 - text.count) + text
-}

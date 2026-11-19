@@ -3,10 +3,6 @@ import Testing
 
 @testable import BudgieCore
 
-private func fixture(_ name: String) throws -> J {
-    try Fixtures.json("categories/\(name)")
-}
-
 /// The sections a category edit can write, in commit order.
 private let cascadeSections = [
     Section.categories, Section.transactions, Section.categoryBudgetLimits, Section.recurringTransactions,
@@ -49,12 +45,10 @@ private func memory(_ j: J) -> [String: [String]] {
     return result
 }
 
-private let zone = TimeZone(identifier: "America/New_York")!
-
 private func load(_ sections: JSONObject, now: DartDateTime) -> FinancialData.LoadResult {
-    FinancialData.load(
-        FinancialSnapshot(revision: 1, sections: sections), preferences: InMemoryPreferences([:]),
-        calendar: DartCalendar(timeZone: zone), now: { now }, newID: { "unexpected-\(UUID().uuidString.lowercased())" })
+    loadFinancialData(
+        sections, calendar: DartCalendar(timeZone: newYorkZone), now: now,
+        newID: { "unexpected-\(UUID().uuidString.lowercased())" })
 }
 
 /// One recorded op applied to `data` (the edit with Flutter's rule pass
@@ -96,9 +90,9 @@ struct CategoryParityTests {
     /// Flutter's rule pass reproduces Dart's real rules section.
     @Test("mutation scenarios")
     func mutations() throws {
-        let f = try fixture("mutations.json")
+        let f = try Fixtures.json("categories/mutations.json")
         #expect(f["tz"].string == "America/New_York")
-        let calendar = DartCalendar(timeZone: zone)
+        let calendar = DartCalendar(timeZone: newYorkZone)
         let scenarios = f["scenarios"].array
         #expect(scenarios.map { $0["name"].string! } == [
             "add", "edit", "archive_move", "cascade", "foreign", "sequence_11", "sequence_22", "sequence_33",
@@ -204,7 +198,7 @@ struct CategoryParityTests {
 
     @Test("the editor's icon registry order and colour tokens")
     func catalog() throws {
-        let f = try fixture("catalog.json")
+        let f = try Fixtures.json("categories/catalog.json")
         #expect(CategoryCatalog.iconIdentifiers == f["iconIdentifiers"].array.map { $0.string! })
         #expect(CategoryCatalog.colorTokens == f["colorTokens"].array.map { $0.string! })
         #expect(CategoryCatalog.iconIdentifiers.count == 18 && CategoryCatalog.colorTokens.count == 8)

@@ -47,12 +47,10 @@ struct CategoryMaterializationTests {
 
     private func load(_ json: String, newIDs: [String] = []) -> FinancialData.LoadResult {
         let calendar = DartCalendar(timeZone: Scenario.zone)
-        let now = calendar.date(2026, 9, 28)
         var ids = newIDs
-        let sections = try! JSONParser.parse(json).objectValue!
-        return FinancialData.load(
-            FinancialSnapshot(schemaVersion: 2, revision: 1, sections: sections), preferences: InMemoryPreferences([:]),
-            calendar: calendar, now: { now }, newID: { ids.isEmpty ? "id" : ids.removeFirst() })
+        return loadFinancialData(
+            try! JSONParser.parse(json).objectValue!, calendar: calendar, now: calendar.date(2026, 9, 28),
+            newID: { ids.isEmpty ? "id" : ids.removeFirst() })
     }
 
     @Test("sources, trimming, case, slugs, budget keys > 0, and no write when nothing changes")
@@ -107,6 +105,7 @@ struct CategoryMaterializationTests {
         #expect(DartJSON.encodeString(result.data.categoriesSection())
             == #"[{"id":"a","type":"expense","name":"A","sortOrder":2,"extra":1},{"id":"b","type":"expense","name":"B","sortOrder":0,"isArchived":true},{"id":"c","type":"income","name":"C","sortOrder":0},{"id":"d","type":"expense","name":"D","sortOrder":1}]"#)
     }
+
     @Test("categoryInfo matches case-insensitively as UTF-16: NFC and NFD spellings stay apart")
     func infoLookup() {
         let data = load(#"""

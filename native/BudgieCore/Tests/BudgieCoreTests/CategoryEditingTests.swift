@@ -3,23 +3,13 @@ import Testing
 
 @testable import BudgieCore
 
-private let zone = TimeZone(identifier: "America/New_York")!
-private let calendar = DartCalendar(timeZone: zone)
+private let calendar = DartCalendar(timeZone: newYorkZone)
 private let now = calendar.date(2026, 9, 28, 9, 15, 30, 250, 125)
 
 /// Loads sections given as JSON text, with the app's launch pass.
 private func data(_ json: String) throws -> FinancialData {
-    let sections = try JSONParser.parse(json).objectValue!
-    return FinancialData.load(
-        FinancialSnapshot(revision: 1, sections: sections), preferences: InMemoryPreferences([:]), calendar: calendar,
-        now: { now }, newID: { "new-id" }
-    ).data
+    try loadFinancialData(JSONParser.parse(json).objectValue!, calendar: calendar, now: now, newID: { "new-id" }).data
 }
-
-private func text(_ value: JSONValue) -> String { DartJSON.encodeString(value) }
-
-/// Swift `==` on strings treats NFC and NFD as equal; Dart does not.
-private func units(_ strings: [String]) -> [[UInt16]] { strings.map { Array($0.utf16) } }
 
 private func category(_ id: String, _ type: String, _ name: String, _ sortOrder: Int, archived: Bool = false) -> String {
     #"{"id":"\#(id)","type":"\#(type)","name":"\#(name)","iconIdentifier":"cart","colorToken":"green","sortOrder":\#(sortOrder),"isArchived":\#(archived),"isBuiltIn":false}"#
@@ -145,7 +135,7 @@ struct CategoryEditingTests {
         let result = try d.updateCategory(id: "expense-gift", name: " Presents ", iconIdentifier: "gift", colorToken: "purple", now: now)
         #expect(result.changedSections == [Section.categories, Section.transactions, Section.categoryBudgetLimits, Section.categorizationRules])
         #expect(result.rename == CategoryRename(type: .expense, oldName: "Gift", newName: "Presents", transactions: 1, templates: 0, rules: 2, budgetLimit: .moved))
-        #expect(units(d.transactions.map(\.category)) == units(["Presents", "Gift", "gift", "Cafe\u{301}", "Caf\u{E9}"]))
+        same(d.transactions.map(\.category), ["Presents", "Gift", "gift", "Cafe\u{301}", "Caf\u{E9}"], "after the NFC rename")
         // Plain now, even though the stored updatedAt was later.
         #expect(d.transactions[0].raw["updatedAt"]?.stringValue == now.toIso8601String())
         #expect(d.transactions[1].raw == untouched)
@@ -157,7 +147,7 @@ struct CategoryEditingTests {
         // NFC rename leaves the NFD spelling alone.
         let cafe = try d.updateCategory(id: "expense-cafe", name: "Coffee", iconIdentifier: "cart", colorToken: "green", now: now)
         #expect(cafe.rename?.transactions == 1)
-        #expect(units(d.transactions.map(\.category)) == units(["Presents", "Gift", "gift", "Cafe\u{301}", "Coffee"]))
+        same(d.transactions.map(\.category), ["Presents", "Gift", "gift", "Cafe\u{301}", "Coffee"], "after the second rename")
         #expect(text(d.budgetLimitsSection()) == #"{"Presents":25.0,"Coffee":10.0}"#)
 
         // Case-only rename cascades; a budget collision keeps the new key's limit.
@@ -212,7 +202,7 @@ struct CategoryEditingTests {
         let scenario = try Scenario(Fixtures.url("store/typical"))
         let fs = FlakyFileSystem()
         for (name, bytes) in scenario.fileSystem.snapshot { fs.base.set(name, bytes) }
-        let store = FinancialStore(fileSystem: fs, preferences: scenario.preferences, protectedData: AlwaysAvailable(), clock: fixedNow)
+        let store = testStore(fs, preferences: scenario.preferences)
         let tracker = PersistenceTracker(store: store)
         let snapshot = try await store.read()
         var d = FinancialData.load(

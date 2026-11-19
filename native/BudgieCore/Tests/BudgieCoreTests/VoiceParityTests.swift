@@ -9,29 +9,11 @@ private let voiceZones = [
     "America/New_York", "UTC", "Australia/Lord_Howe", "Asia/Kolkata", "America/Santiago", "Asia/Beirut",
 ]
 
-private func voiceFixture(_ zone: String) throws -> J {
-    try Fixtures.json("\(Fixtures.zonePath("voice", zone))/parse.json")
-}
-
-private func voiceHex(_ value: Double) -> String {
-    let text = String(value.bitPattern, radix: 16)
-    return String(repeating: "0", count: 16 - text.count) + text
-}
-
-/// Dart string equality (code units; Swift `==` is canonical equivalence).
-private func voiceSame(_ a: String?, _ b: String?) -> Bool {
-    switch (a, b) {
-    case (nil, nil): true
-    case (let a?, let b?): DartString.equal(a, b)
-    default: false
-    }
-}
-
 @Suite("Voice: VoiceDraftParser matches VoiceExpenseService.parseVoiceJson (Fixtures/voice)")
 struct VoiceParityTests {
     @Test("every recorded model reply, in every zone", arguments: voiceZones)
     func matchesDart(_ zone: String) throws {
-        let f = try voiceFixture(zone)
+        let f = try Fixtures.json("voice", zone: zone, "parse.json")
         #expect(f["tz"].string == zone)
         let timeZone = TimeZone(identifier: zone)!
         let defaultExpense = f["expense"].array.map { $0.string! }
@@ -64,7 +46,7 @@ struct VoiceParityTests {
                 let transcript = item["transcript"].string!
                 switch (expected["error"].string, error) {
                 case ("unreadable", .unreadable(let actual)), ("notATransaction", .notATransaction(let actual)):
-                    if !voiceSame(actual, expected["transcript"].string) || !voiceSame(actual, transcript) {
+                    if !dartEqual(actual, expected["transcript"].string) || !dartEqual(actual, transcript) {
                         problems.append("\(name): transcript \(actual) vs \(expected["transcript"].string ?? "nil")")
                     }
                 default:
@@ -81,15 +63,15 @@ struct VoiceParityTests {
             if draft.type.rawValue != expected["type"].string {
                 problems.append("\(name): type \(draft.type) vs \(expected["type"].string!)")
             }
-            if !voiceSame(draft.description, expected["description"].string) {
+            if !dartEqual(draft.description, expected["description"].string) {
                 problems.append("\(name): description «\(draft.description)» vs «\(expected["description"].string!)»")
             }
-            if voiceHex(draft.amount) != expected["amountBits"].string {
+            if hex(draft.amount) != expected["amountBits"].string {
                 problems.append(
-                    "\(name): amount \(draft.amount) (\(voiceHex(draft.amount))) vs \(expected["amount"].string!) (\(expected["amountBits"].string!))"
+                    "\(name): amount \(draft.amount) (\(hex(draft.amount))) vs \(expected["amount"].string!) (\(expected["amountBits"].string!))"
                 )
             }
-            if !voiceSame(draft.category, expected["category"].string) {
+            if !dartEqual(draft.category, expected["category"].string) {
                 problems.append("\(name): category «\(draft.category)» vs «\(expected["category"].string!)»")
             }
             if draft.date.microsecondsSinceEpoch != Int64(expected["dateUs"].int!) || draft.date.isUtc != expected["dateUtc"].bool {
@@ -109,7 +91,7 @@ struct VoiceParityTests {
 
     @Test("case names are unique, and the corpus covers each area", arguments: ["UTC"])
     func corpusShape(_ zone: String) throws {
-        let cases = try voiceFixture(zone)["cases"].array
+        let cases = try Fixtures.json("voice", zone: zone, "parse.json")["cases"].array
         let names = cases.map { $0["name"].string! }
         #expect(Set(names).count == names.count)
         for area in [

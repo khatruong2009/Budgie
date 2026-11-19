@@ -7,14 +7,6 @@ import Testing
 /// midnight (Santiago) and of 30 minutes (Lord Howe).
 private let formZones = ["America/New_York", "America/Santiago", "Australia/Lord_Howe"]
 
-private func fixture(_ zone: String) throws -> J {
-    try Fixtures.json("\(Fixtures.zonePath("recurring_form", zone))/validation.json")
-}
-
-private func instant(_ j: J, _ tz: TimeZone) -> DartDateTime {
-    DartDateTime(microsecondsSinceEpoch: Int64(j["us"].int!), timeZone: tz)
-}
-
 @Suite("Recurring form: validation copy, the start-date rule and what Save stores match the Flutter form (Fixtures/recurring_form)")
 struct RecurringFormParityTests {
     /// The real form driven through Save, case by case. Swift's
@@ -31,7 +23,7 @@ struct RecurringFormParityTests {
     ///   accepts its own stored start (`storedStart`).
     @Test("validation, start-date rule and stored row", arguments: formZones)
     func validation(zone: String) throws {
-        let f = try fixture(zone)
+        let f = try Fixtures.json("recurring_form", zone: zone, "validation.json")
         #expect(f["tz"].string == zone)
         let tz = TimeZone(identifier: zone)!
         let calendar = DartCalendar(timeZone: tz)
@@ -112,10 +104,7 @@ struct RecurringFormParityTests {
                 let template = RecurringTemplate.make(
                     id: "new", type: TransactionType(rawValue: c["type"].string!)!, description: v.description, amount: swiftAmount,
                     category: "General", pattern: .monthly, startDate: start, dayOfMonth: opened.day, dayOfWeek: nil)
-                var data = FinancialData.load(
-                    FinancialSnapshot(revision: 0, sections: JSONObject()), preferences: InMemoryPreferences(), calendar: calendar,
-                    now: { now }, newID: { "x" }
-                ).data
+                var data = loadFinancialData(JSONObject(), calendar: calendar, now: now, newID: { "x" }).data
                 data.addTemplate(template)
                 _ = RecurringGenerator.generateDue(in: &data, now: now, clock: { now }, newID: { "generated" })
                 let dart = c["generated"].array
@@ -153,7 +142,7 @@ struct RecurringFormParityTests {
     /// against the oracle's verdicts for the two midnights around the floor.
     @Test("picker range starts at the first day Flutter accepts", arguments: formZones)
     func range(zone: String) throws {
-        let f = try fixture(zone)
+        let f = try Fixtures.json("recurring_form", zone: zone, "validation.json")
         let tz = TimeZone(identifier: zone)!
         let calendar = DartCalendar(timeZone: tz)
         let cases = f["cases"].array
