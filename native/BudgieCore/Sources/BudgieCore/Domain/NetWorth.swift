@@ -1,7 +1,5 @@
 import Foundation
 
-/// Net worth queries, ported from `TransactionModel` (sections 483-585 and
-/// 1326-1450 of transaction_model.dart).
 public struct NetWorthHistoryPoint: Hashable, Sendable {
     public enum Granularity: String, Sendable { case day, month }
     public let date: DartDateTime
@@ -13,6 +11,8 @@ public struct NetWorthHistoryPoint: Hashable, Sendable {
     public var netWorth: Double { assets - liabilities }
 }
 
+// Net worth queries, ported from `TransactionModel` (sections 483-585 and
+// 1326-1450 of transaction_model.dart).
 extension FinancialData {
     /// `getNetWorthEntriesForMonth`: entries with a value, by amount desc
     /// (Dart `compareTo`) then lowercased name asc (Dart `toLowerCase`, UTF-16
@@ -42,10 +42,7 @@ extension FinancialData {
     /// instant (stable); empty when the id is unknown.
     public func netWorthEntryHistory(id: String) -> [NetWorthSnapshotRecord] {
         guard let entry = netWorthEntry(id: id) else { return [] }
-        return entry.snapshots.enumerated().sorted { a, b in
-            let x = a.element.recordedAt.microsecondsSinceEpoch, y = b.element.recordedAt.microsecondsSinceEpoch
-            return x != y ? x < y : a.offset < b.offset
-        }.map(\.element)
+        return entry.snapshots.sortedStably { $0.recordedAt.microsecondsSinceEpoch }
     }
 
     /// `entries` defaults to the readable accounts; a caller summing many

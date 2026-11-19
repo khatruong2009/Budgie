@@ -169,11 +169,11 @@ struct BudgetTests {
             let wrote = d.setBudgetLimit(category: "Orphan", limit: 30)
             #expect(wrote)
         }
-        let rows = d.budgetProgress(summary([("groceries", 70), ("Pets", 20), ("Clothing", 20), ("Old", 9), ("Orphan", 1)]))
-        #expect(rows.map(\.category) == ["Clothing", "Pets", "Groceries", "Travel"])
-        #expect(rows.map(\.spent) == [20, 20, 0, 0])
-        #expect(d.budgetedCategories().map(\.name) == ["Groceries", "Pets", "Clothing", "Travel"])
-        #expect(d.unbudgetedCategories().map(\.name) == ["Health", "Zed"])
+        let overview = d.budgetOverview(summary([("groceries", 70), ("Pets", 20), ("Clothing", 20), ("Old", 9), ("Orphan", 1)]))
+        #expect(overview.progress.map(\.category) == ["Clothing", "Pets", "Groceries", "Travel"])
+        #expect(overview.progress.map(\.spent) == [20, 20, 0, 0])
+        #expect(overview.budgeted.map(\.name) == ["Groceries", "Pets", "Clothing", "Travel"])
+        #expect(overview.unbudgeted.map(\.name) == ["Health", "Zed"])
     }
 
     @Test("Dart double.compareTo")

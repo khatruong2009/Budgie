@@ -14,7 +14,7 @@ public struct AppSettings: Hashable, Sendable {
         let object = section?.objectValue ?? JSONObject()
         func string(_ key: String) -> String? { object[key]?.stringValue }
         func bool(_ key: String) -> Bool? { object[key]?.boolValue }
-        let timeout: Int? = object["autoLockTimeoutSeconds"]?.numberValue.map { Int(DartNumbers.toInt($0.doubleValue, lexeme: $0)) }
+        let timeout: Int? = object["autoLockTimeoutSeconds"]?.numberValue.map { Int(DartNumbers.toInt($0)) }
         return AppSettings(
             baseCurrencyCode: string("baseCurrencyCode") ?? preferences.string(PreferenceKey.baseCurrencyCode) ?? "USD",
             localeOverride: string("localeOverride") ?? preferences.string(PreferenceKey.localeOverride),

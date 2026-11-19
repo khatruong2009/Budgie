@@ -36,16 +36,11 @@ public enum SafeToSpend {
         let monthEnd = calendar.date(m.year, m.month + 1, 0)
         let effectiveAsOf = clamp(asOf, normalizedMonth, monthEnd, calendar)
 
-        func inMonth(_ d: DartDateTime) -> Bool {
-            let f = d.fields
-            return f.year == m.year && f.month == m.month
-        }
-
         var actualIncome = 0.0
         var actualExpenses = 0.0
         var actualByCategory: [String: Double] = [:]
         for transaction in transactions {
-            guard inMonth(transaction.date), !transaction.date.isAfter(effectiveAsOf) else { continue }
+            guard DartCalendar.isSameMonth(transaction.date, month), !transaction.date.isAfter(effectiveAsOf) else { continue }
             if transaction.type == .income {
                 actualIncome += transaction.amount
             } else {
@@ -58,7 +53,7 @@ public enum SafeToSpend {
         var upcoming = 0.0
         var upcomingByCategory: [String: Double] = [:]
         for template in templates where template.isActive {
-            for occurrence in remainingOccurrences(template, effectiveAsOf, monthEnd, calendar) where inMonth(occurrence) {
+            for occurrence in remainingOccurrences(template, effectiveAsOf, monthEnd, calendar) where DartCalendar.isSameMonth(occurrence, month) {
                 if template.type == .income {
                     if includeExpectedIncome { expectedIncome += template.amount }
                 } else {
@@ -77,7 +72,7 @@ public enum SafeToSpend {
 
         var goals = 0.0
         let asOfMonth = calendar.date(asOf.year, asOf.month)
-        if reserveSuggestedGoalContributions && !isBeforeMonth(normalizedMonth, asOfMonth) {
+        if reserveSuggestedGoalContributions && normalizedMonth >= asOfMonth {
             for goal in savingsGoals where !goal.isCompleted {
                 goals += goal.suggestedMonthlyContribution(now: wallClock)
             }
@@ -86,7 +81,7 @@ public enum SafeToSpend {
         let days: Int
         if DartCalendar.isSameMonth(asOf, month) {
             days = monthEnd.differenceInDays(calendar.startOfDay(asOf)) + 1
-        } else if isBeforeMonth(asOfMonth, normalizedMonth) {
+        } else if asOfMonth < normalizedMonth {
             days = monthEnd.day
         } else {
             days = 0
@@ -96,10 +91,6 @@ public enum SafeToSpend {
             month: normalizedMonth, asOf: effectiveAsOf, actualIncome: actualIncome, expectedIncome: expectedIncome,
             actualExpenses: actualExpenses, upcomingRecurringExpenses: upcoming, flexibleBudgetReserve: reserve,
             plannedGoalContributions: goals, daysRemaining: days)
-    }
-
-    static func isBeforeMonth(_ a: DartDateTime, _ b: DartDateTime) -> Bool {
-        a.year < b.year || (a.year == b.year && a.month < b.month)
     }
 
     /// `_clampDate`: time stripped; before the month -> the day before it

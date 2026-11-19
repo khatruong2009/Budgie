@@ -72,12 +72,7 @@ extension NetWorthEntryRecord {
     func withSnapshot(_ snapshot: NetWorthSnapshotRecord) -> NetWorthEntryRecord {
         var pairs = storedSnapshots.filter { $0.snapshot.recordedAt != snapshot.recordedAt }
         pairs.append((snapshot, snapshot.dartJSON))
-        let sorted = pairs.enumerated().sorted { a, b in
-            let x = a.element.snapshot.recordedAt.microsecondsSinceEpoch
-            let y = b.element.snapshot.recordedAt.microsecondsSinceEpoch
-            return x != y ? x < y : a.offset < b.offset
-        }
-        return with(snapshots: sorted.map(\.element))
+        return with(snapshots: pairs.sortedStably { $0.snapshot.recordedAt.microsecondsSinceEpoch })
     }
 
     /// `deleteNetWorthSnapshot`'s filter: nil when no snapshot was recorded
@@ -88,20 +83,10 @@ extension NetWorthEntryRecord {
         return kept.count == pairs.count ? nil : with(snapshots: kept)
     }
 
-    /// `hasSnapshotForMonth`.
-    public func hasSnapshot(forMonth month: DartDateTime) -> Bool {
-        snapshot(forMonth: month) != nil
-    }
-
     /// `_previousSnapshotBefore` (net_worth_page.dart:1348-1366): the latest
     /// snapshot strictly before `recordedAt`; nil when `recordedAt` is nil.
     public func previousSnapshot(before recordedAt: DartDateTime?) -> NetWorthSnapshotRecord? {
-        guard let recordedAt else { return nil }
-        var previous: NetWorthSnapshotRecord?
-        for snapshot in snapshots where snapshot.recordedAt.isBefore(recordedAt) {
-            if previous == nil || snapshot.recordedAt.isAfter(previous!.recordedAt) { previous = snapshot }
-        }
-        return previous
+        recordedAt.flatMap { date in latestSnapshot { $0.recordedAt.isBefore(date) } }
     }
 }
 
@@ -149,10 +134,16 @@ extension FinancialData {
         guard !trimmed.isEmpty, amount.isFinite else { return false }
         let date = recordedAt ?? defaultSnapshotDate(forMonth: month ?? selectedNetWorthMonth, now: now)
         let snapshot = NetWorthSnapshotRecord(recordedAt: date, amount: amount)
+        return replaceEntries(id: id) { $0.with(name: trimmed, type: type).withSnapshot(snapshot) }
+    }
+
+    /// Applies `transform` to every readable entry with the id; true when any
+    /// returned a replacement.
+    private mutating func replaceEntries(id: String, _ transform: (NetWorthEntryRecord) -> NetWorthEntryRecord?) -> Bool {
         var changed = false
         for index in netWorthRows.indices {
-            guard let entry = netWorthRows[index].record, DartString.equal(entry.id, id) else { continue }
-            netWorthRows[index] = .record(entry.with(name: trimmed, type: type).withSnapshot(snapshot))
+            guard let entry = netWorthRows[index].record, DartString.equal(entry.id, id), let next = transform(entry) else { continue }
+            netWorthRows[index] = .record(next)
             changed = true
         }
         return changed
@@ -162,11 +153,7 @@ extension FinancialData {
     /// snapshots. No other section changes. False for an unknown id (Dart
     /// writes the unchanged list anyway).
     @discardableResult
-    public mutating func deleteNetWorthEntry(id: String) -> Bool {
-        let before = netWorthRows.count
-        netWorthRows.removeAll { $0.record.map { DartString.equal($0.id, id) } ?? false }
-        return netWorthRows.count != before
-    }
+    public mutating func deleteNetWorthEntry(id: String) -> Bool { netWorthRows.removeRows(id: id) }
 
     /// `deleteNetWorthSnapshot`: drops the entry's snapshots recorded at
     /// exactly `recordedAt` (instant and UTC flag). False, with nothing to
@@ -174,15 +161,7 @@ extension FinancialData {
     /// entry then has no value in any month (the UI prevents that).
     @discardableResult
     public mutating func deleteNetWorthSnapshot(entryID: String, recordedAt: DartDateTime) -> Bool {
-        var changed = false
-        for index in netWorthRows.indices {
-            guard let entry = netWorthRows[index].record, DartString.equal(entry.id, entryID),
-                let next = entry.removingSnapshots(recordedAt: recordedAt)
-            else { continue }
-            netWorthRows[index] = .record(next)
-            changed = true
-        }
-        return changed
+        replaceEntries(id: entryID) { $0.removingSnapshots(recordedAt: recordedAt) }
     }
 
     /// `carryNetWorthMonthForward` (no UI caller in Flutter): every entry
@@ -195,7 +174,7 @@ extension FinancialData {
         let date = defaultSnapshotDate(forMonth: month, now: now)
         var changed = false
         for index in netWorthRows.indices {
-            guard let entry = netWorthRows[index].record, !entry.hasSnapshot(forMonth: month),
+            guard let entry = netWorthRows[index].record, entry.snapshot(forMonth: month) == nil,
                 let previous = entry.latestSnapshot(through: previousEnd)
             else { continue }
             netWorthRows[index] = .record(entry.withSnapshot(NetWorthSnapshotRecord(recordedAt: date, amount: previous.amount)))

@@ -69,7 +69,6 @@ enum Canonical {
         }
         return .array(values.map { .string($0) })
     }
-
 }
 
 extension TransactionRecord {
@@ -91,32 +90,28 @@ extension TransactionRecord {
 
     /// The record as Dart holds it after `fromJson`: its row is `toJson()`.
     func canonicalized() throws(BackupExportError) -> TransactionRecord {
-        TransactionRecord(
-            id: id, type: type, description: description, amount: amount, category: category, date: date,
-            recurringTemplateId: recurringTemplateId, tagIds: tagIds, createdAt: createdAt, updatedAt: updatedAt,
-            raw: try canonicalJSON())
+        var copy = self
+        copy.raw = try canonicalJSON()
+        return copy
     }
 
     /// Dart `copyWith(id:)` on a canonical record.
     func withID(_ newID: String) -> TransactionRecord {
-        var object = raw
-        object["id"] = .string(newID)
-        return TransactionRecord(
-            id: newID, type: type, description: description, amount: amount, category: category, date: date,
-            recurringTemplateId: recurringTemplateId, tagIds: tagIds, createdAt: createdAt, updatedAt: updatedAt,
-            raw: object)
+        var copy = self
+        copy.id = newID
+        copy.raw["id"] = .string(newID)
+        return copy
     }
 }
 
 extension NetWorthEntryRecord {
     /// Dart `NetWorthEntry.toJson()` (net_worth_entry.dart:139-146).
     public func canonicalJSON() throws(BackupExportError) -> JSONObject {
-        var snapshots: [JSONValue] = []
-        for snapshot in self.snapshots {
-            snapshots.append(.object(JSONObject(ordered: [
+        let snapshots = try self.snapshots.map { snapshot throws(BackupExportError) -> JSONValue in
+            .object(JSONObject(ordered: [
                 ("recordedAt", Canonical.date(snapshot.recordedAt)),
                 ("amount", try Canonical.double(snapshot.amount)),
-            ])))
+            ]))
         }
         return JSONObject(ordered: [
             ("id", Canonical.string(id, raw: raw, key: "id")),
@@ -174,10 +169,9 @@ extension RecurringTemplate {
     }
 
     func canonicalized() throws(BackupExportError) -> RecurringTemplate {
-        RecurringTemplate(
-            id: id, type: type, description: description, amount: amount, category: category, pattern: pattern,
-            startDate: startDate, nextOccurrence: nextOccurrence, dayOfMonth: dayOfMonth, dayOfWeek: dayOfWeek,
-            isActive: isActive, raw: try canonicalJSON())
+        var copy = self
+        copy.raw = try canonicalJSON()
+        return copy
     }
 }
 
@@ -236,9 +230,8 @@ extension CategorizationRuleRecord {
     }
 
     func canonicalized() throws(BackupExportError) -> CategorizationRuleRecord {
-        CategorizationRuleRecord(
-            id: id, merchantPattern: merchantPattern, matchType: matchType, transactionType: transactionType,
-            minimumAmount: minimumAmount, maximumAmount: maximumAmount, category: category, tagIds: tagIds,
-            priority: priority, isEnabled: isEnabled, raw: try canonicalJSON())
+        var copy = self
+        copy.raw = try canonicalJSON()
+        return copy
     }
 }

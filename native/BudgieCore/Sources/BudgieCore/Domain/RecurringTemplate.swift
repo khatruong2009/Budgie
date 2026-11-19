@@ -16,16 +16,16 @@ public struct RecurringTemplate: Identifiable, Hashable, Sendable {
     public private(set) var dayOfMonth: Int?
     public private(set) var dayOfWeek: Int?
     public private(set) var isActive: Bool
-    public private(set) var raw: JSONObject
+    public internal(set) var raw: JSONObject
 
     /// Dart `RecurringTransaction.fromJson`. Dart casts `amount` to double
     /// without coercion, so an int lexeme is an error there (and here).
     static func parse(_ value: JSONValue, calendar: DartCalendar, newID: () -> String) -> RecurringTemplate? {
         guard case .object(let object) = value else { return nil }
         guard case .some(let id) = Read.optionalString(object, "id") else { return nil }
-        guard let description = Read.requiredString(object, "description") else { return nil }
+        guard let description = object["description"]?.stringValue else { return nil }
         guard let number = object["amount"]?.numberValue, !number.isDartInt else { return nil }
-        guard let category = Read.requiredString(object, "category") else { return nil }
+        guard let category = object["category"]?.stringValue else { return nil }
         guard let patternName = object["pattern"]?.stringValue, let pattern = RecurrencePattern(rawValue: patternName) else { return nil }
         guard let start = Read.parsedDate(object, "startDate", calendar) else { return nil }
         guard let next = Read.parsedDate(object, "nextOccurrence", calendar) else { return nil }

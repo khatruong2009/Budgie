@@ -78,10 +78,7 @@ extension FinancialData {
     /// Dart `categoriesFor(type, includeArchived:)`: by sortOrder, ties in
     /// stored order (a stable sort; Dart's is stable up to 33 rows).
     public func categoryDefinitions(type: TransactionType, includeArchived: Bool) -> [CategoryInfo] {
-        categories.enumerated()
-            .filter { $0.element.type == type && (includeArchived || !$0.element.isArchived) }
-            .sorted { ($0.element.sortOrder, $0.offset) < ($1.element.sortOrder, $1.offset) }
-            .map(\.element)
+        categories.filter { $0.type == type && (includeArchived || !$0.isArchived) }.sortedStably { $0.sortOrder }
     }
 
     /// The error add (`excluding` nil) or update (`excluding` the edited
@@ -112,7 +109,7 @@ extension FinancialData {
         let category = CategoryInfo.make(
             id: uniqueCategoryID(type: type, name: trimmed, newID: newID), type: type, name: trimmed,
             iconIdentifier: CategoryCatalog.registeredIcon(iconIdentifier), colorToken: colorToken,
-            sortOrder: categoryRows.filter { $0.record?.type == type }.count, isBuiltIn: false)
+            sortOrder: categoryRowCount(type: type), isBuiltIn: false)
         categoryRows.append(.record(category))
         return CategoryEditResult(category: category, changedSections: [Section.categories], rename: nil)
     }
@@ -143,7 +140,7 @@ extension FinancialData {
     mutating func updateCategory(
         id: String, name: String, iconIdentifier: String, colorToken: String, now: DartDateTime, restrictRulesByType: Bool
     ) throws(CategoryEditError) -> CategoryEditResult {
-        guard let index = categoryIndex(id: id), let existing = categoryRows[index].record else { return .unchanged }
+        guard let index = categoryRows.index(ofID: id), let existing = categoryRows[index].record else { return .unchanged }
         if let error = validateCategoryName(name, type: existing.type, excluding: id) { throw error }
         let trimmed = DartString.trim(name)
         let updated = existing.with(
@@ -164,7 +161,7 @@ extension FinancialData {
     /// restoring has no check. Only `isArchived` changes (no cascade).
     @discardableResult
     public mutating func setCategoryArchived(id: String, _ archived: Bool) throws(CategoryEditError) -> CategoryEditResult {
-        guard let index = categoryIndex(id: id), let existing = categoryRows[index].record, existing.isArchived != archived else {
+        guard let index = categoryRows.index(ofID: id), let existing = categoryRows[index].record, existing.isArchived != archived else {
             return .unchanged
         }
         if archived {
@@ -187,7 +184,7 @@ extension FinancialData {
     /// to the rows the page shows.
     @discardableResult
     public mutating func moveCategory(id: String, offset: Int) -> CategoryEditResult {
-        guard let index = categoryIndex(id: id), let existing = categoryRows[index].record else { return .unchanged }
+        guard let index = categoryRows.index(ofID: id), let existing = categoryRows[index].record else { return .unchanged }
         var ordered = categoryRowIndices(type: existing.type)
         guard let from = ordered.firstIndex(where: { DartString.equal(categoryRows[$0].record!.id, id) }) else { return .unchanged }
         // Dart's 64-bit int wraps on overflow; `&+` does the same.
@@ -226,14 +223,9 @@ extension FinancialData {
     /// `CategorizationProvider.renameCategory`, restricted by type per D6):
     /// every readable rule whose category equals `from` as UTF-16 and whose
     /// `transactionType` is `type` or nil (any) gets `to`. Rules of the other
-    /// type keep `from`. True when a rule changed (the caller then writes
-    /// `categorizationRules` in the same commit).
-    @discardableResult
-    public mutating func renameRuleCategory(from: String, to: String, type: TransactionType) -> Bool {
-        renameRuleCategory(from: from, to: to, restrictedTo: type) > 0
-    }
-
-    /// `restrictedTo` nil is Flutter's pass (every type). Returns the count.
+    /// type keep `from`. `restrictedTo` nil is Flutter's pass (every type).
+    /// Returns the count (the caller then writes `categorizationRules` in the
+    /// same commit).
     mutating func renameRuleCategory(from: String, to: String, restrictedTo type: TransactionType?) -> Int {
         var count = 0
         for index in ruleRows.indices {
@@ -272,11 +264,10 @@ extension FinancialData {
         // goes, the new one is appended (where Dart's map puts it) unless
         // Dart already holds a limit for it, whose value then wins.
         if type == .expense, let limit = budgetLimit(for: old) {
-            let oldKey = Array(old.utf16), newKey = Array(new.utf16)
-            budgetLimitsObject.members.removeAll { $0.key.codeUnits == oldKey }
+            removeBudgetMembers(Array(old.utf16))
             if budgetLimit(for: new) == nil {
                 // A stored member Dart's load dropped (limit <= 0) goes too.
-                budgetLimitsObject.members.removeAll { $0.key.codeUnits == newKey }
+                removeBudgetMembers(Array(new.utf16))
                 budgetLimitsObject.members.append(JSONObject.Member(key: JSONString(new), value: .double(limit)))
                 rename.budgetLimit = .moved
             } else {
@@ -299,21 +290,9 @@ extension FinancialData {
         return (sections, rename)
     }
 
-    /// Dart `_categories.indexWhere((c) => c.id == id)` over readable rows.
-    private func categoryIndex(id: String) -> Int? {
-        categoryRows.firstIndex { $0.record.map { DartString.equal($0.id, id) } ?? false }
-    }
-
     /// Row indices of the type's definitions (archived included) by
     /// sortOrder, ties in stored order.
-    private func categoryRowIndices(type: TransactionType) -> [Int] {
-        categoryRows.indices
-            .filter { categoryRows[$0].record?.type == type }
-            .enumerated()
-            .sorted { a, b in
-                let x = categoryRows[a.element].record!.sortOrder, y = categoryRows[b.element].record!.sortOrder
-                return x != y ? x < y : a.offset < b.offset
-            }
-            .map(\.element)
+    func categoryRowIndices(type: TransactionType) -> [Int] {
+        categoryRows.indices.filter { categoryRows[$0].record?.type == type }.sortedStably { categoryRows[$0].record!.sortOrder }
     }
 }

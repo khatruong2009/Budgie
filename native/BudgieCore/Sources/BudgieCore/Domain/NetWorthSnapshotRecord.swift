@@ -18,12 +18,8 @@ public struct NetWorthSnapshotRecord: Hashable, Sendable {
             recordedAt = parsed
         } else if let monthKey, !monthKey.isEmpty {
             guard let month = calendar.netWorthMonthFromKey(monthKey) else { return nil }
-            let updated = (updatedAtText?.isEmpty ?? true) ? nil : calendar.tryParse(updatedAtText!)
-            if let updated, DartCalendar.isSameMonth(updated, month) {
-                recordedAt = updated
-            } else {
-                recordedAt = month
-            }
+            let updated = Read.optionalDate(object, "updatedAt", calendar)
+            recordedAt = updated.flatMap { DartCalendar.isSameMonth($0, month) ? $0 : nil } ?? month
         } else if let updatedAtText, !updatedAtText.isEmpty {
             guard let parsed = calendar.tryParse(updatedAtText) else { return nil }
             recordedAt = parsed

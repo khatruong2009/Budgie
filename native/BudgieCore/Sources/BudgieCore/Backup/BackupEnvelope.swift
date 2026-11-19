@@ -201,7 +201,7 @@ public enum BackupEnvelope {
         case .number(let number)?:
             // Flutter: UnsupportedError for an infinite value (see above).
             try require(number.doubleValue.isFinite)
-            timeout = Int(DartNumbers.toInt(number.doubleValue, lexeme: number))
+            timeout = Int(DartNumbers.toInt(number))
             try require(timeout! >= 0)
         default: throw .corrupt
         }

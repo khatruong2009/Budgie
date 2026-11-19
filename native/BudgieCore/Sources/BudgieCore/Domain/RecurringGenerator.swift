@@ -90,16 +90,15 @@ public enum RecurringGenerator {
     ) -> Result {
         let calendar = data.calendar
         var result = Result()
-        let due = data.templates.filter { template in
-            template.isActive && (template.nextOccurrence.isBefore(now) || calendar.isSameDay(template.nextOccurrence, now))
-        }
+        func isDue(_ date: DartDateTime) -> Bool { date.isBefore(now) || calendar.isSameDay(date, now) }
+        let due = data.templates.filter { $0.isActive && isDue($0.nextOccurrence) }
         for template in due {
             // A monthly template without a day would crash the Dart app on the
             // same data; leave it untouched rather than guess.
             if template.pattern == .monthly && template.dayOfMonth == nil { continue }
             let maxLookback = now.adding(days: -90)
             var current = template.nextOccurrence
-            while current.isBefore(now) || calendar.isSameDay(current, now) {
+            while isDue(current) {
                 if current.isAfter(maxLookback) || calendar.isSameDay(current, maxLookback) {
                     let record = data.addTransaction(
                         type: template.type, description: template.description, amount: template.amount,

@@ -51,9 +51,6 @@ public struct LocalInsight: Sendable, Hashable {
 }
 
 public enum InsightEngine {
-    /// The section's `limit` (Flutter never passes another).
-    public static let defaultLimit = 3
-
     /// Dart `InsightEngine.generate`.
     ///
     /// - `transactions`: every readable row in stored order
@@ -68,7 +65,7 @@ public enum InsightEngine {
     /// and the section fails to build; this returns no insights instead.
     public static func generate(
         transactions: [TransactionRecord], budgetLimits: [(String, Double)], savingsGoals: [SavingsGoalRecord],
-        selectedMonth: DartDateTime, now: DartDateTime, excludedIDs: [String] = [], limit: Int = defaultLimit,
+        selectedMonth: DartDateTime, now: DartDateTime, excludedIDs: [String] = [], limit: Int = 3,
         calendar: DartCalendar
     ) -> [LocalInsight] {
         if limit <= 0 { return [] }
@@ -119,10 +116,10 @@ public enum InsightEngine {
         return String(decoding: out, as: UTF8.self)
     }
 
-    /// Dart `double.round()`: half away from zero, saturating at the 64-bit
-    /// range, throwing on NaN and infinities.
     struct NotFinite: Error {}
 
+    /// Dart `double.round()`: half away from zero, saturating at the 64-bit
+    /// range, throwing on NaN and infinities.
     static func dartRound(_ value: Double) throws(NotFinite) -> Int {
         guard value.isFinite else { throw NotFinite() }
         let rounded = value.rounded()
@@ -156,18 +153,13 @@ private struct Rules {
         var keys: [Int] = []
         keys.reserveCapacity(transactions.count)
         for (index, row) in transactions.enumerated() {
-            let key = Rules.key(row.date)
+            let key = DartCalendar.monthKey(row.date)
             keys.append(key)
             byMonth[key, default: []].append(index)
         }
         rowsByMonth = byMonth
         monthKeys = keys
-        selectedKey = Rules.key(month)
-    }
-
-    /// `_sameMonth`: equal year and month fields.
-    static func key(_ date: DartDateTime) -> Int {
-        DartCalendar.monthKey(date)
+        selectedKey = DartCalendar.monthKey(month)
     }
 
     var year: Int { month.fields.year }
@@ -177,7 +169,15 @@ private struct Rules {
 
     /// `DateTime(month.year, month.month - offset)`.
     func monthKey(minus offset: Int) -> Int {
-        Rules.key(calendar.addingMonths(month, -offset))
+        DartCalendar.monthKey(calendar.addingMonths(month, -offset))
+    }
+
+    /// Row indices newest first (`b.date.compareTo(a.date)`), equal instants
+    /// in Dart's tie order.
+    func newestFirst(_ indices: [Int]) -> [Int] {
+        DartSort.sorted(indices) {
+            DartSort.compare(transactions[$1].date.microsecondsSinceEpoch, transactions[$0].date.microsecondsSinceEpoch)
+        }
     }
 
     func rows(_ key: Int) -> [TransactionRecord] {
@@ -242,7 +242,7 @@ private struct Rules {
     /// `_budgetPace` (lines 106-145): only for the real current month.
     func budgetPace(_ limits: [(String, Double)]) throws(InsightEngine.NotFinite) -> [LocalInsight] {
         let n = now.fields
-        guard !limits.isEmpty, n.year == year, n.month == monthNumber else { return [] }
+        guard !limits.isEmpty, DartCalendar.isSameMonth(now, month) else { return [] }
         let daysInMonth = calendar.date(year, monthNumber + 1, 0).day
         let elapsedRatio = Double(min(max(n.day, 1), daysInMonth)) / Double(daysInMonth)
         var result: [LocalInsight] = []
@@ -287,11 +287,7 @@ private struct Rules {
     /// month that is at least 50 and 2.5x the median of at least four
     /// earlier positive expenses of its category outside the month.
     func unusualTransactions() -> [LocalInsight] {
-        // Newest first (`b.date.compareTo(a.date)`), equal instants in
-        // Dart's tie order.
-        let current = DartSort.sorted((rowsByMonth[selectedKey] ?? []).filter { transactions[$0].type == .expense }) {
-            DartSort.compare(transactions[$1].date.microsecondsSinceEpoch, transactions[$0].date.microsecondsSinceEpoch)
-        }
+        let current = newestFirst((rowsByMonth[selectedKey] ?? []).filter { transactions[$0].type == .expense })
         guard !current.isEmpty else { return [] }
         // Positive expenses outside the month, by category, oldest first.
         // A candidate's history is the prefix before its instant; its median
@@ -377,10 +373,7 @@ private struct Rules {
         for key in order {
             let group = groups[key]!
             if group.rows.count < 2 { continue }
-            // Newest first, equal instants in Dart's tie order.
-            let items = DartSort.sorted(group.rows) {
-                DartSort.compare(transactions[$1].date.microsecondsSinceEpoch, transactions[$0].date.microsecondsSinceEpoch)
-            }
+            let items = newestFirst(group.rows)
             let latest = transactions[items[0]]
             let previous = transactions[items[1]]
             if previous.amount <= 0 { continue }
@@ -456,7 +449,7 @@ private struct Rules {
     /// `_negativeCashFlow` (lines 364-388): income recorded and net negative
     /// in the selected month and the two before it.
     func negativeCashFlow() -> [LocalInsight] {
-        let flows = (0..<3).map { cashFlow($0 == 0 ? selectedKey : monthKey(minus: $0)) }
+        let flows = (0..<3).map { cashFlow(monthKey(minus: $0)) }
         if flows.contains(where: { $0.income <= 0 || $0.net >= 0 }) { return [] }
         return [insight(
             "negative-flow:\(yearMonth)", .negativeCashFlow, .urgent,
@@ -488,14 +481,11 @@ public struct InsightPreferences: Sendable, Equatable {
     public static let snoozeDays = 30
 
     /// Dart's `Set` in insertion order (unique by code units).
-    public private(set) var dismissed: [String]
+    public private(set) var dismissed: [String] = []
     /// Dart's `Map` in insertion order (unique by code units).
-    public private(set) var snoozed: [Snooze]
+    public private(set) var snoozed: [Snooze] = []
 
-    public init() {
-        dismissed = []
-        snoozed = []
-    }
+    public init() {}
 
     /// `_loadPreferences`. A value of the wrong type (or a list holding a
     /// non-string) reads as absent; Dart throws there and never shows the
@@ -516,19 +506,10 @@ public struct InsightPreferences: Sendable, Equatable {
         guard case .string(let raw)? = snoozed,
             let decoded = try? JSONParser.parse(Array(raw.utf8)), case .object(let object) = decoded
         else { return result }
-        // Dart's map: a repeated key keeps its first position and last value.
-        var order: [[UInt16]] = []
-        var latest: [[UInt16]: (key: String, value: JSONValue)] = [:]
-        for member in object.members {
-            let units = member.key.codeUnits
-            if latest[units] == nil { order.append(units) }
-            latest[units] = (member.key.value, member.value)
-        }
-        for units in order {
-            let entry = latest[units]!
-            guard case .string(let text) = entry.value else { break }
+        for (key, value) in DartJSON.canonicalMembers(object) {
+            guard case .string(let text) = value else { break }
             if let until = DartDateTime.tryParse(text.value, timeZone: timeZone) {
-                result.snoozed.append(Snooze(id: entry.key, until: until))
+                result.snoozed.append(Snooze(id: key.value, until: until))
             }
         }
         return result
@@ -543,7 +524,7 @@ public struct InsightPreferences: Sendable, Equatable {
     /// `_dismiss`: adds the id and returns the whole list to write, sorted
     /// by code units.
     public mutating func dismiss(_ id: String) -> (key: String, value: PreferenceValue) {
-        if !dismissed.contains(where: { $0.utf16.elementsEqual(id.utf16) }) { dismissed.append(id) }
+        if !dismissed.contains(where: { DartString.equal($0, id) }) { dismissed.append(id) }
         return (Self.dismissedKey, .stringList(dismissed.sorted(by: DartString.precedes)))
     }
 
@@ -552,7 +533,7 @@ public struct InsightPreferences: Sendable, Equatable {
     /// `jsonEncode` writes it.
     public mutating func snooze(_ id: String, now: DartDateTime) -> (key: String, value: PreferenceValue) {
         let entry = Snooze(id: id, until: now.adding(days: Self.snoozeDays))
-        if let index = snoozed.firstIndex(where: { $0.id.utf16.elementsEqual(id.utf16) }) {
+        if let index = snoozed.firstIndex(where: { DartString.equal($0.id, id) }) {
             snoozed[index] = entry
         } else {
             snoozed.append(entry)
@@ -565,7 +546,7 @@ public struct InsightPreferences: Sendable, Equatable {
     /// times.
     public static func == (lhs: InsightPreferences, rhs: InsightPreferences) -> Bool {
         lhs.dismissed.count == rhs.dismissed.count && lhs.snoozed.count == rhs.snoozed.count
-            && zip(lhs.dismissed, rhs.dismissed).allSatisfy { $0.utf16.elementsEqual($1.utf16) }
-            && zip(lhs.snoozed, rhs.snoozed).allSatisfy { $0.id.utf16.elementsEqual($1.id.utf16) && $0.until == $1.until }
+            && zip(lhs.dismissed, rhs.dismissed).allSatisfy { DartString.equal($0, $1) }
+            && zip(lhs.snoozed, rhs.snoozed).allSatisfy { DartString.equal($0.id, $1.id) && $0.until == $1.until }
     }
 }

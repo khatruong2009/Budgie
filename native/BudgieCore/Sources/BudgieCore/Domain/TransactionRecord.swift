@@ -5,7 +5,7 @@ public enum TransactionType: String, Sendable, Hashable, CaseIterable {
 }
 
 public struct TransactionRecord: Identifiable, Hashable, Sendable {
-    public private(set) var id: String
+    public internal(set) var id: String
     public private(set) var type: TransactionType
     public private(set) var description: String
     public private(set) var amount: Double
@@ -15,7 +15,7 @@ public struct TransactionRecord: Identifiable, Hashable, Sendable {
     public private(set) var tagIds: [String]
     public private(set) var createdAt: DartDateTime
     public private(set) var updatedAt: DartDateTime
-    public private(set) var raw: JSONObject
+    public internal(set) var raw: JSONObject
 
     public var isRecurring: Bool { recurringTemplateId != nil }
 
@@ -25,16 +25,15 @@ public struct TransactionRecord: Identifiable, Hashable, Sendable {
         guard case .object(let object) = value else { return nil }
         guard let date = Read.parsedDate(object, "date", calendar) else { return nil }
         guard case .some(let id) = Read.optionalString(object, "id") else { return nil }
-        guard let description = Read.requiredString(object, "description") else { return nil }
+        guard let description = object["description"]?.stringValue else { return nil }
         guard let amount = Read.num(object, "amount") else { return nil }
-        guard let category = Read.requiredString(object, "category") else { return nil }
+        guard let category = object["category"]?.stringValue else { return nil }
         guard case .some(let templateID) = Read.optionalString(object, "recurringTemplateId") else { return nil }
         guard let tagIds = Read.stringArray(object, "tagIds") else { return nil }
         let createdAt = Read.optionalDate(object, "createdAt", calendar) ?? date
         let updatedAt = Read.optionalDate(object, "updatedAt", calendar) ?? createdAt
-        let validID = id.map { !DartString.trim($0).isEmpty } ?? false
         return TransactionRecord(
-            id: validID ? id! : newID(),
+            id: id.flatMap { DartString.trim($0).isEmpty ? nil : $0 } ?? newID(),
             type: object["type"]?.stringValue == "expense" ? .expense : .income,
             description: description, amount: amount, category: category, date: date,
             recurringTemplateId: templateID, tagIds: tagIds, createdAt: createdAt, updatedAt: updatedAt,
@@ -90,30 +89,15 @@ public struct TransactionRecord: Identifiable, Hashable, Sendable {
     /// when now is not after it. Only changed keys are rewritten.
     public func applying(_ edit: Edit, now: DartDateTime) -> TransactionRecord {
         var next = self
-        if edit.type != type {
-            next.type = edit.type
-            next.raw["type"] = .string(edit.type.rawValue)
-        }
-        if edit.description != description {
-            next.description = edit.description
-            next.raw["description"] = .string(edit.description)
-        }
+        if edit.type != type { next.type = edit.type; next.raw["type"] = .string(edit.type.rawValue) }
+        if edit.description != description { next.description = edit.description; next.raw["description"] = .string(edit.description) }
         if edit.amount.bitPattern != amount.bitPattern || raw["amount"]?.numberValue?.isDartInt == true {
             next.amount = edit.amount
             next.raw["amount"] = .double(edit.amount)
         }
-        if edit.category != category {
-            next.category = edit.category
-            next.raw["category"] = .string(edit.category)
-        }
-        if edit.date != date {
-            next.date = edit.date
-            next.raw["date"] = .string(edit.date.toIso8601String())
-        }
-        if let tagIds = edit.tagIds, tagIds != self.tagIds {
-            next.tagIds = tagIds
-            next.raw["tagIds"] = .array(tagIds.map { .string($0) })
-        }
+        if edit.category != category { next.category = edit.category; next.raw["category"] = .string(edit.category) }
+        if edit.date != date { next.date = edit.date; next.raw["date"] = .string(edit.date.toIso8601String()) }
+        if let tagIds = edit.tagIds, tagIds != self.tagIds { next.tagIds = tagIds; next.raw["tagIds"] = .array(tagIds.map { .string($0) }) }
         let updatedAt = now.isAfter(updatedAt) ? now : updatedAt.adding(microseconds: 1)
         next.updatedAt = updatedAt
         next.raw["updatedAt"] = .string(updatedAt.toIso8601String())
