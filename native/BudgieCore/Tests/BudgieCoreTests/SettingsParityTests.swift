@@ -3,10 +3,6 @@ import Testing
 
 @testable import BudgieCore
 
-private func fixture(_ name: String) throws -> J {
-    try Fixtures.json("settings/\(name)")
-}
-
 private func settings(_ section: J) -> AppSettings {
     AppSettings.load(section: section.value, preferences: InMemoryPreferences())
 }
@@ -37,7 +33,7 @@ struct SettingsParityTests {
     /// including values outside its lists (backups, the Flutter build).
     @Test("row subtitles")
     func labels() throws {
-        let cases = try fixture("labels.json")["cases"].array
+        let cases = try Fixtures.json("settings/labels.json")["cases"].array
         #expect(cases.count == 45)
         for c in cases {
             let s = settings(c["section"])
@@ -55,7 +51,7 @@ struct SettingsParityTests {
     /// when it is listed, and what each row stores.
     @Test("choice sheets")
     func sheets() throws {
-        let cases = try fixture("sheets.json")["cases"].array
+        let cases = try Fixtures.json("settings/sheets.json")["cases"].array
         #expect(cases.count == 2)
         for c in cases {
             let s = settings(c["section"])
@@ -93,7 +89,7 @@ struct SettingsParityTests {
     /// and the fields.
     @Test("setters")
     func setters() throws {
-        let f = try fixture("setters.json")
+        let f = try Fixtures.json("settings/setters.json")
         let preferences = InMemoryPreferences()
         var s = AppSettings.load(section: nil, preferences: preferences)
         var section: JSONValue? = nil

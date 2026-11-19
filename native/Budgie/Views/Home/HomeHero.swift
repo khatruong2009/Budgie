@@ -14,7 +14,6 @@ struct HomeHero: View {
 
     @ScaledMetric(relativeTo: .largeTitle) private var ringSize: CGFloat = 236
 
-    /// The ring's figure.
     static let amountText = TextSpec(face: .gabaritoExtraBold, size: 44, tracking: -1.6, height: 1.0, tabular: true, relativeTo: .largeTitle)
     private static let legendAmount = TextSpec(face: .monoMedium, size: 13, height: 1.25, tabular: true, relativeTo: .footnote)
 
@@ -38,7 +37,7 @@ struct HomeHero: View {
                     RollingAmount(
                         text: amount, color: isNegative ? BudgieColor.danger : BudgieColor.textPrimary,
                         style: Self.amountText, hidden: formatter.hideBalances)
-                        // A fresh odometer each time balances are shown (it was a separate branch).
+                        // A fresh odometer each time balances are shown.
                         .id(formatter.hideBalances)
                     Text(status(cashFlow: cashFlow))
                         .textStyle(.noteStrong)

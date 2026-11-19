@@ -26,19 +26,8 @@ final class RecurringUITests: XCTestCase {
 
     // MARK: - Helpers
 
-    private func replaceText(in field: XCUIElement, with text: String) {
-        field.tapSettled()
-        if let value = field.value as? String, !value.isEmpty, value != field.placeholderValue {
-            field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: value.count))
-        }
-        field.typeSettled(text)
-    }
-
     private func openRecurring() {
-        app.goToHomeRoot()
-        app.buttons["home.settings"].tapSettled()
-        app.buttons["settings.recurring"].tapSettled()
-        XCTAssertTrue(app.buttons["recurring.add"].waitForExistence(timeout: 10))
+        app.openSettingsPage("settings.recurring", marker: app.buttons["recurring.add"])
     }
 
     /// The card whose summary mentions `text`.
@@ -105,12 +94,12 @@ final class RecurringUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Amount is required"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Description is required"].exists)
         let amount = app.textFields["Amount"]
-        replaceText(in: amount, with: "0")
+        amount.replaceText(with: "0")
         XCTAssertFalse(app.staticTexts["Amount is required"].exists, "typing clears the amount error")
         app.buttons["recurring.form.save"].tapSettled()
         XCTAssertTrue(app.staticTexts["Amount must be greater than 0"].waitForExistence(timeout: 5))
-        replaceText(in: amount, with: "900")
-        replaceText(in: app.textFields["Description"], with: rent)
+        amount.replaceText(with: "900")
+        app.textFields["Description"].replaceText(with: rent)
         XCTAssertFalse(app.staticTexts["Description is required"].exists, "typing clears the description error")
         XCTAssertTrue(app.element("recurring.form.day").exists, "monthly shows the Day of Month wheel")
         let preview = app.element("recurring.form.preview")
@@ -131,8 +120,8 @@ final class RecurringUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Add Recurring Expense"].waitForExistence(timeout: 10))
         app.buttons["Income"].firstMatch.tapSettled()
         XCTAssertTrue(app.staticTexts["Add Recurring Income"].waitForExistence(timeout: 5))
-        replaceText(in: app.textFields["Amount"], with: "50")
-        replaceText(in: app.textFields["Description"], with: salary)
+        app.textFields["Amount"].replaceText(with: "50")
+        app.textFields["Description"].replaceText(with: salary)
         // The pattern wheel is the form's first (the category is a menu row).
         wheel("recurring.form.pattern", index: 0).adjust(toPickerWheelValue: "Weekly")
         XCTAssertTrue(app.element("recurring.form.day").waitForNonExistence(timeout: 5), "no Day of Month for weekly")
@@ -166,7 +155,7 @@ final class RecurringUITests: XCTestCase {
         XCTAssertFalse(app.buttons["Income"].exists, "no type toggle when editing")
         XCTAssertTrue(preview.label.contains(Self.format(monthlyDates[1], "EEEE, MMM dd, yyyy")), "edit previews from the cursor")
         let edited = "UI rent edited \(suffix)"
-        replaceText(in: app.textFields["Description"], with: edited)
+        app.textFields["Description"].replaceText(with: edited)
         app.buttons["recurring.form.save"].tapSettled()
         XCTAssertTrue(summary(edited).waitForExistence(timeout: 10))
         XCTAssertTrue(summary(edited).label.contains("next occurrence \(rentNext)"), summary(edited).label)
@@ -191,8 +180,8 @@ final class RecurringUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Add Expense"].waitForExistence(timeout: 10))
         app.buttons["Make this recurring"].tapSettled()
         XCTAssertTrue(app.staticTexts["Add Recurring Expense"].waitForExistence(timeout: 10))
-        replaceText(in: app.textFields["Amount"], with: "15")
-        replaceText(in: app.textFields["Description"], with: madeRecurring)
+        app.textFields["Amount"].replaceText(with: "15")
+        app.textFields["Description"].replaceText(with: madeRecurring)
         app.buttons["recurring.form.save"].tapSettled()
         XCTAssertTrue(app.staticTexts["Add Recurring Expense"].waitForNonExistence(timeout: 10), "the sheet closed after Save")
         XCTAssertFalse(app.staticTexts["Add Expense"].exists)

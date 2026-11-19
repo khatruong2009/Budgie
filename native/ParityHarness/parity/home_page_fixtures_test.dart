@@ -523,11 +523,6 @@ Future<void> loadDataset(WidgetTester tester, Dataset d, AppHarness app) async {
   });
 }
 
-bool isType(Widget w, String name) => w.runtimeType.toString() == name;
-
-Finder byTypeName(String name) =>
-    find.byWidgetPredicate((w) => isType(w, name), description: name);
-
 /// The Text widgets under [parent] with their strings (rich text as plain).
 List<String> textsUnder(
   WidgetTester tester,

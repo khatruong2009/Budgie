@@ -1,11 +1,8 @@
 import BudgieCore
 import SwiftUI
 
-/// Add money (`_AllocationDialog`, savings_goals_page.dart:1219-1400): the
-/// goal's name, the autofocused "Allocation amount" field, quick chips that
-/// replace the field's text ($25.00, $100.00 and, while something remains,
-/// "Finish goal"), then Cancel and Add money. The amount must be above 0;
-/// there is no upper limit (over-funding is allowed).
+/// Add money (`_AllocationDialog`, savings_goals_page.dart:1219-1400). The
+/// amount must be above 0; there is no upper limit (over-funding is allowed).
 ///
 /// "Finish goal" fills the remainder rounded to cents, as Flutter, but while
 /// the field still reads that text `finishAmount` is saved (the remainder,
@@ -38,8 +35,8 @@ struct AllocationDialog: View {
                         symbol: AmountInput.currencySymbolName(formatter), keyboard: .decimalPad,
                         error: error, autofocus: true)
                     FlowLayout(spacing: Metrics.spacingS) {
-                        chip(formatter.format(25), spoken: "Fill amount \(formatter.format(25))", fill: 25, identifier: "goals.allocate.chip.25")
-                        chip(formatter.format(100), spoken: "Fill amount \(formatter.format(100))", fill: 100, identifier: "goals.allocate.chip.100")
+                        quickChip(25, identifier: "goals.allocate.chip.25")
+                        quickChip(100, identifier: "goals.allocate.chip.100")
                         if goal.remainingAmount > 0 {
                             chip("Finish goal", spoken: "Finish goal", fill: goal.finishAmount, identifier: "goals.allocate.chip.finish")
                         }
@@ -53,6 +50,11 @@ struct AllocationDialog: View {
         }
         .disabled(busy)
         .sensoryFeedback(.selection, trigger: chipTaps)
+    }
+
+    private func quickChip(_ amount: Double, identifier: String) -> some View {
+        let label = formatter.format(amount)
+        return chip(label, spoken: "Fill amount \(label)", fill: amount, identifier: identifier)
     }
 
     /// A quick amount: fills `fill` to cents, replacing the text.
@@ -82,14 +84,15 @@ struct AllocationDialog: View {
     private var amount: Double? {
         let finish = goal.finishAmount
         if finish > 0, text == formatter.formatNumber(finish, decimalDigits: 2) { return finish }
-        return AmountInput.parse(text, formatter: formatter).flatMap { $0 > 0 ? $0 : nil }
+        return AmountParser.parse(text, formatter: formatter).flatMap { $0 > 0 ? $0 : nil }
     }
 
     private func submit() {
         guard !busy else { return }
         guard let amount else {
-            error = "Enter an amount greater than 0"
-            AccessibilityNotification.Announcement("Enter an amount greater than 0").post()
+            let message = "Enter an amount greater than 0"
+            error = message
+            AccessibilityNotification.Announcement(message).post()
             return
         }
         error = nil

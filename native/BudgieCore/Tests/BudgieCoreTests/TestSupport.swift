@@ -64,6 +64,12 @@ func bits(_ value: J) -> Double? {
     value.string.flatMap { UInt64($0, radix: 16) }.map { Double(bitPattern: $0) }
 }
 
+/// A Dart double as its 64-bit pattern in 16 hex digits (the form fixtures and the store checksum use).
+func hex(_ value: Double) -> String {
+    let text = String(value.bitPattern, radix: 16)
+    return String(repeating: "0", count: 16 - text.count) + text
+}
+
 func strings(_ j: J) -> [String] { j.array.map { $0.string! } }
 
 /// UTF-16 comparison, as Dart compares strings.
@@ -75,9 +81,52 @@ func same(_ actual: [String], _ expected: [String], _ label: String) {
     #expect(actual.map { Array($0.utf16) } == expected.map { Array($0.utf16) }, "\(label): \(actual) | \(expected)")
 }
 
+/// Dart string equality of optionals (`nil` equals only `nil`).
+func dartEqual(_ a: String?, _ b: String?) -> Bool {
+    guard let a, let b else { return a == nil && b == nil }
+    return DartString.equal(a, b)
+}
+
+/// A JSON value as Dart prints it, or "<nil>".
+func text(_ value: JSONValue?) -> String { value.map { DartJSON.encodeString($0) } ?? "<nil>" }
+
+/// An id generator returning "<prefix>1", "<prefix>2", ...
+func sequentialIDs(_ prefix: String) -> () -> String {
+    var counter = 0
+    return {
+        counter += 1
+        return "\(prefix)\(counter)"
+    }
+}
+
+let newYorkZone = TimeZone(identifier: "America/New_York")!
+
+/// A fixture instant from its microseconds: an ambiguous local time cannot be re-derived from its ISO text.
+func instant(_ j: J, _ tz: TimeZone) -> DartDateTime {
+    DartDateTime(microsecondsSinceEpoch: Int64(j["us"].int!), timeZone: tz)
+}
+
+/// `FinancialData.load` over raw sections, as the app does at launch.
+func loadFinancialData(
+    _ sections: JSONObject, preferences: [String: PreferenceValue] = [:], calendar: DartCalendar, now: DartDateTime,
+    newID: () -> String = { UUID().uuidString.lowercased() }, matchesPaddedCategoryNames: Bool = true
+) -> FinancialData.LoadResult {
+    FinancialData.load(
+        FinancialSnapshot(revision: 1, sections: sections), preferences: InMemoryPreferences(preferences), calendar: calendar,
+        now: { now }, newID: newID, matchesPaddedCategoryNames: matchesPaddedCategoryNames)
+}
+
+/// Data holding one recurring template, loaded at noon on 2026-01-01.
+func financialData(holding template: RecurringTemplate, calendar: DartCalendar) -> FinancialData {
+    loadFinancialData(
+        JSONObject(ordered: [(Section.recurringTransactions, .array([.object(template.raw)]))]),
+        calendar: calendar, now: calendar.date(2026, 1, 1, 12), newID: { "id" }
+    ).data
+}
+
 enum TestDirectory {
     /// A fresh, not yet created path `<tmp>/<prefix>-<UUID>`. Callers create it
-    /// and remove it in a `defer`, as before.
+    /// and remove it in a `defer`.
     static func make(_ prefix: String) -> URL {
         FileManager.default.temporaryDirectory.appendingPathComponent("\(prefix)-\(UUID().uuidString)")
     }

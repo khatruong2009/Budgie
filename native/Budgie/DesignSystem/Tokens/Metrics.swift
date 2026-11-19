@@ -32,7 +32,6 @@ enum Metrics {
     static let sectionGap: CGFloat = 28
     static let cardPadding: CGFloat = 20
     static let cardRadius: CGFloat = 22
-    static let statCardRadius: CGFloat = 22
     static let listCardPadding: CGFloat = 8
     static let hairlineInset: CGFloat = 12
     static let sheetRadius: CGFloat = 30

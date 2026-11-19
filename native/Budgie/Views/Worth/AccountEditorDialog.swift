@@ -1,27 +1,19 @@
 import BudgieCore
 import SwiftUI
 
-/// The add / edit account dialog (`_NetWorthEditorDialog`, NW:2140-2513),
-/// hosted by `budgieDialog` with no padding so the header banner runs to
-/// the border. Banner: the type colour (green for an asset, rose for a
-/// liability) at 8% behind the type's arrow tile, "Add account" / "Edit
-/// account" in the sheet title style, the balance month and a close
-/// button. Body, balance first so the figure stays in view above the
-/// number pad: the balance in the big amount field, the account name, then
-/// one row with the Asset / Liability arrow toggle and the balance month
-/// (an inline month grid, 1970 to this month, instead of Material's date
-/// picker); then the outlined Cancel and the Add / Save pill filled in the
-/// type colour.
+/// The add / edit account dialog (`_NetWorthEditorDialog`), hosted by
+/// `budgieDialog` with no padding so the header banner runs to the border.
+/// The balance comes first so the figure stays in view above the number pad;
+/// the balance month is an inline month grid instead of Material's date
+/// picker.
 ///
 /// The balance field formats as Flutter's `_CurrencyInputFormatter`
-/// (`NetWorthAmountInput.sanitize`: digits, one ".", two decimals, commas
-/// every three digits), and a comma-decimal keyboard's "," typed at the end
-/// becomes "." (D6). Editing prefills the month's balance (`#,##0.##`);
-/// an untouched field saves the stored value exactly. Save validates like
-/// `_save` ("Name is required", then "Enter a valid balance"; 0 is valid),
-/// awaits the model, then closes; a failed write shows the save-failed
-/// toast (Flutter only shows the banner). While saving, the buttons and the
-/// scrim are disabled.
+/// (`NetWorthAmountInput.sanitize`), and a comma-decimal keyboard's "," typed
+/// at the end becomes "." (D6). Editing prefills the month's balance
+/// (`#,##0.##`); an untouched field saves the stored value exactly. Save
+/// validates like `_save` ("Name is required", then "Enter a valid balance";
+/// 0 is valid), awaits the model, then closes; a failed write shows the
+/// save-failed toast (Flutter only shows the banner).
 struct AccountEditorDialog: View {
     let request: AccountEditorRequest
     let dismiss: () -> Void
@@ -60,15 +52,9 @@ struct AccountEditorDialog: View {
     var body: some View {
         VStack(spacing: 0) {
             banner
-            // The banner and the buttons stay put; the fields scroll when the
-            // keyboard or a large text size leaves too little room. The
-            // insets are inside the scroll view so the focused field's 2pt
-            // ring is not clipped by it.
+            // Fields scroll; the insets sit inside so the focus ring is not clipped.
             DialogScroll {
                 VStack(spacing: 12) {
-                    // "Balance" keeps the label short enough for a long
-                    // figure on a small phone; the type is in the label
-                    // VoiceOver reads.
                     BudgieField(
                         title: "Balance", text: $amountText, prompt: "0.00", keyboard: .decimalPad,
                         error: amountError, style: .amount, prefix: AmountInput.currencySymbol(model.moneyFormatter),
@@ -112,12 +98,10 @@ struct AccountEditorDialog: View {
 
     private var banner: some View {
         HStack(spacing: 0) {
-            IconTile(symbol: type == .asset ? "arrow.up.right" : "arrow.down.left", color: accent, size: 44, iconSize: 22)
+            IconTile(symbol: type.arrowSymbol, color: accent, size: 44, iconSize: 22)
             VStack(alignment: .leading, spacing: Metrics.spacingXXS) {
                 Text(isEditing ? "Edit account" : "Add account")
-                    .textStyle(.sheetTitle)
-                    .foregroundStyle(BudgieColor.textPrimary)
-                    .accessibilityAddTraits(.isHeader)
+                    .sheetTitleStyle()
                 Text(DartDateFormat.yMMMM(entryMonth))
                     .textStyle(.rowSubtitle)
                     .foregroundStyle(BudgieColor.textSecondary)
@@ -152,8 +136,6 @@ struct AccountEditorDialog: View {
 
     // MARK: - Type and balance month
 
-    /// The type toggle beside the balance month, the month grid below them
-    /// while picking.
     private var typeAndMonth: some View {
         VStack(spacing: Metrics.spacingS) {
             HStack(spacing: Metrics.spacingS) {
@@ -166,15 +148,12 @@ struct AccountEditorDialog: View {
         }
     }
 
-    /// The balance month on the field fill: a calendar glyph, `yMMMM` and a
-    /// chevron, at least 44pt tall (the text wraps at large sizes). Opening
-    /// the grid ends editing: the balance keeps its focus otherwise, and the
-    /// number pad leaves room for only the grid's first rows.
+    /// Opening the grid ends editing so the number pad leaves room for it.
     private var monthButton: some View {
         let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
         return Button {
             monthTaps += 1
-            if !pickingMonth { RuleEditorDialog.dismissKeyboard() }
+            if !pickingMonth { UIApplication.dismissKeyboard() }
             pickingMonth.toggle()
         } label: {
             HStack(spacing: Metrics.spacingS) {
@@ -192,8 +171,7 @@ struct AccountEditorDialog: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 6)
             .frame(minHeight: Metrics.touchTarget)
-            .background(BudgieColor.fieldFill, in: shape)
-            .overlay(shape.strokeBorder(BudgieColor.cardBorder, lineWidth: Metrics.borderThin))
+            .modifier(FieldBox(radius: 14))
             .contentShape(shape)
         }
         .buttonStyle(.plain)
@@ -217,9 +195,7 @@ struct AccountEditorDialog: View {
 
     // MARK: - Buttons
 
-    /// The dialog pair (REDESIGN_PLAN 4.7): outlined Cancel, and Add / Save
-    /// filled in the type colour, spinning while the write is awaited. Both
-    /// play the pill's light impact.
+    /// Outlined Cancel and an Add / Save pill in the type colour.
     private var buttons: some View {
         DialogButtons(
             cancelId: "worth.editor.cancel", submitTitle: isEditing ? "Save" : "Add", submitId: "worth.editor.save",
@@ -288,14 +264,12 @@ private struct TypeToggle: View {
     let onTap: () -> Void
 
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
         HStack(spacing: Metrics.spacingXXS) {
             segment(.asset, "Asset", symbol: "arrow.up.right", color: BudgieColor.income)
             segment(.liability, "Liability", symbol: "arrow.down.left", color: BudgieColor.danger)
         }
         .padding(3)
-        .background(BudgieColor.fieldFill, in: shape)
-        .overlay(shape.strokeBorder(BudgieColor.cardBorder, lineWidth: Metrics.borderThin))
+        .modifier(FieldBox(radius: 14))
     }
 
     private func segment(_ value: NetWorthEntryType, _ title: String, symbol: String, color: Color) -> some View {
@@ -345,7 +319,6 @@ private struct BalanceMonthGrid: View {
     }
 
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
         VStack(spacing: Metrics.spacingS) {
             HStack(spacing: 0) {
                 stepButton("chevron.left", label: "Previous year", enabled: year > 1970) { year -= 1 }
@@ -364,8 +337,7 @@ private struct BalanceMonthGrid: View {
             }
         }
         .padding(10)
-        .background(BudgieColor.fieldFill, in: shape)
-        .overlay(shape.strokeBorder(BudgieColor.cardBorder, lineWidth: Metrics.borderThin))
+        .modifier(FieldBox(radius: 14))
     }
 
     private func monthButton(_ month: DartDateTime) -> some View {
@@ -376,7 +348,7 @@ private struct BalanceMonthGrid: View {
             pick(month)
         } label: {
             Text(DartDateFormat.MMM(month))
-                .textStyle(isSelected ? WorthStyle.chipBold : WorthStyle.chip)
+                .textStyle(isSelected ? WorthStyle.chipBold : .chipLabel)
                 .foregroundStyle(
                     isSelected ? BudgieColor.selectionText : enabled ? BudgieColor.textPrimary : BudgieColor.textTertiary)
                 .frame(maxWidth: .infinity, minHeight: 36)

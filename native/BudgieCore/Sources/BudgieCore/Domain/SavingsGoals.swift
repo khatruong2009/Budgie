@@ -23,7 +23,7 @@ import Foundation
 /// Non-finite amounts are refused (Dart would keep them in memory and fail
 /// every later save of the model).
 
-public enum SavingsGoalStatus: String, Sendable, Hashable, CaseIterable {
+public enum SavingsGoalStatus: String, Sendable, Hashable {
     case onTrack, behind, complete
 
     /// The status pill (savings_goals_page.dart:896-915).
@@ -160,11 +160,7 @@ extension SavingsGoalRecord {
     /// is not positive. NaN stays NaN, as in Dart (only reachable from a
     /// hand-edited "NaN" string amount).
     public var progress: Double {
-        if targetAmount <= 0 { return 0 }
-        let value = currentAmount / targetAmount
-        if value < 0 { return 0 }
-        if value > 1 { return 1 }
-        return value
+        targetAmount <= 0 ? 0 : dartClamp(currentAmount / targetAmount, 0, 1)
     }
 
     /// `progressPercent`: `(progress * 100).round()`, half away from zero.
@@ -177,7 +173,7 @@ extension SavingsGoalRecord {
     /// `isOverdue`: not completed and the target's calendar day is before
     /// today's (both as local midnight, `DateTime(y, m, d)`).
     public func isOverdue(now: DartDateTime, calendar: DartCalendar) -> Bool {
-        return !isCompleted && calendar.startOfDay(targetDate).isBefore(calendar.startOfDay(now))
+        !isCompleted && calendar.startOfDay(targetDate).isBefore(calendar.startOfDay(now))
     }
 
     /// `_statusFor` (savings_goals_page.dart:246-267). Complete when
@@ -329,11 +325,7 @@ extension FinancialData {
     /// `deleteSavingsGoal`: removes every goal with this id. False, with
     /// nothing to write, for an unknown id.
     @discardableResult
-    public mutating func deleteSavingsGoal(id: String) -> Bool {
-        let before = goalRows.count
-        goalRows.removeAll { $0.record.map { DartString.equal($0.id, id) } ?? false }
-        return goalRows.count != before
-    }
+    public mutating func deleteSavingsGoal(id: String) -> Bool { goalRows.removeRows(id: id) }
 
     /// `allocateToSavingsGoal`: adds `amount` (negative withdraws, floored
     /// at 0) to every goal with this id. False, with nothing to write, for a

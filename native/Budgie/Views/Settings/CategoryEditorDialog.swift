@@ -74,7 +74,7 @@ struct CategoryEditorDialog: View {
             BudgieField(title: "Name", text: $name, capitalization: .words, error: error, autofocus: true)
                 .submitLabel(.done)
                 .accessibilityIdentifier("categories.editor.name")
-            caption("Icon")
+            FieldCaption("Icon", isHeader: true)
                 .padding(.top, Metrics.spacingM)
             FlowLayout(spacing: Metrics.spacingS) {
                 ForEach(CategoryCatalog.iconIdentifiers, id: \.self) { identifier in
@@ -93,7 +93,7 @@ struct CategoryEditorDialog: View {
             }
             .frame(maxWidth: Self.gridWidth, alignment: .leading)
             .padding(.top, Metrics.spacingS)
-            caption("Color")
+            FieldCaption("Color", isHeader: true)
                 .padding(.top, Metrics.spacingM)
             // Flutter's colour Wrap has no run spacing (the rows touch);
             // 8 like the icons (PARITY_GAPS).
@@ -122,12 +122,6 @@ struct CategoryEditorDialog: View {
     /// fit six.
     private static let gridWidth = Metrics.touchTarget * 5 + Metrics.spacingS * 4
 
-    /// "Icon" / "Color", as the field's label (caption w600, secondary,
-    /// inset 4).
-    private func caption(_ text: String) -> some View {
-        FieldCaption(text, isHeader: true)
-    }
-
     // MARK: - Save
 
     /// The first error saving would give: the form's empty-name message,
@@ -147,12 +141,11 @@ struct CategoryEditorDialog: View {
         error = nil
         busy = true
         Task {
-            let outcome: AppModel.EditOutcome<CategoryEditError>
-            if let category = request.category {
-                outcome = await model.updateCategory(
+            let outcome = if let category = request.category {
+                await model.updateCategory(
                     id: category.id, name: name, iconIdentifier: iconIdentifier, colorToken: colorToken)
             } else {
-                outcome = await model.addCategory(
+                await model.addCategory(
                     type: request.type, name: name, iconIdentifier: iconIdentifier, colorToken: colorToken)
             }
             busy = false

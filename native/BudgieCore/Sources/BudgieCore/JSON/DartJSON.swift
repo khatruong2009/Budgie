@@ -56,18 +56,18 @@ public enum DartJSON {
             newline(depth)
             out.append(UInt8(ascii: "]"))
         case .object(let object):
-            let members = mode == .dartCanonical ? canonicalMembers(object) : object.members.map { ($0.key, $0.value) }
+            let members = mode == .dartCanonical ? canonicalMembers(object) : object.members
             guard !members.isEmpty else {
                 out.append(contentsOf: "{}".utf8)
                 return
             }
             out.append(UInt8(ascii: "{"))
-            for (index, (key, element)) in members.enumerated() {
+            for (index, member) in members.enumerated() {
                 if index > 0 { out.append(UInt8(ascii: ",")) }
                 newline(depth + 1)
-                writeString(key, into: &out, mode: mode)
+                writeString(member.key, into: &out, mode: mode)
                 out.append(contentsOf: ": ".utf8)
-                writeIndented(element, depth: depth + 1, into: &out, mode: mode)
+                writeIndented(member.value, depth: depth + 1, into: &out, mode: mode)
             }
             newline(depth)
             out.append(UInt8(ascii: "}"))
@@ -78,13 +78,13 @@ public enum DartJSON {
 
     /// Dart map semantics: a repeated key keeps its first position and
     /// takes its last value. Keys compare by decoded code units.
-    static func canonicalMembers(_ object: JSONObject) -> [(JSONString, JSONValue)] {
+    static func canonicalMembers(_ object: JSONObject) -> [JSONObject.Member] {
         var order: [[UInt16]] = []
-        var latest: [[UInt16]: (JSONString, JSONValue)] = [:]
+        var latest: [[UInt16]: JSONObject.Member] = [:]
         for member in object.members {
             let units = member.key.codeUnits
             if latest[units] == nil { order.append(units) }
-            latest[units] = (member.key, member.value)
+            latest[units] = member
         }
         return order.map { latest[$0]! }
     }
@@ -111,31 +111,12 @@ public enum DartJSON {
             out.append(UInt8(ascii: "]"))
         case .object(let object):
             out.append(UInt8(ascii: "{"))
-            switch mode {
-            case .preserving:
-                for (index, member) in object.members.enumerated() {
-                    if index > 0 { out.append(UInt8(ascii: ",")) }
-                    writeString(member.key, into: &out, mode: mode)
-                    out.append(UInt8(ascii: ":"))
-                    write(member.value, into: &out, mode: mode)
-                }
-            case .dartCanonical:
-                // Dart map semantics: a repeated key keeps its first position
-                // and takes its last value. Keys compare by decoded code units.
-                var order: [[UInt16]] = []
-                var latest: [[UInt16]: (JSONString, JSONValue)] = [:]
-                for member in object.members {
-                    let units = member.key.codeUnits
-                    if latest[units] == nil { order.append(units) }
-                    latest[units] = (member.key, member.value)
-                }
-                for (index, units) in order.enumerated() {
-                    if index > 0 { out.append(UInt8(ascii: ",")) }
-                    let (key, value) = latest[units]!
-                    writeString(key, into: &out, mode: mode)
-                    out.append(UInt8(ascii: ":"))
-                    write(value, into: &out, mode: mode)
-                }
+            let members = mode == .dartCanonical ? canonicalMembers(object) : object.members
+            for (index, member) in members.enumerated() {
+                if index > 0 { out.append(UInt8(ascii: ",")) }
+                writeString(member.key, into: &out, mode: mode)
+                out.append(UInt8(ascii: ":"))
+                write(member.value, into: &out, mode: mode)
             }
             out.append(UInt8(ascii: "}"))
         }

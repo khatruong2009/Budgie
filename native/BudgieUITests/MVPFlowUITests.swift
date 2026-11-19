@@ -13,14 +13,9 @@ final class MVPFlowUITests: XCTestCase {
         app.launch()
     }
 
-    private func tab(_ name: String) {
-        app.tabBars.buttons[name].tap()
-    }
-
     /// Empties a focused field one delete at a time. Not the edit menu's
     /// Select All: that needs a long press to raise a system menu within a
-    /// short wait, and when the menu is late the old step skipped it and
-    /// typed after the old amount.
+    /// short wait, and a late menu would leave the old amount in place.
     private func clear(_ field: XCUIElement) {
         for _ in 0..<20 {
             guard let value = field.value as? String, !value.isEmpty, value != field.placeholderValue else { return }
@@ -80,7 +75,7 @@ final class MVPFlowUITests: XCTestCase {
         XCTAssertTrue(app.labelled(containing: "paused").waitForExistence(timeout: 5))
 
         // Net worth is empty on a fresh install.
-        tab("Worth")
+        app.tab("Worth")
         XCTAssertTrue(app.staticTexts["No net worth accounts yet"].waitForExistence(timeout: 5))
 
         // Theme: the Light | Dark | Auto pills on the Theme row.

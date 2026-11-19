@@ -23,7 +23,7 @@ struct PreRestoreBackupTests {
         let prefs = try! PropertyListSerialization.data(fromPropertyList: ["flutter.themeMode": "dark"], format: .binary, options: 0)
         return PreRestoreBackup(
             applicationSupport: support, store: store, exportPreferences: { prefs }, appVersion: "test",
-            clock: { DartDateTime(microsecondsSinceEpoch: micros, timeZone: testZone) })
+            clock: { DartDateTime(microsecondsSinceEpoch: micros, timeZone: newYorkZone) })
     }
 
     @Test("copies every store file byte for byte, the preferences and a manifest, COMPLETE last")
@@ -149,7 +149,7 @@ struct PreRestoreBackupTests {
         let support = support()
         defer { try? FileManager.default.removeItem(at: support) }
         let files = InMemoryFileSystem(files: try typicalFiles())
-        let store = FinancialStore(fileSystem: files, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow)
+        let store = testStore(files)
         let before = try await store.read()
         let copier = backup(support, store: files)
 
@@ -171,22 +171,18 @@ struct PreRestoreBackupTests {
 
 @Suite("Backup restore: one commit, D10 keeps what the file leaves out")
 struct BackupRestoreTests {
-    let calendar = DartCalendar(timeZone: testZone)
+    let calendar = DartCalendar(timeZone: newYorkZone)
 
     func typical() async throws -> (FinancialData, InMemoryFileSystem, FinancialStore) {
         let files = InMemoryFileSystem(files: try typicalFiles())
-        let store = FinancialStore(fileSystem: files, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow)
+        let store = testStore(files)
         let snapshot = try await store.read()
         let data = FinancialData.load(snapshot, preferences: InMemoryPreferences(), calendar: calendar, now: fixedNow, newID: { "load-id" }).data
         return (data, files, store)
     }
 
     func decode(_ text: String) throws -> RestorePlan {
-        var n = 0
-        return try BackupEnvelope.decode(bytes: Array(text.utf8), calendar: calendar, now: fixedNow(), newID: {
-            n += 1
-            return "decoded-\(n)"
-        })
+        try BackupEnvelope.decode(bytes: Array(text.utf8), calendar: calendar, now: fixedNow(), newID: sequentialIDs("decoded-"))
     }
 
     @Test("a schema-1 file keeps categories, tags, rules and settings; the rest is replaced")
@@ -198,11 +194,7 @@ struct BackupRestoreTests {
                              {"id":"a","type":"income","description":"dup","amount":2.5,"category":"Salary","date":"2026-01-02"}],
              "netWorthEntries":[],"categoryBudgetLimits":{"Zero":0,"Keep":12},"savingsGoals":[],"recurringTransactions":[],"themeMode":"dark"}}
             """#)
-        var ids = 0
-        let result = current.restoring(plan, now: fixedNow(), newID: {
-            ids += 1
-            return "fresh-\(ids)"
-        })
+        let result = current.restoring(plan, now: fixedNow(), newID: sequentialIDs("fresh-"))
         let data = result.data
         #expect(data.transactions.map(\.id) == ["a", "fresh-1"])
         #expect(data.transactions[1].raw["id"]?.stringValue == "fresh-1")
@@ -254,10 +246,7 @@ struct BackupRestoreTests {
             {"transactions":[{"id":"ok","type":"expense","description":"d","amount":1.0,"category":"General","date":"2026-01-01T00:00:00.000"},{"id":"bad"}],
              "transactionTags":[{"id":"t","name":"Keep"},{"id":5}]}
             """#).objectValue!
-        let current = FinancialData.load(
-            FinancialSnapshot(revision: 1, sections: sections), preferences: InMemoryPreferences(), calendar: calendar,
-            now: fixedNow, newID: { "id" }
-        ).data
+        let current = loadFinancialData(sections, calendar: calendar, now: fixedNow(), newID: { "id" }).data
         #expect(current.transactionRows.count == 2 && current.tagRows.count == 2)
         let plan = try decode(#"{"schemaVersion":3,"data":{"transactions":[],"categories":[]}}"#)
         let result = current.restoring(plan, now: fixedNow(), newID: { "x" })
@@ -273,7 +262,7 @@ struct BackupRestoreTests {
         // does so at every launch), and its templates are due: use a store
         // that a launch leaves as it is.
         let files = InMemoryFileSystem()
-        let store = FinancialStore(fileSystem: files, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow)
+        let store = testStore(files)
         let seed = try JSONParser.parse(#"""
             {"transactions":[{"id":"t1","type":"expense","description":"Café \"x\"","amount":12,"category":"Groceries","date":"2026-09-01","tagIds":["g"]},
                              {"id":"t2","type":"income","description":"Pay","amount":100.5,"category":"Side Gig","date":"2026-09-02T09:00:00.000Z"}],

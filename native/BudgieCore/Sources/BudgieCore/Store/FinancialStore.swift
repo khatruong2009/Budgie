@@ -128,8 +128,7 @@ public actor FinancialStore {
     /// After `dataUnreadable`, the user chose to start with an empty store.
     /// The `.corrupt-*` files stay on disk.
     public func acknowledgeUnreadableData(_ corruptFiles: [String]) throws(FinancialStoreError) {
-        let known = Set(acknowledgedCorruptFiles())
-        let all = (known.union(corruptFiles)).sorted()
+        let all = Set(acknowledgedCorruptFiles()).union(corruptFiles).sorted()
         preferences.set(.stringList(all), forKey: PreferenceKey.acknowledgedCorruptFiles)
         // This is the explicit start-fresh path. Without it, a missing store
         // after a prior save must remain a recovery error, not a new install.
@@ -162,7 +161,7 @@ public actor FinancialStore {
             // Primary missing, unreadable or older: restore it from the
             // backup (same revision, fresh header); the backup is untouched.
             let restored = backup!
-            let encoded = StoreFile.encode(restored, writtenAt: now())
+            let encoded = StoreFile.encode(restored, writtenAt: clock())
             try writeAtomically(StoreFile.primaryName, encoded)
             try verifyOnDisk(restored.revision, expectedBytes: encoded)
             report.restoredFromBackup = true
@@ -173,10 +172,8 @@ public actor FinancialStore {
             // Both exist (or the only one exists) and neither decodes: keep
             // them for recovery. An explicit acknowledgment is required
             // before considering the legacy sources below.
-            let stamp = millisecondsSinceEpoch()
-            var existingNames: Set<String>
-            do { existingNames = Set(try fileSystem.list()) }
-            catch { throw .readFailed(name: StoreFile.directoryName, reason: "\(error)") }
+            let stamp = DartDateTime.flooredDivision(clock().microsecondsSinceEpoch, 1_000)
+            var existingNames = Set(try listFiles())
             for (name, bytes) in [(StoreFile.primaryName, primaryBytes), (StoreFile.backupName, backupBytes)]
             where bytes != nil {
                 let baseName = "\(name).corrupt-\(stamp)"
@@ -216,37 +213,27 @@ public actor FinancialStore {
         guard let migrated else { return .empty }
         try commit(migrated.snapshot)
         report.migratedFrom = migrated.source
-        report.removedPreferenceKeys = PreferenceKey.migratedKeys.filter { preferences.contains($0) }
-        LegacyMigration.removeMigratedKeys(preferences)
+        report.removedPreferenceKeys = LegacyMigration.removeMigratedKeys(preferences)
         return migrated.snapshot
     }
 
     private func unacknowledgedCorruptFiles() throws(FinancialStoreError) -> [String] {
-        let names: [String]
-        do {
-            names = try fileSystem.list()
-        } catch {
-            throw .readFailed(name: StoreFile.directoryName, reason: "\(error)")
-        }
         let acknowledged = Set(acknowledgedCorruptFiles())
-        return names.filter { name in
+        return try listFiles().filter { name in
             (name.hasPrefix(StoreFile.primaryName + ".corrupt-") || name.hasPrefix(StoreFile.backupName + ".corrupt-"))
                 && !acknowledged.contains(name)
         }
     }
 
     private func acknowledgedCorruptFiles() -> [String] {
-        if case .stringList(let names)? = preferences.value(forKey: PreferenceKey.acknowledgedCorruptFiles) {
-            return names
-        }
-        return []
+        preferences.stringList(PreferenceKey.acknowledgedCorruptFiles) ?? []
     }
 
     // MARK: - Committing (Dart `_commit`)
 
     private func commit(_ next: FinancialSnapshot) throws(FinancialStoreError) {
         try requireProtectedData()
-        let encoded = StoreFile.encode(next, writtenAt: now())
+        let encoded = StoreFile.encode(next, writtenAt: clock())
 
         // Preserve the intact current primary as the backup, byte for byte.
         if let current = try readIfPresent(StoreFile.primaryName), StoreFile.decode(current) != nil {
@@ -274,6 +261,14 @@ public actor FinancialStore {
         guard protectedData.isProtectedDataAvailable else { throw .protectedDataUnavailable }
     }
 
+    private func listFiles() throws(FinancialStoreError) -> [String] {
+        do {
+            return try fileSystem.list()
+        } catch {
+            throw .readFailed(name: StoreFile.directoryName, reason: "\(error)")
+        }
+    }
+
     private func readIfPresent(_ name: String) throws(FinancialStoreError) -> [UInt8]? {
         do {
             return try fileSystem.read(name)
@@ -293,13 +288,5 @@ public actor FinancialStore {
         try requireProtectedData()
         do { try fileSystem.commitStaged(name) }
         catch { throw .writeFailed(name: name, reason: "\(error)") }
-    }
-
-    private func now() -> DartDateTime {
-        clock()
-    }
-
-    private func millisecondsSinceEpoch() -> Int64 {
-        DartDateTime.flooredDivision(now().microsecondsSinceEpoch, 1_000)
     }
 }

@@ -9,6 +9,29 @@ public enum StoredRow<Record: Hashable & Sendable>: Hashable, Sendable {
         if case .record(let record) = self { return record }
         return nil
     }
+
+    init(_ row: JSONValue, parse: (JSONValue) -> Record?) {
+        self = parse(row).map { .record($0) } ?? .unreadable(row)
+    }
+}
+
+extension StoredRow where Record: Identifiable, Record.ID == String {
+    /// A readable row whose id equals `id` as Dart strings.
+    func hasID(_ id: String) -> Bool { record.map { DartString.equal($0.id, id) } ?? false }
+}
+
+extension Array {
+    func index<Record: Identifiable>(ofID id: String) -> Int? where Element == StoredRow<Record>, Record.ID == String {
+        firstIndex { $0.hasID(id) }
+    }
+
+    /// Removes every readable row with the id; whether any went.
+    @discardableResult
+    mutating func removeRows<Record: Identifiable>(id: String) -> Bool where Element == StoredRow<Record>, Record.ID == String {
+        let before = count
+        removeAll { $0.hasID(id) }
+        return count != before
+    }
 }
 
 /// Everything the app shows, loaded from a `FinancialSnapshot` with the same
@@ -64,17 +87,9 @@ public struct FinancialData: Sendable {
     /// repeated key keeps its first position and its last value, as Dart's
     /// `jsonDecode` map does.
     public var budgetLimits: [(String, Double)] {
-        var order: [[UInt16]] = []
-        var entries: [[UInt16]: (name: String, value: JSONValue)] = [:]
-        for member in budgetLimitsObject.members {
-            let units = member.key.codeUnits
-            if entries[units] == nil { order.append(units) }
-            entries[units] = (member.key.value, member.value)
-        }
-        return order.compactMap { units in
-            let entry = entries[units]!
-            guard let value = entry.value.numberValue?.doubleValue, value > 0 else { return nil }
-            return (entry.name, value)
+        DartJSON.canonicalMembers(budgetLimitsObject).compactMap { member in
+            guard let value = member.value.numberValue?.doubleValue, value > 0 else { return nil }
+            return (member.key.value, value)
         }
     }
 
@@ -148,9 +163,7 @@ public struct FinancialData: Sendable {
 
         // Net worth entries, or the legacy starting balances when empty.
         if case .array(let rows)? = sections[Section.netWorthEntries], !rows.isEmpty {
-            data.netWorthRows = rows.map { row in
-                NetWorthEntryRecord.parse(row, calendar: calendar, now: now).map { .record($0) } ?? .unreadable(row)
-            }
+            data.netWorthRows = rows.map { row in StoredRow(row) { NetWorthEntryRecord.parse($0, calendar: calendar, now: now) } }
         } else {
             let assets = preferences.double(PreferenceKey.startingAssets) ?? 0
             let liabilities = preferences.double(PreferenceKey.startingLiabilities) ?? 0
@@ -191,10 +204,10 @@ public struct FinancialData: Sendable {
             return rows
         }
         data.tagRows = listSection(Section.transactionTags, legacyKey: PreferenceKey.transactionTags).map { row in
-            TransactionTagRecord.parse(row, newID: newID).map { .record($0) } ?? .unreadable(row)
+            StoredRow(row) { TransactionTagRecord.parse($0, newID: newID) }
         }
         data.ruleRows = listSection(Section.categorizationRules, legacyKey: PreferenceKey.categorizationRules).map { row in
-            CategorizationRuleRecord.parse(row, newID: newID).map { .record($0) } ?? .unreadable(row)
+            StoredRow(row) { CategorizationRuleRecord.parse($0, newID: newID) }
         }
 
         if case .object(let limits)? = sections[Section.categoryBudgetLimits] {
@@ -203,13 +216,13 @@ public struct FinancialData: Sendable {
 
         if case .array(let goals)? = sections[Section.savingsGoals] {
             data.goalRows = goals.map { row in
-                SavingsGoalRecord.parse(row, calendar: calendar, now: launch, newID: newID).map { .record($0) } ?? .unreadable(row)
+                StoredRow(row) { SavingsGoalRecord.parse($0, calendar: calendar, now: launch, newID: newID) }
             }
         }
 
         if case .array(let rows)? = sections[Section.recurringTransactions], !rows.isEmpty {
             data.templateRows = rows.map { row in
-                RecurringTemplate.parse(row, calendar: calendar, newID: newID).map { .record($0) } ?? .unreadable(row)
+                StoredRow(row) { RecurringTemplate.parse($0, calendar: calendar, newID: newID) }
             }
         }
 
@@ -280,19 +293,13 @@ public struct FinancialData: Sendable {
 
     @discardableResult
     public mutating func updateTransaction(id: String, _ edit: TransactionRecord.Edit, now: DartDateTime) -> Bool {
-        guard let index = transactionRows.firstIndex(where: { $0.record.map { DartString.equal($0.id, id) } ?? false }), let record = transactionRows[index].record else {
-            return false
-        }
+        guard let index = transactionRows.index(ofID: id), let record = transactionRows[index].record else { return false }
         transactionRows[index] = .record(record.applying(edit, now: now))
         return true
     }
 
     @discardableResult
-    public mutating func deleteTransaction(id: String) -> Bool {
-        let before = transactionRows.count
-        transactionRows.removeAll { $0.record.map { DartString.equal($0.id, id) } ?? false }
-        return transactionRows.count != before
-    }
+    public mutating func deleteTransaction(id: String) -> Bool { transactionRows.removeRows(id: id) }
 
     /// Widget value (`_syncWidgetCashFlow`): current calendar month's income
     /// minus expenses, summed in list order.
@@ -300,8 +307,7 @@ public struct FinancialData: Sendable {
         let n = now.fields
         var cashFlow = 0.0
         for transaction in transactions {
-            let f = transaction.date.fields
-            guard f.year == n.year && f.month == n.month else { continue }
+            guard DartCalendar.isSameMonth(transaction.date, now) else { continue }
             cashFlow += transaction.type == .income ? transaction.amount : -transaction.amount
         }
         return (cashFlow, "\(n.year)-\(DartCalendar.pad(n.month, 2))")

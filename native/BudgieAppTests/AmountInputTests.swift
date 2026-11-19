@@ -78,7 +78,7 @@ final class AmountInputTests: XCTestCase {
 
     /// Filter bounds take 0 and up; blank or unreadable text is no bound.
     func testFilterBoundsAcceptZeroAndFollowTheFormat() {
-        func bound(_ text: String, _ formatter: MoneyFormatter) -> Double? { AmountInput.parse(text, formatter: formatter) }
+        func bound(_ text: String, _ formatter: MoneyFormatter) -> Double? { AmountParser.parse(text, formatter: formatter) }
         XCTAssertEqual(bound("0", english), 0)
         XCTAssertEqual(bound("0,00", german), 0)
         XCTAssertEqual(bound("12,5", english), 12.5, "Flutter drops the comma: 125")

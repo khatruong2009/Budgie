@@ -98,19 +98,16 @@ extension SettingsView {
     /// sheet closes, or at once when the page was left while the file was
     /// being built or the sheet could not be shown.
     private func share(_ file: ShareFile) {
-        guard isVisible else {
+        func finish() {
             model.finishExport(file.url)
             finishDataTask()
-            return
         }
-        let presented = SharePresenter.present(file) { completed in
-            model.finishExport(file.url)
-            finishDataTask()
+        guard isVisible, SharePresenter.present(file, onComplete: { completed in
+            finish()
             if completed { model.showToast(file.completedToast) }
-        }
-        if !presented {
-            model.finishExport(file.url)
-            finishDataTask()
+        }) else {
+            finish()
+            return
         }
     }
 

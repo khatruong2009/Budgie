@@ -81,12 +81,7 @@ public struct DartCalendar: Sendable {
         return x.year == y.year && x.month == y.month && x.day == y.day
     }
 
-    /// `TransactionModel._monthKey`: year * 12 + month.
-    public func ledgerMonthKey(_ d: DartDateTime) -> Int {
-        DartCalendar.monthKey(d)
-    }
-
-    /// `year * 12 + month` of the date's fields.
+    /// `TransactionModel._monthKey`: `year * 12 + month` of the date's fields.
     public static func monthKey(_ d: DartDateTime) -> Int {
         let f = d.fields
         return f.year * 12 + f.month
@@ -111,7 +106,7 @@ public struct DartCalendar: Sendable {
         return x.year == y.year && x.month == y.month
     }
 
-    /// Inverse of `ledgerMonthKey` (`getAvailableMonths`).
+    /// Inverse of `monthKey` (`getAvailableMonths`).
     public func month(fromLedgerKey key: Int) -> DartDateTime {
         let year = (key - 1) / 12
         return date(year, key - year * 12)

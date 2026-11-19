@@ -9,7 +9,7 @@ import Testing
 /// January to July 2026 are past months (Dart's tests use the real clock).
 @Suite("Net worth mutations (transaction_model_net_worth_test.dart and more)")
 struct NetWorthMutationTests {
-    let calendar = DartCalendar(timeZone: TimeZone(identifier: "America/New_York")!)
+    let calendar = DartCalendar(timeZone: newYorkZone)
     var now: DartDateTime { calendar.date(2026, 9, 28, 9, 15) }
 
     private var counter = 0
@@ -19,11 +19,7 @@ struct NetWorthMutationTests {
     }
 
     func empty(_ sections: JSONObject = JSONObject(), preferences: [String: PreferenceValue] = [:]) -> FinancialData {
-        let now = self.now
-        return FinancialData.load(
-            FinancialSnapshot(revision: 1, sections: sections), preferences: InMemoryPreferences(preferences), calendar: calendar,
-            now: { now }, newID: { UUID().uuidString.lowercased() }
-        ).data
+        loadFinancialData(sections, preferences: preferences, calendar: calendar, now: now).data
     }
 
     func section(_ data: FinancialData) -> String { DartJSON.encodeString(data.netWorthSection()) }
@@ -63,8 +59,7 @@ struct NetWorthMutationTests {
         #expect(data.totalLiabilities(forMonth: february) == 149500)
         #expect(data.netWorth(forMonth: february) == 50500)
         #expect(data.trackedNetWorthEntryCount(forMonth: february) == 2)
-        let ok65 = data.updatedNetWorthEntryCount(forMonth: february) == 2
-        #expect(ok65)
+        #expect(data.updatedNetWorthEntryCount(forMonth: february) == 2)
         #expect(data.staleNetWorthEntryCount(forMonth: february) == 0)
     }
 
@@ -87,8 +82,7 @@ struct NetWorthMutationTests {
                               recordedAt: calendar.date(2026, 1, 20, 9), id: id(), now: now)
         data.selectNetWorthMonth(february)
         #expect(data.hasNetWorthData(forMonth: february))
-        let ok88 = data.updatedNetWorthEntryCount(forMonth: february) == 0
-        #expect(ok88)
+        #expect(data.updatedNetWorthEntryCount(forMonth: february) == 0)
         let history = data.netWorthHistory(limit: 10)
         #expect(history.count == 1)
         #expect(history.first?.date == calendar.date(2026, 1, 20))
@@ -208,8 +202,7 @@ struct NetWorthMutationTests {
     @Test("empty or whitespace names are a no-op; names are trimmed like Dart")
     mutating func names() {
         var data = empty()
-        let ok207 = data.addNetWorthEntry(name: " \u{FEFF}\u{3000}", type: .asset, amount: 1, id: id(), now: now) == nil
-        #expect(ok207)
+        #expect(data.addNetWorthEntry(name: " \u{FEFF}\u{3000}", type: .asset, amount: 1, id: id(), now: now) == nil)
         #expect(data.netWorthRows.isEmpty)
         let entry = data.addNetWorthEntry(name: "\u{FEFF} Mortgage \n", type: .liability, amount: 1, id: id(), now: now)!
         #expect(entry.name == "Mortgage")
@@ -306,8 +299,7 @@ struct NetWorthMutationTests {
         let entry = data.addNetWorthEntry(name: "A", type: .asset, amount: 1, id: id(), now: now)!
         let before = section(data)
         for bad in [Double.nan, .infinity, -.infinity] {
-            let ok295 = data.addNetWorthEntry(name: "B", type: .asset, amount: bad, id: id(), now: now) == nil
-            #expect(ok295)
+            #expect(data.addNetWorthEntry(name: "B", type: .asset, amount: bad, id: id(), now: now) == nil)
             let ok296 = !data.updateNetWorthEntry(id: entry.id, name: "A", type: .asset, amount: bad, now: now)
             #expect(ok296)
         }

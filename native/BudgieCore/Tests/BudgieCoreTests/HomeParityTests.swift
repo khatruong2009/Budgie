@@ -7,19 +7,7 @@ import Testing
 func homeData(_ sections: JSONObject, zone: TimeZone = Scenario.zone) -> FinancialData {
     let calendar = DartCalendar(timeZone: zone)
     let now = calendar.date(2026, 9, 28, 9, 15)
-    return FinancialData.load(
-        FinancialSnapshot(revision: 1, sections: sections), preferences: InMemoryPreferences([:]), calendar: calendar,
-        now: { now }, newID: { UUID().uuidString.lowercased() }
-    ).data
-}
-
-private func fixture(_ name: String) throws -> J {
-    try Fixtures.json("home/\(name)")
-}
-
-private func hex(_ value: Double) -> String {
-    let text = String(value.bitPattern, radix: 16)
-    return String(repeating: "0", count: 16 - text.count) + text
+    return loadFinancialData(sections, calendar: calendar, now: now).data
 }
 
 private func pairs(_ limits: [(String, Double)]) -> [[UInt16]] {
@@ -39,7 +27,7 @@ struct HomeParityTests {
     /// repeated keys), the written section is byte-identical.
     @Test("budget limit set/remove sequences")
     func budgetMutations() throws {
-        let cases = try fixture("budget_mutations.json")["cases"].array
+        let cases = try Fixtures.json("home/budget_mutations.json")["cases"].array
         #expect(cases.count == 4)
         for c in cases {
             let label = c["label"].string!
@@ -74,20 +62,25 @@ struct HomeParityTests {
 
     @Test("budget rows, EDIT and Add lists, and the expense category order")
     func budgetRows() throws {
-        let f = try fixture("budget_rows.json")
+        let f = try Fixtures.json("home/budget_rows.json")
         let data = homeData(try JSONParser.parse(f["sections"].string!).objectValue!)
         let ledger = LedgerIndex.build(data.transactions, calendar: data.calendar)
 
         #expect(data.categoryPicker(for: .expense).map(\.name) == f["expenseCategories"].array.map { $0.string! })
         #expect(pairs(data.budgetLimits) == pairs(f["limits"]))
-        #expect(data.budgetedCategories().map(\.name) == f["budgeted"].array.map { $0.string! })
-        #expect(data.unbudgetedCategories().map(\.name) == f["unbudgeted"].array.map { $0.string! })
+        let lists = data.budgetOverview(MonthSummary())
+        #expect(lists.budgeted.map(\.name) == f["budgeted"].array.map { $0.string! })
+        #expect(lists.unbudgeted.map(\.name) == f["unbudgeted"].array.map { $0.string! })
+        // One entry per exact name, in picker order, split by whether a limit is held.
+        var seenNames = Set<[UInt16]>()
+        let expenseNames = data.categoryPicker(for: .expense).filter { seenNames.insert(Array($0.name.utf16)).inserted }
 
         let months = f["months"].array
         #expect(months.count == 4)
         for m in months {
             let month = try data.calendar.parse(m["month"].string!)
-            let swift = data.budgetProgress(ledger.summary(forMonth: month))
+            let overview = data.budgetOverview(ledger.summary(forMonth: month))
+            let swift = overview.progress
             let dart = m["rows"].array
             #expect(swift.map(\.category) == dart.map { $0["category"].string! }, "\(m["month"].string!)")
             for (s, d) in zip(swift, dart) {
@@ -104,10 +97,8 @@ struct HomeParityTests {
                 #expect(status == d["status"].string, "\(s.category) status")
             }
             // The one-pass overview Home reads agrees with the separate queries.
-            let overview = data.budgetOverview(ledger.summary(forMonth: month))
-            #expect(overview.progress == swift)
-            #expect(overview.budgeted.map(\.id) == data.budgetedCategories().map(\.id))
-            #expect(overview.unbudgeted.map(\.id) == data.unbudgetedCategories().map(\.id))
+            #expect(overview.budgeted.map(\.id) == expenseNames.filter { data.budgetLimit(for: $0.name) != nil }.map(\.id))
+            #expect(overview.unbudgeted.map(\.id) == expenseNames.filter { data.budgetLimit(for: $0.name) == nil }.map(\.id))
             for info in overview.budgeted + overview.unbudgeted {
                 #expect(overview.limit(for: info.name) == data.budgetLimit(for: info.name), "\(info.name) limit")
             }
@@ -116,7 +107,7 @@ struct HomeParityTests {
 
     @Test("percent deltas, delta labels, previous month")
     func deltas() throws {
-        let f = try fixture("deltas.json")
+        let f = try Fixtures.json("home/deltas.json")
         let deltas = f["deltas"].array
         #expect(deltas.count > 50)
         for d in deltas {
@@ -140,7 +131,7 @@ struct HomeParityTests {
 
     @Test("rule matching and suggestions over a query corpus")
     func rules() throws {
-        let f = try fixture("rules.json")
+        let f = try Fixtures.json("home/rules.json")
         let rules = try JSONParser.parse(f["rules"].string!).arrayValue!.map {
             CategorizationRuleRecord.parse($0, newID: { "generated" })!
         }
@@ -165,7 +156,7 @@ struct HomeParityTests {
 
     @Test("double.tryParse over an adversarial corpus")
     func tryParse() throws {
-        let cases = try fixture("try_parse.json")["cases"].array
+        let cases = try Fixtures.json("home/try_parse.json")["cases"].array
         #expect(cases.count > 100)
         for c in cases {
             let input = c["input"].string!

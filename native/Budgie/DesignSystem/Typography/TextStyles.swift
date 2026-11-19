@@ -32,10 +32,21 @@ extension TextSpec {
     /// A note under or beside content (Regular 13).
     static let note = TextSpec(face: .gabaritoRegular, size: 13, height: 1.25, relativeTo: .footnote)
     static let noteStrong = TextSpec(face: .gabaritoSemiBold, size: 13, height: 1.25, relativeTo: .footnote)
+    static let footnoteSemiBold = TextSpec(face: .gabaritoSemiBold, size: 13, relativeTo: .footnote)
+    static let footnoteBold = TextSpec(face: .gabaritoBold, size: 13, relativeTo: .footnote)
     /// The explanatory paragraph under a sheet's title.
     static let sheetBlurb = TextSpec(face: .gabaritoRegular, size: 14, height: 1.3, relativeTo: .subheadline)
+    /// A sheet's feature card: its label and its total.
+    static let featureLabel = TextSpec(face: .gabaritoSemiBold, size: 13, height: 1.3, relativeTo: .footnote)
+    static let featureTotal = TextSpec(
+        face: .gabaritoExtraBold, size: 40, tracking: -1.2, height: 1.1, tabular: true, relativeTo: .largeTitle)
+    /// A sheet's breakdown row: its label and its mono value.
+    static let sheetRowLabel = TextSpec(face: .gabaritoRegular, size: 15, height: 1.3, relativeTo: .subheadline)
+    static let sheetRowValue = TextSpec(face: .monoSemiBold, size: 14, height: 1.3, tabular: true, relativeTo: .footnote)
     static let goalTitle = TextSpec(face: .gabaritoBold, size: 18, tracking: -0.3, height: 1.25, relativeTo: .headline)
     static let rowTitle = TextSpec(face: .gabaritoSemiBold, size: 15, height: 1.25, relativeTo: .body)
+    /// `rowTitle` at 14: month chips and pills.
+    static let chipLabel = TextSpec(face: .gabaritoSemiBold, size: 14, height: 1.25, relativeTo: .subheadline)
     static let rowSubtitle = TextSpec(face: .gabaritoRegular, size: 12, height: 1.25, relativeTo: .caption)
     static let amount = TextSpec(face: .gabaritoBold, size: 16, tabular: true, relativeTo: .body)
     static let amountSmall = TextSpec(face: .gabaritoBold, size: 15, tabular: true, relativeTo: .body)
@@ -57,11 +68,9 @@ extension TextSpec {
     static let headingSmall = TextSpec(face: .gabaritoSemiBold, size: 20, tracking: -0.1, height: 1.3, relativeTo: .title3)
     static let bodyLarge = TextSpec(face: .gabaritoRegular, size: 17, tracking: -0.4, height: 1.5, relativeTo: .body)
     static let bodyMedium = TextSpec(face: .gabaritoRegular, size: 15, tracking: -0.2, height: 1.5, relativeTo: .subheadline)
-    static let bodySmall = TextSpec(face: .gabaritoRegular, size: 13, tracking: -0.1, height: 1.4, relativeTo: .footnote)
     static let labelSmall = TextSpec(face: .gabaritoSemiBold, size: 13, tracking: -0.1, height: 1.3, relativeTo: .footnote)
     static let caption = TextSpec(face: .gabaritoRegular, size: 13, tracking: -0.1, height: 1.4, relativeTo: .footnote)
-    /// `caption` at w600: form field labels (`ModernTextField`, the forms'
-    /// wheel captions) and the recurring card's detail labels.
+    /// `caption` at w600: form field labels and the recurring card's detail labels.
     static let captionStrong = TextSpec(face: .gabaritoSemiBold, size: 13, tracking: -0.1, height: 1.4, relativeTo: .footnote)
     static let numericMedium = TextSpec(face: .gabaritoSemiBold, size: 22, tracking: -0.2, height: 1.3, tabular: true, relativeTo: .title2)
 
@@ -74,8 +83,8 @@ extension TextSpec {
     var scalingStyle: Font.TextStyle { relativeTo == .caption2 ? .caption : relativeTo }
 
     /// The font alone (for places that take a `Font`, e.g. `Text` concatenation).
-    func font(scaledSize: CGFloat? = nil) -> Font {
-        let font = Font.custom(face.postScriptName, size: scaledSize ?? size, relativeTo: scalingStyle)
+    func font() -> Font {
+        let font = Font.custom(face.postScriptName, size: size, relativeTo: scalingStyle)
         return tabular ? font.monospacedDigit() : font
     }
 }
@@ -96,6 +105,15 @@ extension View {
     /// same way.
     func textStyle(_ spec: TextSpec) -> some View {
         modifier(TextStyleModifier(spec: spec))
+    }
+}
+
+extension View {
+    /// A sheet's title: `sheetTitle` in the primary colour, as a header.
+    func sheetTitleStyle() -> some View {
+        textStyle(.sheetTitle)
+            .foregroundStyle(BudgieColor.textPrimary)
+            .accessibilityAddTraits(.isHeader)
     }
 }
 

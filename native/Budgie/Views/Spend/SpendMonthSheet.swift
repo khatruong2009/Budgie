@@ -22,9 +22,7 @@ struct SpendMonthSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Select month")
-                .textStyle(.sheetTitle)
-                .foregroundStyle(BudgieColor.textPrimary)
-                .accessibilityAddTraits(.isHeader)
+                .sheetTitleStyle()
                 .padding(.horizontal, Metrics.pageHorizontal)
                 .padding(.top, 12)
             GlowCard(padding: 0) {
@@ -32,7 +30,14 @@ struct SpendMonthSheet: View {
                     VStack(spacing: 0) {
                         ForEach(months.indices, id: \.self) { index in
                             if index > 0 { Hairline() }
-                            row(months[index])
+                            OptionRow(
+                                title: DartDateFormat.yMMMM(months[index]),
+                                selected: selected.map { DartCalendar.isSameMonth($0, months[index]) } ?? false,
+                                identifier: "spend.month.\(DartDateFormat.yyyyMM(months[index]))"
+                            ) {
+                                onPick(months[index])
+                                dismiss()
+                            }
                         }
                     }
                     .padding(.horizontal, Metrics.spacingM)
@@ -50,7 +55,7 @@ struct SpendMonthSheet: View {
         .onGeometryChangeCompat { contentHeight = $0.height }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .budgieSheetChrome()
-        .presentationDetents([.height(BudgetSheetLayout.handleHeight + (contentHeight > 0 ? contentHeight : estimatedHeight))])
+        .presentationDetents([.height(BudgetSheetLayout.height(measured: contentHeight, estimate: estimatedHeight))])
         .accessibilityIdentifier("spend.monthSheet")
     }
 
@@ -64,16 +69,5 @@ struct SpendMonthSheet: View {
     /// of resizing once measured.
     private var estimatedHeight: CGFloat {
         12 + 29 + 16 + min(estimatedListHeight, Self.maxListHeight) + 2 + 16
-    }
-
-    /// A row: the month and the accent check on the selected one.
-    private func row(_ month: DartDateTime) -> some View {
-        OptionRow(
-            title: DartDateFormat.yMMMM(month), selected: selected.map { DartCalendar.isSameMonth($0, month) } ?? false,
-            identifier: "spend.month.\(DartDateFormat.yyyyMM(month))"
-        ) {
-            onPick(month)
-            dismiss()
-        }
     }
 }

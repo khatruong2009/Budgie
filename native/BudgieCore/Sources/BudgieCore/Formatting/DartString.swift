@@ -10,10 +10,7 @@ public enum DartString {
     /// Dart `String.trim`: Unicode White_Space plus U+FEFF (Swift's
     /// `.whitespacesAndNewlines` has no U+FEFF).
     public static func trim(_ text: String) -> String {
-        let scalars = text.unicodeScalars
-        guard let start = scalars.firstIndex(where: { !isWhitespace($0) }) else { return "" }
-        let end = scalars.lastIndex(where: { !isWhitespace($0) })!
-        return String(scalars[start...end])
+        String(decoding: trimUnits(Array(text.utf16)), as: UTF16.self)
     }
 
     /// Dart `String.trim` on UTF-16 code units (every character in the set is
@@ -55,12 +52,7 @@ public enum DartString {
                 result.append("i")
                 continue
             }
-            let mapped = scalar.properties.lowercaseMapping.unicodeScalars
-            if mapped.count == 1, inDartTables(scalar), inDartTables(mapped.first!) {
-                result.append(contentsOf: mapped)
-            } else {
-                result.append(scalar)
-            }
+            result.append(simpleMapping(scalar, scalar.properties.lowercaseMapping.unicodeScalars))
         }
         return String(result)
     }
@@ -69,6 +61,13 @@ public enum DartString {
     private static func inDartTables(_ scalar: Unicode.Scalar) -> Bool {
         guard let age = scalar.properties.age else { return false }
         return (age.major, age.minor) <= (5, 1)
+    }
+
+    /// `mapped` when it is one scalar and both it and `scalar` are in the VM's
+    /// case tables, else `scalar` unchanged.
+    private static func simpleMapping(_ scalar: Unicode.Scalar, _ mapped: String.UnicodeScalarView) -> Unicode.Scalar {
+        if mapped.count == 1, let target = mapped.first, inDartTables(scalar), inDartTables(target) { return target }
+        return scalar
     }
 
     /// Dart `String.toUpperCase` on the VM: the simple (one-to-one) Unicode
@@ -84,11 +83,7 @@ public enum DartString {
         for scalar in text.unicodeScalars {
             var mapped = scalar.properties.uppercaseMapping.unicodeScalars
             if mapped.count != 1 { mapped = scalar.properties.titlecaseMapping.unicodeScalars }
-            if mapped.count == 1, inDartTables(scalar), inDartTables(mapped.first!) {
-                result.append(contentsOf: mapped)
-            } else {
-                result.append(scalar)
-            }
+            result.append(simpleMapping(scalar, mapped))
         }
         return String(result)
     }

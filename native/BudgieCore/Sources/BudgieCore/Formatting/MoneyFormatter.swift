@@ -67,14 +67,10 @@ struct IntlLocaleData: Sendable {
         compactCurrencyPatterns.map { CompactStyle(pattern: $0.pattern, exponent: $0.exponent) }
     }
 
-    private static let englishCompact: [(exponent: Int, pattern: String)] = [
-        (3, "\u{00A4}0K"), (6, "\u{00A4}0M"), (9, "\u{00A4}0B"), (12, "\u{00A4}0T"),
-    ]
-
     private static let english = IntlLocaleData(
         decimalSeparator: ".", groupSeparator: ",",
         currencyPrefixPattern: "\u{00A4}", currencySuffixPattern: "",
-        compactCurrencyPatterns: englishCompact)
+        compactCurrencyPatterns: [(3, "\u{00A4}0K"), (6, "\u{00A4}0M"), (9, "\u{00A4}0B"), (12, "\u{00A4}0T")])
 
     private static let german = IntlLocaleData(
         decimalSeparator: ",", groupSeparator: ".",
@@ -122,9 +118,7 @@ struct IntlLocaleData: Sendable {
     /// nil and anything unknown resolve to en_US, like `Intl.defaultLocale ?? 'en_US'`.
     static func resolve(_ locale: String?) -> IntlLocaleData {
         guard let locale else { return english }
-        let canonical = locale.replacingOccurrences(of: "-", with: "_")
-        let language = canonical.split(separator: "_", maxSplits: 1).first.map(String.init) ?? canonical
-        switch language.lowercased() {
+        switch locale.split(whereSeparator: { $0 == "-" || $0 == "_" }).first?.lowercased() {
         case "de": return german
         case "es": return spanish
         case "fr": return french
@@ -162,27 +156,13 @@ struct CompactStyle: Sendable {
         self.pattern = pattern
         self.exponent = exponent
         // Regex `([^0]*)(0+)(.*)`: prefix, a run of zeros, suffix.
-        let scalars = Array(pattern.unicodeScalars)
-        var index = 0
-        var prefix = String.UnicodeScalarView()
-        while index < scalars.count, scalars[index] != "0" {
-            prefix.append(scalars[index])
-            index += 1
-        }
-        var zeros = 0
-        while index < scalars.count, scalars[index] == "0" {
-            zeros += 1
-            index += 1
-        }
-        var suffix = String.UnicodeScalarView()
-        while index < scalars.count {
-            suffix.append(scalars[index])
-            index += 1
-        }
-        self.prefix = String(prefix)
-        self.suffix = String(suffix)
+        let scalars = pattern.unicodeScalars
+        let leading = scalars.prefix { $0 != "0" }
+        let zeroRun = scalars[leading.endIndex...].prefix { $0 == "0" }
+        self.prefix = String(leading)
+        self.suffix = String(scalars[zeroRun.endIndex...])
         let onlyZeros = scalars.allSatisfy { $0 == "0" }
-        self.divisor = (zeros > 0 && !onlyZeros) ? intPow10(exponent - zeros + 1) : 1
+        self.divisor = (!zeroRun.isEmpty && !onlyZeros) ? intPow10(exponent - zeroRun.count + 1) : 1
     }
 
     var isFallback: Bool { pattern == "0" }
@@ -236,7 +216,6 @@ struct IntlNumberSpec: Sendable {
     let negativeSuffix: String
     let groupingSize = 3
     let finalGroupingSize = 3
-    let minimumIntegerDigits = 1
     let minimumFractionDigits: Int
     let maximumFractionDigits: Int
     let isForCurrency: Bool
@@ -293,7 +272,7 @@ struct IntlNumberSpec: Sendable {
                 positiveSuffix: style.suffix, negativeSuffix: style.suffix,
                 digits: FixedDigits(
                     significantDigitsInUse: true,
-                    useDefaultSignificantDigits: true,  // !isForCurrency || !style.isFallback
+                    useDefaultSignificantDigits: true,
                     minimumFractionDigits: 0,  // overridden getter for non-fallback styles
                     groupingEnabled: false))
         } else {
@@ -402,18 +381,17 @@ struct IntlNumberSpec: Sendable {
         computeFractionDigits()
 
         let power = intPow10(fractionDigits)
-        let digitMultiplier = power
-        var remainingDigits = dartRound(fraction * Double(digitMultiplier))
+        var remainingDigits = dartRound(fraction * Double(power))
 
         var hasRounding = false
-        if remainingDigits >= digitMultiplier {
+        if remainingDigits >= power {
             if bigIntegerPart != nil { bigIntegerPart! += 1 } else { integerPart &+= 1 }
-            remainingDigits -= digitMultiplier
+            remainingDigits -= power
             hasRounding = true
         } else if numberOfIntegerDigits(Double(remainingDigits))
-            > numberOfIntegerDigits(Double(saturatingInt((fraction * Double(digitMultiplier)).rounded(.down))))
+            > numberOfIntegerDigits(Double(saturatingInt((fraction * Double(power)).rounded(.down))))
         {
-            fraction = Double(remainingDigits) / Double(digitMultiplier)
+            fraction = Double(remainingDigits) / Double(power)
             hasRounding = true
         }
         if hasRounding && mode.significantDigitsInUse {
@@ -428,10 +406,8 @@ struct IntlNumberSpec: Sendable {
         let fractionPresent = fractionDigits > 0 && (minFractionDigits > 0 || fractionPart > 0)
 
         var out = ""
-        // minimumIntegerDigits is 1, so a zero integer part still prints "0".
-        if integerDigits.count < minimumIntegerDigits {
-            integerDigits = String(repeating: "0", count: minimumIntegerDigits - integerDigits.count) + integerDigits
-        }
+        // A zero integer part still prints "0".
+        if integerDigits.isEmpty { integerDigits = "0" }
         let digitChars = Array(integerDigits)
         let digitLength = digitChars.count
         let grouping = mode.groupingEnabled ? groupingSize : 0

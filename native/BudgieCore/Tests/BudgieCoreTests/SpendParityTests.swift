@@ -3,15 +3,6 @@ import Testing
 
 @testable import BudgieCore
 
-private func fixture(_ name: String) throws -> J {
-    try Fixtures.json("spend/\(name)")
-}
-
-private func hex(_ value: Double) -> String {
-    let text = String(value.bitPattern, radix: 16)
-    return String(repeating: "0", count: 16 - text.count) + text
-}
-
 private func units(_ text: String?) -> [UInt16]? { text.map { Array($0.utf16) } }
 
 /// ARGB hex of a palette slot as the Flutter page paints it
@@ -53,7 +44,7 @@ private let square = CGSize(width: 240, height: 240)
 struct SpendParityTests {
     @Test("Dart String.hashCode over a corpus")
     func hashCodes() throws {
-        let cases = try fixture("strings.json")["hashCodes"].array
+        let cases = try Fixtures.json("spend/strings.json")["hashCodes"].array
         #expect(cases.count > 50)
         for c in cases {
             let text = String(decoding: c["units"].array.map { UInt16($0.int!) }, as: UTF16.self)
@@ -64,7 +55,7 @@ struct SpendParityTests {
     @Test("Dart toUpperCase for every scalar")
     func uppercase() throws {
         var expected: [UInt32: [UInt16]] = [:]
-        for entry in try fixture("strings.json")["upper"].array {
+        for entry in try Fixtures.json("spend/strings.json")["upper"].array {
             expected[UInt32(entry[0].int!)] = entry[1].array.map { UInt16($0.int!) }
         }
         #expect(expected.count > 1000)
@@ -83,7 +74,7 @@ struct SpendParityTests {
     // differed only in "tz"); Swift is checked in each fixture zone.
     @Test("the page's breakdown, rows, tail, centre and selections for every dataset", arguments: fixtureZones)
     func breakdowns(zone: String) throws {
-        let cases = try fixture("breakdowns.json")["cases"].array
+        let cases = try Fixtures.json("spend/breakdowns.json")["cases"].array
         #expect(cases.count == 17)
         let money = MoneyFormatter()
         for c in cases {
@@ -203,7 +194,7 @@ struct SpendParityTests {
 
     @Test("donut taps: hit test, deselect rules, ring edges, gaps, bulge, centre, outside")
     func donutTaps() throws {
-        let distributions = try fixture("donut.json")["distributions"].array
+        let distributions = try Fixtures.json("spend/donut.json")["distributions"].array
         #expect(distributions.count == 9)
         for d in distributions {
             let name = d["name"].string!
@@ -230,7 +221,7 @@ struct SpendParityTests {
 
     @Test("donut arcs through the sweep-in, unselected and selected")
     func donutArcs() throws {
-        for d in try fixture("donut.json")["distributions"].array {
+        for d in try Fixtures.json("spend/donut.json")["distributions"].array {
             let name = d["name"].string!
             let geometry = DonutGeometry(values: d["values"].array.map { bits($0)! })
             for (key, selected) in [("frames", nil as Int?), ("selectedFrames", d["selected"].int)] {

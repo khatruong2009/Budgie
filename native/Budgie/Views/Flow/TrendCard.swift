@@ -69,7 +69,7 @@ struct TrendLine: View {
             TrendCurve(values: values)
                 .stroke(BudgieColor.accent, style: StrokeStyle(lineWidth: 3, lineCap: .butt, lineJoin: .miter))
             // `FlDotCirclePainter(radius: 5, color: 0xFFF2F2FA, strokeWidth: 0)`.
-            TrendEndDot(values: values).fill(BudgieColor.trendDot)
+            TrendEndDot(values: values).fill(BudgieColor.textPrimary)
             zeroLine
         }
         .motion(.linear(duration: 0.15), value: nets)
@@ -114,13 +114,8 @@ private struct TrendCurve: Shape {
 
     func path(in rect: CGRect) -> Path {
         let points = CashFlowMath.trendPoints(values.values, size: rect.size)
-        var path = Path()
-        guard let first = points.first else { return path }
-        path.move(to: first)
-        if points.count == 1 { path.addLine(to: first) }
-        for (index, controls) in CashFlowMath.trendControlPoints(points).enumerated() {
-            path.addCurve(to: points[index + 1], control1: controls.0, control2: controls.1)
-        }
+        var path = Path(smoothCurveThrough: points)
+        if points.count == 1 { path.addLine(to: points[0]) }
         return path.offsetBy(dx: rect.minX, dy: rect.minY)
     }
 }
@@ -136,7 +131,7 @@ private struct TrendEndDot: Shape {
 
     func path(in rect: CGRect) -> Path {
         guard let last = CashFlowMath.trendPoints(values.values, size: rect.size).last else { return Path() }
-        return Path(ellipseIn: CGRect(x: rect.minX + last.x - 5, y: rect.minY + last.y - 5, width: 10, height: 10))
+        return Path(circleAt: CGPoint(x: rect.minX + last.x, y: rect.minY + last.y), radius: 5)
     }
 }
 

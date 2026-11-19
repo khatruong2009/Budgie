@@ -24,7 +24,7 @@ import SwiftUI
 /// starts at the first expense category) when the new list has that name
 /// (UTF-16), else takes its first; the tag selection stays.
 ///
-/// Amounts parse with the money format's separators (`AmountInput`, D6);
+/// Amounts parse with the money format's separators (`AmountParser`, D6);
 /// empty is no bound; an edit prefills a bound rounded to cents and a
 /// field left as prefilled keeps the stored value exactly. Checked on
 /// Add / Save, inline under the field: not an amount of 0 or more, and a
@@ -37,10 +37,7 @@ import SwiftUI
 /// switch is on the page's row).
 ///
 /// The keyboard (Flutter's: no capitalisation, a Done key) goes away on
-/// Done and when a dropdown opens, so the menu is not cut by it. With the
-/// keyboard up the fields scroll; the scroll indicator flashes once the
-/// keyboard is shown and the bottom edge fades while more is below, cues
-/// that the fields below are there.
+/// Done and when a dropdown opens, so the menu is not cut by it.
 struct RuleEditorDialog: View {
     /// The rule to edit; nil adds a new one.
     let rule: CategorizationRuleRecord?
@@ -131,7 +128,7 @@ struct RuleEditorDialog: View {
             BudgieField(
                 title: "Merchant text", text: $pattern, prompt: "Whole Foods", capitalization: .never, autofocus: rule == nil)
                 .submitLabel(.done)
-                .onSubmit(Self.dismissKeyboard)
+                .onSubmit(UIApplication.dismissKeyboard)
                 .accessibilityIdentifier("rules.editor.pattern")
             MenuField(
                 title: "Type", options: Self.types.map(Self.typeLabel),
@@ -152,7 +149,10 @@ struct RuleEditorDialog: View {
                         get: { categories.firstIndex { DartString.equal($0, selectedCategory) } ?? 0 },
                         set: { if categories.indices.contains($0) { category = categories[$0] } }),
                     identifier: "rules.editor.category")
-                if type == nil, let note = anyTypeNote(selectedCategory) {
+                if type == nil,
+                    let note = Self.anyTypeNote(
+                        selectedCategory, expense: activeNames(.expense), income: activeNames(.income))
+                {
                     Text(note)
                         .textStyle(.caption)
                         .foregroundStyle(BudgieColor.textSecondary)
@@ -176,10 +176,7 @@ struct RuleEditorDialog: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// The tags as the transaction form's chips (REDESIGN_PLAN 4.1: 34pt
-    /// capsules; selected: accent at 13% with accent 13 w700 text and a
-    /// check; else a 1pt card border with secondary 13 w600 text), under a
-    /// "Tags" caption.
+    /// The tags as the transaction form's chips, under a "Tags" caption.
     private var tagChips: some View {
         VStack(alignment: .leading, spacing: 6) {
             FieldCaption("Tags", isHeader: true)
@@ -204,20 +201,15 @@ struct RuleEditorDialog: View {
     /// The picker's names for `type` (nil: Any type), plus the edited
     /// rule's own category under its own type when the list lacks it.
     private func categoryNames(for type: TransactionType?) -> [String] {
-        var names = type.map { model.categories(for: $0).map(\.name) }
-            ?? Self.anyTypeCategories(
-                expense: model.categories(for: .expense).map(\.name), income: model.categories(for: .income).map(\.name))
+        var names = type.map(activeNames) ?? Self.anyTypeCategories(expense: activeNames(.expense), income: activeNames(.income))
         if let rule, rule.transactionType == type, !names.contains(where: { DartString.equal($0, rule.category) }) {
             names.append(rule.category)
         }
         return names
     }
 
-    /// Under Any type, when only one type has the category: the other
-    /// type's form will not take this rule's suggestion.
-    private func anyTypeNote(_ name: String) -> String? {
-        Self.anyTypeNote(
-            name, expense: model.categories(for: .expense).map(\.name), income: model.categories(for: .income).map(\.name))
+    private func activeNames(_ type: TransactionType) -> [String] {
+        model.categories(for: type).map(\.name)
     }
 
     private func submit(category: String) {
@@ -254,12 +246,12 @@ struct RuleEditorDialog: View {
     static let amountError = "Enter an amount of 0 or more"
 
     /// A bound field: `.some(nil)` when empty (no bound), the stored value
-    /// while the text is its prefill, else the parse (`AmountInput`: 0 or
+    /// while the text is its prefill, else the parse (`AmountParser`: 0 or
     /// more, finite, the format's separators); nil when it does not parse.
     static func bound(_ text: String, prefill: String, stored: Double?, formatter: MoneyFormatter) -> Double?? {
         if let stored, text == prefill { return .some(stored) }
         if text.allSatisfy(\.isWhitespace) { return .some(nil) }
-        return AmountInput.parse(text, formatter: formatter).map { .some($0) }
+        return AmountParser.parse(text, formatter: formatter).map { .some($0) }
     }
 
     /// An edit's bound prefill: rounded to cents, locale-grouped
@@ -300,11 +292,6 @@ struct RuleEditorDialog: View {
     /// type has it, else the new type's first.
     static func categoryAfterTypeChange(_ picked: String?, from old: [String], to new: [String]) -> String {
         resolvedCategory(resolvedCategory(picked, in: old), in: new)
-    }
-
-    /// Ends editing wherever the keyboard is (the field's focus is its own).
-    static func dismissKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
     static func typeLabel(_ type: TransactionType?) -> String {
@@ -394,8 +381,7 @@ private struct MenuField: View {
                 }
                 .padding(.horizontal, 14)
                 .frame(minHeight: 52)
-                .background(BudgieColor.fieldFill, in: shape)
-                .overlay(shape.strokeBorder(BudgieColor.cardBorder, lineWidth: Metrics.borderThin))
+                .modifier(FieldBox(radius: Metrics.fieldRadius))
                 .contentShape(shape)
             }
             .buttonStyle(.plain)
@@ -422,7 +408,7 @@ private struct MenuField: View {
     private func tap() {
         if keyboardUp {
             opening = true
-            RuleEditorDialog.dismissKeyboard()
+            UIApplication.dismissKeyboard()
         } else {
             open = true
         }

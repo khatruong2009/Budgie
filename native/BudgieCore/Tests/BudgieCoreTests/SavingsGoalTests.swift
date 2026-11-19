@@ -10,17 +10,13 @@ import Testing
 /// New York (Dart's test uses the real clock).
 @Suite("Savings goals (transaction_model_budget_reports_test.dart and more)")
 struct SavingsGoalTests {
-    let calendar = DartCalendar(timeZone: TimeZone(identifier: "America/New_York")!)
+    let calendar = DartCalendar(timeZone: newYorkZone)
     var now: DartDateTime { calendar.date(2026, 3, 10, 9, 15) }
 
     func load(_ goals: String? = nil) -> FinancialData {
         var sections = JSONObject()
         if let goals { sections[Section.savingsGoals] = try! JSONParser.parse(goals) }
-        let now = self.now
-        return FinancialData.load(
-            FinancialSnapshot(revision: 1, sections: sections), preferences: InMemoryPreferences([:]), calendar: calendar,
-            now: { now }, newID: { "new-id" }
-        ).data
+        return loadFinancialData(sections, calendar: calendar, now: now, newID: { "new-id" }).data
     }
 
     func reload(_ data: FinancialData) -> FinancialData {

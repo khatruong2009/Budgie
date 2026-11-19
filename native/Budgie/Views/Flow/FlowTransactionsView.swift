@@ -56,16 +56,12 @@ struct FlowTransactionsView: View {
                 }
             }
             .padding(.bottom, Metrics.spacingL)
-            .frame(maxWidth: Metrics.maxContentWidth)
-            .frame(maxWidth: .infinity)
+            .budgieContentColumn()
         }
         // A decimal pad has no return key; Flutter offers no way out either.
         .scrollDismissesKeyboard(.interactively)
         .background(BudgieColor.background)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.visible, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarBackground(BudgieColor.background, for: .navigationBar)
+        .budgieInlineBar()
         .toolbar {
             // Beside the back button, as Flutter lays out its header row; a
             // centred title would slide aside whenever the month is long.
@@ -88,8 +84,8 @@ struct FlowTransactionsView: View {
             }
         }
         .onChange(of: FilterKey(filter: filter, revision: model.ledgerRevision), initial: true) { _, _ in refilter() }
-        .onChange(of: minText) { _, text in filter.minAmount = AmountInput.parse(text, formatter: model.moneyFormatter) }
-        .onChange(of: maxText) { _, text in filter.maxAmount = AmountInput.parse(text, formatter: model.moneyFormatter) }
+        .onChange(of: minText) { _, text in filter.minAmount = AmountParser.parse(text, formatter: model.moneyFormatter) }
+        .onChange(of: maxText) { _, text in filter.maxAmount = AmountParser.parse(text, formatter: model.moneyFormatter) }
         .sheet(item: $sheet) { sheet in sheetContent(sheet) }
         .sheet(item: $editing) { record in
             TransactionFormView(mode: .edit(record))

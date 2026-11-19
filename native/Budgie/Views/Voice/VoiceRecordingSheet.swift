@@ -1,6 +1,5 @@
 import BudgieCore
 import SwiftUI
-import UIKit
 
 /// The voice recording sheet (`_VoiceRecordingSheet`,
 /// voice_recording_sheet.dart:261-514): LISTENING with the pulsing mic, the
@@ -54,16 +53,13 @@ private struct VoiceSheetBody: View {
         if VoiceTestHooks.stubbing {
             return (VoiceTestHooks.fakeKey, { VoiceTestHooks.stubbedSession ?? URLSession(configuration: .ephemeral) }, maxSeconds)
         }
+        #else
+        let maxSeconds = VoiceEntryModel.defaultMaxSeconds
+        #endif
         return (
             OpenAIVoiceClient.apiKey(fromInfoDictionary: Bundle.main.infoDictionary),
             { URLSession(configuration: .ephemeral) }, maxSeconds
         )
-        #else
-        return (
-            OpenAIVoiceClient.apiKey(fromInfoDictionary: Bundle.main.infoDictionary),
-            { URLSession(configuration: .ephemeral) }, VoiceEntryModel.defaultMaxSeconds
-        )
-        #endif
     }
 
     var body: some View {
@@ -80,7 +76,7 @@ private struct VoiceSheetBody: View {
         .scrollClipDisabled()
         .budgieSheetChrome()
         .presentationDetents([
-            .height(BudgetSheetLayout.handleHeight + (contentHeight > 0 ? contentHeight : estimatedHeight))
+            .height(BudgetSheetLayout.height(measured: contentHeight, estimate: estimatedHeight))
         ])
         .interactiveDismissDisabled(entry.isProcessing)
         .sensoryFeedback(.impact(weight: .medium), trigger: entry.recordingStarts)
@@ -178,25 +174,17 @@ private struct VoiceSheetBody: View {
             // The sheet pattern: the main action as a full-width filled
             // pill, the secondary one outlined under it.
             VStack(spacing: 12) {
-                tryAgainPill
-                cancelPill
+                PillButton(
+                    title: "Try again", filled: true, minHeight: Metrics.pillButtonHeight
+                ) { entry.tryAgain() }
+                .accessibilityIdentifier("voice.tryAgain")
+                PillButton(
+                    title: "Cancel", color: BudgieColor.textPrimary, minHeight: Metrics.pillButtonHeight
+                ) { onCancel() }
+                .accessibilityIdentifier("voice.cancel")
             }
             .padding(.top, Metrics.sectionGap)
         }
-    }
-
-    private var cancelPill: some View {
-        PillButton(
-            title: "Cancel", color: BudgieColor.textPrimary, minHeight: Metrics.pillButtonHeight
-        ) { onCancel() }
-        .accessibilityIdentifier("voice.cancel")
-    }
-
-    private var tryAgainPill: some View {
-        PillButton(
-            title: "Try again", filled: true, minHeight: Metrics.pillButtonHeight
-        ) { entry.tryAgain() }
-        .accessibilityIdentifier("voice.tryAgain")
     }
 
     /// The 14pt secondary blurb of the sheet pattern.

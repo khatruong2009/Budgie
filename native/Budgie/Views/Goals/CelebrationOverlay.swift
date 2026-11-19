@@ -2,12 +2,10 @@ import SwiftUI
 
 /// The completion celebration (`_CompletionCelebration` and
 /// `_CelebrationPainter`, savings_goals_page.dart:1547-1692), 1600ms linear:
-/// the dialog scrim (Flutter: black at 34%), 18 dots flying out from the
-/// centre (44 to 224pt, radii 3 / 4.5 / 6, success and accent alternating,
-/// fading as they go)
-/// under a "Goal complete" card that scales 0.7 to 1 with Flutter's
-/// `easeOutBack` over the first 80%; everything fades out over the last
-/// 25%. It never takes touches. The page skips it under Reduce Motion.
+/// the dialog scrim (black at 34% in Flutter), dots flying out and fading
+/// under a "Goal complete" card that scales in with Flutter's `easeOutBack`;
+/// everything fades out over the last 25%. It never takes touches. The page
+/// skips it under Reduce Motion.
 struct CelebrationOverlay: View {
     let name: String
     /// When it started (animation clock only).
@@ -33,9 +31,7 @@ struct CelebrationOverlay: View {
                         let radius = 3 + Double(i % 3) * 1.5
                         let point = CGPoint(x: center.x + cos(angle) * distance, y: center.y + sin(angle) * distance)
                         let color = i.isMultiple(of: 2) ? BudgieColor.income : BudgieColor.accent
-                        canvas.fill(
-                            Path(ellipseIn: CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2)),
-                            with: .color(color.opacity(1 - v)))
+                        canvas.fill(Path(circleAt: point, radius: radius), with: .color(color.opacity(1 - v)))
                     }
                 }
                 card.scaleEffect(0.7 + 0.3 * Self.easeOutBack.value(at: min(v, 0.8) / 0.8))

@@ -3,18 +3,13 @@ import Testing
 
 @testable import BudgieCore
 
-private let calendar = DartCalendar(timeZone: TimeZone(identifier: "America/New_York")!)
+private let calendar = DartCalendar(timeZone: newYorkZone)
 private let now = calendar.date(2026, 9, 28, 9, 15, 30, 250, 125)
 
 /// Loads sections given as JSON text.
 private func data(_ json: String) throws -> FinancialData {
-    FinancialData.load(
-        FinancialSnapshot(revision: 1, sections: try JSONParser.parse(json).objectValue!), preferences: InMemoryPreferences([:]),
-        calendar: calendar, now: { now }, newID: { "new-id" }
-    ).data
+    try loadFinancialData(JSONParser.parse(json).objectValue!, calendar: calendar, now: now, newID: { "new-id" }).data
 }
-
-private func text(_ value: JSONValue) -> String { DartJSON.encodeString(value) }
 
 private let twoTags = #"{"transactionTags":[{"id":"t1","name":"Work","colorToken":"accent"},{"id":"t2","name":"Café","colorToken":"cyan"}]}"#
 

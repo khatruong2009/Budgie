@@ -80,15 +80,8 @@ public enum LegacyMigration {
         let hasLegacyData = legacy.contains { $0.1 != nil }
         if primary == nil && backup == nil && !hasLegacyData { return nil }
 
-        let chosen: FinancialSnapshot?
-        let chosePrimary: Bool
-        if let primary, backup == nil || primary.revision >= backup!.revision {
-            chosen = primary
-            chosePrimary = true
-        } else {
-            chosen = backup
-            chosePrimary = false
-        }
+        let chosePrimary = primary != nil && (backup == nil || primary!.revision >= backup!.revision)
+        let chosen = chosePrimary ? primary : backup
 
         var sections = chosen?.sections ?? JSONObject()
         // The old store mirrored the ledger to the bare key after every
@@ -130,9 +123,8 @@ public enum LegacyMigration {
         {
             invalid.append(PreferenceKey.categoryBudgetLimits)
         }
-        if decodeEnvelope(preferences.string(PreferenceKey.legacyEnvelope)) == nil
-            && decodeEnvelope(preferences.string(PreferenceKey.legacyEnvelopeBackup)) == nil
-        {
+        // `migrate` decoded an envelope unless the result is nil or came from the bare keys.
+        if (result?.source ?? .legacyKeys) == .legacyKeys {
             invalid += [PreferenceKey.legacyEnvelope, PreferenceKey.legacyEnvelopeBackup]
                 .filter { preferences.allKeys().contains($0) }
         }
@@ -140,9 +132,10 @@ public enum LegacyMigration {
     }
 
     /// Dart `_removeMigratedPreferenceKeys`. Call only after a verified commit.
-    public static func removeMigratedKeys(_ preferences: PreferencesStore) {
-        for key in PreferenceKey.migratedKeys where preferences.contains(key) {
-            preferences.set(nil, forKey: key)
-        }
+    /// Returns the keys that were present and are now removed.
+    public static func removeMigratedKeys(_ preferences: PreferencesStore) -> [String] {
+        let present = PreferenceKey.migratedKeys.filter { preferences.contains($0) }
+        for key in present { preferences.set(nil, forKey: key) }
+        return present
     }
 }

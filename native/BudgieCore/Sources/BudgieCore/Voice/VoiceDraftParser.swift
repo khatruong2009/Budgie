@@ -51,23 +51,16 @@ public enum VoiceDraftParser {
         }
 
         // `json['type'] == 'income'`: a UTF-16 comparison of a String only.
-        let type: TransactionType
-        if case .string(let text)? = json["type"], text.matches("income") {
-            type = .income
-        } else {
-            type = .expense
-        }
+        let type: TransactionType = if case .string(let text)? = json["type"], text.matches("income") { .income } else { .expense }
 
         let categories = type == .income ? incomeCategories : expenseCategories
-        let fallbackCategory = type == .income ? "Other" : "General"
-        var category = fallbackCategory
-        if case .string(let text)? = json["category"] {
-            // `Iterable.contains` is `==`, which is code-unit equality.
-            let units = text.codeUnits
-            if let match = categories.first(where: { $0.utf16.elementsEqual(units) }) {
-                category = match
+        // `Iterable.contains` is `==`, which is code-unit equality.
+        let category =
+            if case .string(let text)? = json["category"], let match = categories.first(where: text.matches) {
+                match
+            } else {
+                type == .income ? "Other" : "General"
             }
-        }
 
         var amount = 0.0
         switch json["amount"] {

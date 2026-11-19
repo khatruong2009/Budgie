@@ -7,11 +7,6 @@ private func fixture(_ name: String) throws -> J {
     try Fixtures.json("goals/\(name)")
 }
 
-private func hex(_ value: Double) -> String {
-    let text = String(value.bitPattern, radix: 16)
-    return String(repeating: "0", count: 16 - text.count) + text
-}
-
 private func memoryLine(_ g: SavingsGoalRecord) -> String {
     [g.id, g.name, hex(g.targetAmount), hex(g.currentAmount), g.targetDate.toIso8601String(), g.createdAt.toIso8601String(),
      g.completedAt?.toIso8601String() ?? "null"].joined(separator: "|")
@@ -24,13 +19,6 @@ private func memoryLine(_ g: J) -> String {
 
 private func memoryLines(_ data: FinancialData) -> [String] { data.savingsGoals.map(memoryLine) }
 private func memoryLines(_ memory: J) -> [String] { memory.array.map(memoryLine) }
-
-private func load(_ sections: JSONObject, calendar: DartCalendar, now: DartDateTime) -> FinancialData {
-    FinancialData.load(
-        FinancialSnapshot(revision: 1, sections: sections), preferences: InMemoryPreferences([:]), calendar: calendar,
-        now: { now }, newID: { UUID().uuidString.lowercased() }
-    ).data
-}
 
 /// The formatter configurations the generator used, in its order.
 private let formatters = [
@@ -49,7 +37,7 @@ struct GoalsParityTests {
     /// ids follow Dart's format and counter.
     @Test("mutation scenarios", arguments: dstFixtureZones)
     func mutations(zone: String) throws {
-        let f = try Fixtures.json("\(Fixtures.zonePath("goals", zone))/mutations.json")
+        let f = try Fixtures.json("goals", zone: zone, "mutations.json")
         #expect(f["tz"].string == zone)
         let calendar = DartCalendar(timeZone: TimeZone(identifier: zone)!)
         let scenarios = f["scenarios"].array
@@ -61,7 +49,7 @@ struct GoalsParityTests {
             let byteComparable = s["byteComparable"].bool!
             var now = try calendar.parse(s["launch"].string!)
             let initial = try s["initial"].string.map { try JSONParser.parse($0).objectValue! } ?? JSONObject()
-            var data = load(initial, calendar: calendar, now: now)
+            var data = loadFinancialData(initial, calendar: calendar, now: now).data
             #expect(memoryLines(data) == memoryLines(s["loaded"]), "\(label) load")
 
             for (index, step) in s["steps"].array.enumerated() {
@@ -112,7 +100,7 @@ struct GoalsParityTests {
                 // What Swift would write loads back as the same memory.
                 var written = JSONObject()
                 written[Section.savingsGoals] = data.savingsGoalsSection()
-                #expect(memoryLines(load(written, calendar: calendar, now: now)) == memoryLines(data), "\(at) reload")
+                #expect(memoryLines(loadFinancialData(written, calendar: calendar, now: now).data) == memoryLines(data), "\(at) reload")
             }
         }
     }
@@ -123,7 +111,7 @@ struct GoalsParityTests {
     /// allocation dialog's `willComplete`; the page's sort and summary.
     @Test("derived values", arguments: dstFixtureZones)
     func derived(zone: String) throws {
-        let f = try Fixtures.json("\(Fixtures.zonePath("goals", zone))/derived.json")
+        let f = try Fixtures.json("goals", zone: zone, "derived.json")
         #expect(f["tz"].string == zone)
         let calendar = DartCalendar(timeZone: TimeZone(identifier: zone)!)
         let unused = calendar.date(2020)

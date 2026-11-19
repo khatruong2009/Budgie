@@ -20,7 +20,6 @@ struct GlowProgressBar: View {
     var trackBorder: Color? = nil
     /// Gap between track edge and fill (the Home gauge uses 2).
     var fillInset: CGFloat = 0
-    var animate = true
 
     @Environment(\.colorScheme) private var scheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -28,7 +27,7 @@ struct GlowProgressBar: View {
 
     var body: some View {
         let target = unit(value)
-        let shown = appeared || !animate ? target : 0
+        let shown = appeared ? target : 0
         GeometryReader { geometry in
             let border: CGFloat = trackBorder == nil ? 0 : 1
             let innerWidth = geometry.size.width - fillInset * 2 - border * 2

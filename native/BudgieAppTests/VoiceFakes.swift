@@ -63,9 +63,11 @@ final class FakeServices {
     /// While held, both stages wait for `releaseOne()` before answering.
     let gate = Gate()
 
+    /// The fixed "today" the voice tests use.
+    nonisolated static let today = DartCalendar(timeZone: .current).date(2026, 9, 30)
+
     static let draft = VoiceDraft(
-        type: .expense, description: "Chipotle", amount: 12.5, category: "Eating Out",
-        date: DartCalendar(timeZone: .current).date(2026, 9, 30))
+        type: .expense, description: "Chipotle", amount: 12.5, category: "Eating Out", date: today)
 
     var services: VoiceServices {
         VoiceServices(

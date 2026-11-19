@@ -55,14 +55,10 @@ extension AppModel {
     var hasNetWorthEntries: Bool { data?.hasNetWorthEntries ?? false }
 
     /// The account with this id (the history page follows it live).
-    func netWorthEntry(id: String) -> NetWorthEntryRecord? {
-        data?.netWorthEntry(id: id)
-    }
+    func netWorthEntry(id: String) -> NetWorthEntryRecord? { data?.netWorthEntry(id: id) }
 
     /// `getNetWorthEntryHistory`: ascending; empty for an unknown id.
-    func netWorthEntryHistory(id: String) -> [NetWorthSnapshotRecord] {
-        data?.netWorthEntryHistory(id: id) ?? []
-    }
+    func netWorthEntryHistory(id: String) -> [NetWorthSnapshotRecord] { data?.netWorthEntryHistory(id: id) ?? [] }
 
     /// Dart `selectNetWorthMonth`: normalised to the month, then written,
     /// even when it is already selected (as Flutter).

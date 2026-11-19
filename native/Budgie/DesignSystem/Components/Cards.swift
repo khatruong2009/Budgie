@@ -68,7 +68,7 @@ struct GlowCard<Content: View>: View {
             HapticButton(action: onTap) {
                 card
             }
-            .buttonStyle(PressScaleStyle(scale: 0.98))
+            .buttonStyle(PressScaleStyle())
         } else {
             card
         }
@@ -96,18 +96,11 @@ extension View {
 /// view): for a list that can have hundreds of rows, like an account's
 /// balance timeline (docs/PERFORMANCE.md).
 struct GlowListCard<Row: View>: View {
-    var radius: CGFloat = Metrics.cardRadius
-    let rows: [Row]
     var lazy = false
-
-    init(radius: CGFloat = Metrics.cardRadius, lazy: Bool = false, rows: [Row]) {
-        self.radius = radius
-        self.lazy = lazy
-        self.rows = rows
-    }
+    let rows: [Row]
 
     var body: some View {
-        GlowCard(padding: Metrics.listCardPadding, radius: radius) {
+        GlowCard(padding: Metrics.listCardPadding) {
             if lazy {
                 LazyVStack(spacing: 0) { content }
             } else {

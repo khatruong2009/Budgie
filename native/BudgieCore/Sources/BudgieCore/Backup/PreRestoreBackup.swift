@@ -9,13 +9,9 @@ import Foundation
 /// replaces a store the Swift app itself wrote). The restore must not run
 /// when `create()` throws. After a successful restore, `prune()` keeps the
 /// newest `retained` complete copies and always the one that restore
-/// made; nothing else deletes them.
-///
-/// "Newest" is creation order, not the clock: each folder name starts with
-/// a sequence number one above the highest already there
-/// (`s000004-20260930-...`), so a device clock set back cannot make the
-/// copy just taken sort first and be pruned. Folders from before the
-/// sequence (a bare stamp) count as older than every numbered one.
+/// made; nothing else deletes them. "Newest" is creation order, not the
+/// clock (see `folderName`). Folders from before the sequence (a bare
+/// stamp) count as older than every numbered one.
 public struct PreRestoreBackup: Sendable {
     public static let folderName = "pre-restore"
     public static let retained = 3
@@ -55,7 +51,9 @@ public struct PreRestoreBackup: Sendable {
     @discardableResult
     public func create() throws -> URL {
         let sequence = (try folders().last.map { Self.sequence(of: $0) } ?? 0) + 1
-        let folder = root.appendingPathComponent(folderName(sequence: sequence), isDirectory: true)
+        let now = clock()
+        let utc = DartDateTime(microsecondsSinceEpoch: now.microsecondsSinceEpoch, isUtc: true, timeZone: now.timeZone)
+        let folder = root.appendingPathComponent(folderName(sequence: sequence, utc: utc), isDirectory: true)
         let copy = DirectoryFileSystem(directory: folder.appendingPathComponent(StoreFile.directoryName, isDirectory: true))
         let meta = DirectoryFileSystem(directory: folder)
         do {
@@ -65,8 +63,7 @@ public struct PreRestoreBackup: Sendable {
             var primaryChecksum: String? = nil
             for name in try store.list() {
                 guard let bytes = try store.read(name) else { continue }  // gone since the listing
-                try copy.writeStaged(name, bytes)
-                try copy.commitStaged(name)
+                try write(copy, name, bytes)
                 guard try copy.read(name) == bytes else { throw Failure.copyMismatch(name) }
                 files.append(["name": name, "size": bytes.count, "sha256": sha256Hex(bytes)])
                 if name == StoreFile.primaryName { primaryChecksum = StoreFile.verify(bytes)?.payloadChecksum }
@@ -74,11 +71,9 @@ public struct PreRestoreBackup: Sendable {
             let preferences = [UInt8](try exportPreferences())
             try write(meta, PreRestoreBackup.preferencesName, preferences)
 
-            let now = clock()
             let manifest: [String: Any] = [
                 "reason": "restore",
-                "createdAt": DartDateTime(microsecondsSinceEpoch: now.microsecondsSinceEpoch, isUtc: true, timeZone: now.timeZone)
-                    .toIso8601String(),
+                "createdAt": utc.toIso8601String(),
                 "appVersion": appVersion,
                 "primaryChecksum": primaryChecksum ?? NSNull(),
                 "files": files,
@@ -140,14 +135,12 @@ public struct PreRestoreBackup: Sendable {
     }
 
     /// `s<sequence, 6+ digits>-yyyyMMdd-HHmmss-uuuuuu-<8 hex>`, the stamp in
-    /// UTC: ordered by the sequence, readable by the stamp, unique.
-    private func folderName(sequence: Int) -> String {
-        let now = clock()
-        let f = DartDateTime(microsecondsSinceEpoch: now.microsecondsSinceEpoch, isUtc: true, timeZone: now.timeZone).fields
-        func pad(_ value: Int, _ width: Int) -> String {
-            let digits = String(value)
-            return String(repeating: "0", count: max(0, width - digits.count)) + digits
-        }
+    /// UTC. The sequence is one above the highest already there
+    /// (`s000004-20260930-...`), so a device clock set back cannot make the
+    /// copy just taken sort first and be pruned; the stamp is for readers.
+    private func folderName(sequence: Int, utc: DartDateTime) -> String {
+        let f = utc.fields
+        let pad = DartCalendar.pad
         let micros = f.millisecond * 1_000 + f.microsecond
         return "s\(pad(sequence, 6))-"
             + "\(pad(f.year, 4))\(pad(f.month, 2))\(pad(f.day, 2))-\(pad(f.hour, 2))\(pad(f.minute, 2))\(pad(f.second, 2))-"

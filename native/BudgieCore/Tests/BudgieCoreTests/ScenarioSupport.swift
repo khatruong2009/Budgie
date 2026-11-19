@@ -85,10 +85,6 @@ struct Scenario {
             ["size": (entry["size"] as! NSNumber).intValue, "fnv": entry["fnv"] as! String]
         }
     }
-
-    func prefsSnapshot() -> [String: PreferenceValue] {
-        preferences.all
-    }
 }
 
 /// Dart-canonical sections checksum, comparable with expected.json.

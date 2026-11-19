@@ -3,15 +3,11 @@ import Testing
 
 @testable import BudgieCore
 
-private let zone = TimeZone(identifier: "America/New_York")!
-private let calendar = DartCalendar(timeZone: zone)
+private let calendar = DartCalendar(timeZone: newYorkZone)
 private let now = calendar.date(2026, 9, 28, 9, 15, 30, 250, 125)
 
 private func emptyData() -> FinancialData {
-    FinancialData.load(
-        FinancialSnapshot(revision: 1, sections: JSONObject()), preferences: InMemoryPreferences(), calendar: calendar,
-        now: { now }, newID: { UUID().uuidString.lowercased() }
-    ).data
+    loadFinancialData(JSONObject(), calendar: calendar, now: now).data
 }
 
 private struct Sample {
@@ -204,10 +200,7 @@ struct CSVImportPortedTests {
         #expect(result.data.transactions.count == samples.count)
         var sections = JSONObject()
         for (name, value) in result.sections { sections[name] = value }
-        let reloaded = FinancialData.load(
-            FinancialSnapshot(revision: 2, sections: sections), preferences: InMemoryPreferences(), calendar: calendar,
-            now: { now }, newID: { UUID().uuidString.lowercased() }
-        ).data
+        let reloaded = loadFinancialData(sections, calendar: calendar, now: now).data
         #expect(reloaded.transactions == result.data.transactions)
         for (record, sample) in zip(reloaded.transactions, samples) {
             #expect(record.type == sample.type && record.amount == sample.amount && record.date == sample.date)
@@ -267,9 +260,7 @@ struct CSVImportTests {
         var sections = JSONObject()
         sections[Section.categories] = base.categoriesSection()
         for (name, value) in result.sections { sections[name] = value }
-        let relaunched = FinancialData.load(
-            FinancialSnapshot(revision: 2, sections: sections), preferences: InMemoryPreferences(), calendar: calendar,
-            now: { now }, newID: { UUID().uuidString.lowercased() })
+        let relaunched = loadFinancialData(sections, calendar: calendar, now: now)
         #expect(relaunched.pendingWrites.isEmpty)
         #expect(relaunched.data.categories == result.data.categories)
 

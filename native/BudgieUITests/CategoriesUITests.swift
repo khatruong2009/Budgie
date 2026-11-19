@@ -35,19 +35,8 @@ final class CategoriesUITests: XCTestCase {
 
     // MARK: - Helpers
 
-    private func replaceText(in field: XCUIElement, with text: String) {
-        field.tapSettled()
-        if let value = field.value as? String, !value.isEmpty, value != field.placeholderValue {
-            field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: value.count))
-        }
-        field.typeSettled(text)
-    }
-
     private func openCategories() {
-        app.goToHomeRoot()
-        app.buttons["home.settings"].tapSettled()
-        app.buttons["settings.categories"].tapSettled()
-        XCTAssertTrue(app.element("categories.list").waitForExistence(timeout: 10))
+        app.openSettingsPage("settings.categories", marker: app.element("categories.list"))
     }
 
     /// Scrolls the list until the row is on screen; `required` fails the
@@ -64,16 +53,6 @@ final class CategoriesUITests: XCTestCase {
     }
 
     private func value(of element: XCUIElement) -> String { element.value as? String ?? "" }
-
-    /// Polls `condition` until it holds or `timeout` passes.
-    private func waitUntil(_ timeout: TimeInterval = 5, _ condition: () -> Bool) -> Bool {
-        let deadline = Date().addingTimeInterval(timeout)
-        repeat {
-            if condition() { return true }
-            Thread.sleep(forTimeInterval: 0.25)
-        } while Date() < deadline
-        return false
-    }
 
     private func menu(_ id: String) -> XCUIElement { app.buttons["categories.row.menu.\(id)"] }
     private func row(_ id: String) -> XCUIElement { app.element("categories.row.\(id)") }
@@ -136,7 +115,7 @@ final class CategoriesUITests: XCTestCase {
         app.buttons["categories.editor.submit"].tapSettled()
         XCTAssertTrue(app.labelled(exactly: "A category with this name already exists").waitForExistence(timeout: 5))
         XCTAssertTrue(field.exists, "editor still open")
-        replaceText(in: field, with: "")
+        field.replaceText(with: "")
         XCTAssertTrue(app.labelled(exactly: "Enter a category name").waitForExistence(timeout: 5), "the error follows the text")
         app.buttons["categories.editor.submit"].tapSettled()
         XCTAssertTrue(app.labelled(exactly: "Enter a category name").exists)
@@ -186,7 +165,7 @@ final class CategoriesUITests: XCTestCase {
         choose("Edit", forRow: id)
         XCTAssertTrue(field.waitForExistence(timeout: 5))
         XCTAssertEqual(field.value as? String, name)
-        replaceText(in: field, with: renamed)
+        field.replaceText(with: renamed)
         let save = app.buttons["categories.editor.submit"]
         XCTAssertEqual(save.label, "Save")
         save.tapSettled()

@@ -123,7 +123,6 @@ public struct CategoryBreakdown: Sendable {
     }
 
     public let month: DartDateTime
-    public let previousMonth: DartDateTime
     /// `DateFormat.MMMM` of the previous month, for the pill.
     public let previousMonthLabel: String
     /// Sorted by amount, largest first; ties keep first-appearance order.
@@ -147,16 +146,11 @@ public struct CategoryBreakdown: Sendable {
     /// shows them, with every percentage 0.
     public var showsEmptyState: Bool { total == 0.0 }
 
-    /// `_deltaPct` (category_donut_chart.dart:412-416): nil when the
-    /// previous total is nil or 0.
-    public var deltaPercent: Double? {
-        guard let previousTotal, previousTotal != 0.0 else { return nil }
-        return (total - previousTotal) / previousTotal * 100
-    }
-
-    /// The pill, nil when hidden.
+    /// The pill, nil when hidden: `_deltaPct` (category_donut_chart.dart:
+    /// 412-416) is nil when the previous total is nil or 0.
     public var delta: Delta? {
-        guard let percent = deltaPercent else { return nil }
+        guard let previousTotal, previousTotal != 0.0 else { return nil }
+        let percent = (total - previousTotal) / previousTotal * 100
         let direction: Delta.Direction = percent.magnitude < 0.5 ? .neutral : percent > 0 ? .up : .down
         let word = previousMonthLabel.isEmpty ? "last month" : previousMonthLabel
         return Delta(percent: percent, direction: direction, text: "\(DartFixed.toStringAsFixed(percent.magnitude, 0))% vs \(word)")
@@ -264,7 +258,7 @@ public struct CategoryBreakdown: Sendable {
         }
 
         return CategoryBreakdown(
-            month: month, previousMonth: previousMonth, previousMonthLabel: DartDateFormat.MMMM(previousMonth),
+            month: month, previousMonthLabel: DartDateFormat.MMMM(previousMonth),
             records: records, total: total,
             previousTotal: previousSummary.transactionCount == 0 ? nil : previousSummary.expenses,
             largestAmount: largest, slices: slices, tail: tail)
@@ -287,10 +281,8 @@ public enum SpendMonth {
     /// month with data, `available.first` (possibly a future month). With
     /// no months the stored selection is kept as it is.
     public static func resolve(selected: DartDateTime?, available: [DartDateTime]) -> Resolution {
-        if let selected {
-            if available.contains(where: { DartCalendar.isSameMonth($0, selected) }) {
-                return Resolution(month: selected, resetsSelection: false)
-            }
+        if let selected, available.contains(where: { DartCalendar.isSameMonth($0, selected) }) {
+            return Resolution(month: selected, resetsSelection: false)
         }
         guard let newest = available.first else { return Resolution(month: selected, resetsSelection: false) }
         return Resolution(month: newest, resetsSelection: true)

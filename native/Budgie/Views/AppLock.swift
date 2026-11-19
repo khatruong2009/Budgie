@@ -9,14 +9,13 @@ enum DeviceAuth {
         case success
         case failed
         /// The device has no passcode, so there is nothing to authenticate with.
-        case unavailable(String)
+        case unavailable
     }
 
     /// The device's biometry; `.none` when it has none.
     static var biometryType: LABiometryType {
         let context = LAContext()
-        var error: NSError?
-        _ = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
+        _ = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
         return context.biometryType
     }
 
@@ -25,10 +24,7 @@ enum DeviceAuth {
         if let outcome = AppLockTestHooks.authenticationOutcome() { return outcome }
         #endif
         let context = LAContext()
-        var error: NSError?
-        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
-            return .unavailable(error?.localizedDescription ?? "This device can't authenticate.")
-        }
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: nil) else { return .unavailable }
         do {
             return try await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) ? .success : .failed
         } catch {
@@ -90,7 +86,7 @@ final class AppLockWindow {
     func sceneDidBecomeActive() {
         let timeout = model.data?.appSettings.autoLockTimeoutSeconds ?? 0
         if let since = backgroundedAt, since.duration(to: .now) >= .seconds(max(timeout, 0)) {
-            model.relock()
+            model.sessionUnlocked = false
         }
         backgroundedAt = nil
         showsPrivacyCover = false
@@ -148,7 +144,7 @@ private struct AppLockWindowRoot: View {
     var body: some View {
         Group {
             if model.isLocked {
-                LockScreen { model.markUnlocked() }
+                LockScreen { model.sessionUnlocked = true }
             } else {
                 PrivacyCover()
             }

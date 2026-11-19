@@ -3,26 +3,8 @@ import Testing
 
 @testable import BudgieCore
 
-/// Fixtures written by native/ParityHarness/parity/insight_fixtures_test.dart
-/// from the real InsightEngine and LocalInsightsSection.
-private func insightFixture(_ relative: String) throws -> J {
-    try Fixtures.json("insights/" + relative)
-}
-
-private func insightZoneFixture(_ zone: String, _ name: String) throws -> J {
-    try Fixtures.json("\(Fixtures.zonePath("insights", zone))/\(name)")
-}
-
-private func hex(_ value: Double) -> String {
-    let text = String(value.bitPattern, radix: 16)
-    return String(repeating: "0", count: 16 - text.count) + text
-}
-
-/// Dart string equality.
-private func same(_ a: String?, _ b: String?) -> Bool {
-    guard let a, let b else { return a == nil && b == nil }
-    return DartString.equal(a, b)
-}
+// Fixtures written by native/ParityHarness/parity/insight_fixtures_test.dart
+// from the real InsightEngine and LocalInsightsSection.
 
 /// One recorded case: the inputs and the call, as the harness made it.
 private struct InsightCall {
@@ -73,16 +55,16 @@ private func differences(_ actual: [LocalInsight], _ expected: J, _ context: Str
     var problems: [String] = []
     for (index, (insight, e)) in zip(actual, rows).enumerated() {
         let at = "\(context)[\(index)]"
-        if !same(insight.id, e["id"].string) { problems.append("\(at) id \(insight.id) vs \(e["id"].string ?? "nil")") }
+        if !dartEqual(insight.id, e["id"].string) { problems.append("\(at) id \(insight.id) vs \(e["id"].string ?? "nil")") }
         if insight.type.rawValue != e["type"].string { problems.append("\(at) type \(insight.type) vs \(e["type"].string ?? "nil")") }
         if insight.severity.rawValue != e["severity"].string {
             problems.append("\(at) severity \(insight.severity) vs \(e["severity"].string ?? "nil")")
         }
-        if !same(insight.headline, e["headline"].string) { problems.append("\(at) headline \(insight.headline) vs \(e["headline"].string ?? "nil")") }
-        if !same(insight.explanation, e["explanation"].string) {
+        if !dartEqual(insight.headline, e["headline"].string) { problems.append("\(at) headline \(insight.headline) vs \(e["headline"].string ?? "nil")") }
+        if !dartEqual(insight.explanation, e["explanation"].string) {
             problems.append("\(at) explanation \(insight.explanation) vs \(e["explanation"].string ?? "nil")")
         }
-        if !same(insight.suggestedAction, e["action"].string) {
+        if !dartEqual(insight.suggestedAction, e["action"].string) {
             problems.append("\(at) action \(insight.suggestedAction) vs \(e["action"].string ?? "nil")")
         }
         if insight.generatedDate.toIso8601String() != e["generatedDate"].string {
@@ -97,7 +79,7 @@ private func differences(_ actual: [LocalInsight], _ expected: J, _ context: Str
 
 private func check(_ file: String, zone: String) throws {
     let calendar = DartCalendar(timeZone: TimeZone(identifier: zone)!)
-    let fixture = try insightZoneFixture(zone, file)
+    let fixture = try Fixtures.json("insights", zone: zone, file)
     #expect(fixture["tz"].string == zone)
     let cases = fixture["cases"].array
     #expect(!cases.isEmpty)
@@ -132,24 +114,15 @@ struct InsightParityTests {
 
     @Test("slug matches the engine's `_slug`")
     func slugs() throws {
-        let pairs = try insightFixture("slugs.json")["slugs"].array
+        let pairs = try Fixtures.json("insights/slugs.json")["slugs"].array
         #expect(pairs.count > 200)
-        let wrong = pairs.filter { !same(InsightEngine.slug($0[0].string!), $0[1].string!) }
+        let wrong = pairs.filter { !dartEqual(InsightEngine.slug($0[0].string!), $0[1].string!) }
             .map { "\($0[0].string!.debugDescription) -> \(InsightEngine.slug($0[0].string!)) vs \($0[1].string!)" }
         #expect(wrong.isEmpty, "\(wrong.prefix(20).joined(separator: "\n"))")
     }
 }
 
 // MARK: - Preferences through the real section
-
-/// A typed preference as the harness records it ({"type", "value"}).
-private func preferenceValue(_ typed: J) -> PreferenceValue? {
-    switch typed["type"].string {
-    case "string": return typed["value"].string.map { .string($0) }
-    case "stringList": return .stringList(typed["value"].array.map { $0.string! })
-    default: return nil
-    }
-}
 
 private func sameValue(_ a: PreferenceValue?, _ b: PreferenceValue?) -> Bool {
     switch (a, b) {
@@ -167,7 +140,7 @@ struct InsightPreferencesParityTests {
     func replay(zone: String) throws {
         let timeZone = TimeZone(identifier: zone)!
         let calendar = DartCalendar(timeZone: timeZone)
-        let fixture = try insightZoneFixture(zone, "prefs.json")
+        let fixture = try Fixtures.json("insights", zone: zone, "prefs.json")
         var problems: [String] = []
         var steps = 0
         for scenario in fixture["scenarios"].array {
@@ -178,9 +151,7 @@ struct InsightPreferencesParityTests {
             }
             for c in scenario["cases"].array {
                 let label = "\(scenario["start"].string!) \(c["label"].string!)"
-                var initial: [String: PreferenceValue] = [:]
-                for key in c["initial"].keys { initial[key] = preferenceValue(c["initial"][key]) }
-                let store = InMemoryPreferences(initial)
+                let store = InMemoryPreferences(typedPreferences(c["initial"]))
                 var prefs = InsightPreferences.load(from: store, timeZone: timeZone)
                 var now = start
                 func visible() -> [LocalInsight] {
@@ -216,10 +187,11 @@ struct InsightPreferencesParityTests {
                         problems.append("\(at): cards \(texts.map { $0[1] }) vs \(expectedTexts.map { $0.count > 1 ? $0[1] : "?" })")
                     }
                     let expectedKeys = step["prefs"].keys
+                    let expectedPrefs = typedPreferences(step["prefs"])
                     let storedKeys = store.allKeys().filter { $0.contains("local_insights") }
                     if Set(expectedKeys) != Set(storedKeys) { problems.append("\(at): keys \(storedKeys) vs \(expectedKeys)") }
-                    for key in expectedKeys where !sameValue(store.value(forKey: key), preferenceValue(step["prefs"][key])) {
-                        problems.append("\(at): \(key) \(String(describing: store.value(forKey: key))) vs \(String(describing: preferenceValue(step["prefs"][key])))")
+                    for key in expectedKeys where !sameValue(store.value(forKey: key), expectedPrefs[key]) {
+                        problems.append("\(at): \(key) \(String(describing: store.value(forKey: key))) vs \(String(describing: expectedPrefs[key]))")
                     }
                 }
             }

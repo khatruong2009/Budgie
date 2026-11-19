@@ -62,12 +62,7 @@ public struct OpenAIVoiceClient: Sendable {
     /// Transcribes a recorded audio file. The text is trimmed like Flutter's
     /// `String.trim`; an empty result throws `.noSpeech`.
     public func transcribe(audioFile: URL) async throws(VoiceEntryError) -> String {
-        let audio: Data
-        do {
-            audio = try Data(contentsOf: audioFile)
-        } catch {
-            throw .failed
-        }
+        guard let audio = try? Data(contentsOf: audioFile) else { throw .failed }
 
         let boundary = "BudgieBoundary-" + UUID().uuidString
         var body = Data()
@@ -184,14 +179,9 @@ public struct OpenAIVoiceClient: Sendable {
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue(contentType, forHTTPHeaderField: "Content-Type")
 
-        let data: Data
-        let response: URLResponse
-        do {
-            (data, response) = try await session.upload(for: request, from: body)
-        } catch {
-            throw .failed
-        }
-        guard let http = response as? HTTPURLResponse else { throw .failed }
+        guard let (data, response) = try? await session.upload(for: request, from: body),
+            let http = response as? HTTPURLResponse
+        else { throw .failed }
         switch http.statusCode {
         case 200..<300: return data
         case 401, 403: throw .unauthorized

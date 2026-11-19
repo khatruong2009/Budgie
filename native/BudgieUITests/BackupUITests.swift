@@ -39,9 +39,9 @@ final class BackupUITests: XCTestCase {
         XCTAssertTrue(title.waitForExistence(timeout: 15), "share sheet\n\(app.debugDescription)")
         XCTAssertEqual(title.label, "Budgie Backup")
         screen.closeShareSheet()
-        XCTAssertTrue(screen.waitUntil(10) { !title.exists }, "share sheet closed")
+        XCTAssertTrue(waitUntil(10) { !title.exists }, "share sheet closed")
         XCTAssertFalse(app.labelled(exactly: "Backup exported").waitForExistence(timeout: 3), "no message after a cancel")
-        XCTAssertTrue(screen.waitUntil(5) { app.buttons["settings.exportBackup"].exists }, "the row is enabled again")
+        XCTAssertTrue(waitUntil(5) { app.buttons["settings.exportBackup"].exists }, "the row is enabled again")
     }
 
     /// A file Flutter refuses: its message, nothing restored.
@@ -71,7 +71,7 @@ final class BackupUITests: XCTestCase {
             "This will import 3 transactions, 0 net worth entries, 1 budgets, 0 goals and 0 recurring templates, "
                 + "replacing everything currently in Budgie. This cannot be undone.")
         app.element("backup.confirm.cancel").tapSettled()
-        XCTAssertTrue(screen.waitUntil(5) { !title.exists })
+        XCTAssertTrue(waitUntil(5) { !title.exists })
         XCTAssertFalse(app.labelled(exactly: "Backup restored").waitForExistence(timeout: 2))
         XCTAssertEqual(screen.transactionCount(), before, "Cancel changes nothing")
 
@@ -79,7 +79,7 @@ final class BackupUITests: XCTestCase {
         XCTAssertEqual(screen.transactionCount(), 3)
         app.goToHomeRoot()
         for name in ["UITest Groceries", "UITest Rent", "UITest Paycheck"] {
-            XCTAssertTrue(screen.containing(name).waitForExistence(timeout: 10), name)
+            XCTAssertTrue(app.labelled(containing: name).waitForExistence(timeout: 10), name)
         }
     }
 
@@ -97,7 +97,7 @@ final class BackupUITests: XCTestCase {
         app.element("backup.confirm.confirm").tapSettled()
         let lock = app.element("applock.lock")
         XCTAssertTrue(lock.waitForExistence(timeout: 15), "the lock screen after the restore")
-        XCTAssertFalse(screen.waitUntil(3) { !lock.exists }, "nothing unlocks it without authenticating")
+        XCTAssertFalse(waitUntil(3) { !lock.exists }, "nothing unlocks it without authenticating")
 
         // Put the unlocked fixture back for the suites that follow: the
         // relaunch's lock screen unlocks with one authentication the hook
@@ -129,20 +129,6 @@ struct SettingsDataScreen {
             throw XCTSkip("The app's data was not made by UI tests: erase the simulator, stage the fixtures, then run again.")
         }
         XCTAssertTrue(home.exists, "Home", file: file, line: line)
-    }
-
-    func containing(_ text: String) -> XCUIElement {
-        app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
-    }
-
-    /// Polls `condition` until it holds or `timeout` passes.
-    func waitUntil(_ timeout: TimeInterval = 5, _ condition: () -> Bool) -> Bool {
-        let deadline = Date().addingTimeInterval(timeout)
-        repeat {
-            if condition() { return true }
-            Thread.sleep(forTimeInterval: 0.25)
-        } while Date() < deadline
-        return false
     }
 
     func openSettings() {

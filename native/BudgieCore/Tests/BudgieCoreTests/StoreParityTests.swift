@@ -76,8 +76,7 @@ struct StoreParityTests {
 
         #expect(scenario.listing() == Scenario.listing(expected["filesAfterLoad"]), "\(scenario.name) files after load")
         let prefsAfter = try Scenario.loadPrefsJSON(expected["prefsAfterLoad"])
-        var swiftPrefs = scenario.prefsSnapshot()
-        swiftPrefs = swiftPrefs.filter { !$0.key.hasPrefix("native.") }
+        let swiftPrefs = scenario.preferences.all.filter { !$0.key.hasPrefix("native.") }
         #expect(swiftPrefs == prefsAfter, "\(scenario.name) preferences after load")
 
         // One more commit on a relaunched store over the same files.
@@ -94,7 +93,7 @@ struct StoreParityTests {
     @Test("a load -> save of every readable store reproduces the payload bytes")
     func losslessResave() async throws {
         for name in storeScenarioNames + legacyScenarioNames {
-            let scenario = try Scenario(Fixtures.url(name.hasPrefix("v1") || legacyScenarioNames.contains(name) ? "legacy/\(name)" : "store/\(name)"))
+            let scenario = try Scenario(Fixtures.url(legacyScenarioNames.contains(name) ? "legacy/\(name)" : "store/\(name)"))
             guard let primary = scenario.fileSystem.snapshot[StoreFile.primaryName],
                 let header = StoreFile.verify(primary), StoreFile.decode(primary) != nil
             else { continue }

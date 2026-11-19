@@ -17,8 +17,7 @@ struct BudgetsSection: View {
 
     var body: some View {
         // One pass per render for the card and both pickers.
-        let overview =
-            model.budgetOverview(forMonth: model.selectedMonth)
+        let overview = model.budgetOverview(forMonth: model.selectedMonth)
         // Dart `budgets.length < expenseCategories.length`: the rows are the
         // budgeted expense categories, so this holds iff one is unbudgeted.
         let showsAddRow = !overview.unbudgeted.isEmpty
@@ -105,7 +104,7 @@ private struct BudgetTile: View {
     var body: some View {
         let color = statusColor
         let (subtitle, chip) = HomeSummary.budgetRow(item, formatter: formatter)
-        let shape = RoundedRectangle(cornerRadius: Metrics.statCardRadius, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous)
         HapticButton(action: action) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
@@ -174,43 +173,10 @@ private struct AddBudgetButton: View {
                 Text("Add a budget").textStyle(.rowTitle).foregroundStyle(BudgieColor.textPrimary)
             }
             .frame(maxWidth: .infinity, minHeight: 52)
-            .overlay(shape.strokeBorder(BudgieColor.textTertiary.opacity(0.6), style: StrokeStyle(lineWidth: 1.5, dash: [5, 4])))
+            .dashedBorder(shape, dash: [5, 4])
             .contentShape(shape)
         }
-        .buttonStyle(PressScaleStyle(scale: 0.98))
+        .buttonStyle(PressScaleStyle())
         .accessibilityHint(hint)
-    }
-}
-
-/// `_AddBudgetRow` (spending_page.dart:1819-1873) in the Edit picker:
-/// accent plus tile, "Add a budget" and a chevron.
-struct AddBudgetRow: View {
-    let action: () -> Void
-
-    var body: some View {
-        HapticButton(action: action) {
-            HStack(spacing: 12) {
-                IconTile(symbol: "plus", color: BudgieColor.accent)
-                Text("Add a budget")
-                    .textStyle(.rowTitle)
-                    .foregroundStyle(BudgieColor.accent)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                BudgetChevron()
-            }
-            .padding(12)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(PressScaleStyle(scale: 1))
-    }
-}
-
-/// `Symbols.chevron_right_rounded` 20, weight 500, tertiary.
-struct BudgetChevron: View {
-    var body: some View {
-        Image(systemName: "chevron.right")
-            .font(.system(size: 15, weight: .semibold))
-            .foregroundStyle(BudgieColor.textTertiary)
-            .frame(width: 20)
-            .accessibilityHidden(true)
     }
 }

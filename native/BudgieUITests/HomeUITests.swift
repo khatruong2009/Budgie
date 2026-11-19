@@ -74,21 +74,8 @@ final class HomeUITests: XCTestCase {
     /// December 2025", as the toast words it.
     private func addedToast(monthsAgo: Int) -> String {
         let month = Calendar.current.date(byAdding: .month, value: -monthsAgo, to: Date()) ?? Date()
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
         let sameYear = Calendar.current.component(.year, from: month) == Calendar.current.component(.year, from: Date())
-        formatter.dateFormat = sameYear ? "LLLL" : "LLLL yyyy"
-        return "Added to \(formatter.string(from: month))"
-    }
-
-    /// "September 2026": the label of the month pill and of the SEE ALL
-    /// month chips.
-    private func monthLabel(monthsAgo: Int) -> String {
-        let month = Calendar.current.date(byAdding: .month, value: -monthsAgo, to: Date()) ?? Date()
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "LLLL yyyy"
-        return formatter.string(from: month)
+        return "Added to \(monthName(sameYear ? "LLLL" : "LLLL yyyy", monthsAgo: monthsAgo))"
     }
 
     // MARK: - Tests
@@ -191,7 +178,7 @@ final class HomeUITests: XCTestCase {
         app.goToHomeRoot()
         let pill = app.buttons["home.monthPill"]
         XCTAssertTrue(pill.waitForExistence(timeout: 10))
-        let start = monthLabel(monthsAgo: 0)
+        let start = monthName("LLLL yyyy", monthsAgo: 0)
         XCTAssertEqual(pill.label, start)
         let parts = start.split(separator: " ")
         let month = String(parts[0])
@@ -278,8 +265,8 @@ final class HomeUITests: XCTestCase {
 
         app.goToHomeRoot()
         app.buttons["See all transactions"].firstMatch.tapSettled()
-        let current = app.buttons[monthLabel(monthsAgo: 0)]
-        let previous = app.buttons[monthLabel(monthsAgo: 1)]
+        let current = app.buttons[monthName("LLLL yyyy", monthsAgo: 0)]
+        let previous = app.buttons[monthName("LLLL yyyy", monthsAgo: 1)]
         XCTAssertTrue(current.waitForExistence(timeout: 10), "a chip for this month")
         XCTAssertTrue(previous.exists, "a chip for last month")
         XCTAssertTrue(current.isSelected, "the newest month is selected first")

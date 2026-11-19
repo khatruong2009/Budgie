@@ -3,8 +3,8 @@ import UIKit
 
 /// The first-launch tour (`onboarding_tutorial.dart`): three swipeable pages,
 /// left-aligned (redesign 4.4), Skip at the top right, page dots and a
-/// full-width Continue / Start budgeting button. Shown once, as `MainView`'s content inside the lock gate
-/// (Flutter's `AppPrivacyGate(OnboardingTutorialGate(...))`); Skip and the
+/// full-width Continue / Start budgeting button. Shown once, as `MainView`'s
+/// content inside the lock gate (Flutter's `AppPrivacyGate(OnboardingTutorialGate(...))`); Skip and the
 /// last page's button call `model.completeOnboarding()`, which writes the
 /// flag, swaps in the tabs and lets a queued quick action or link open.
 struct OnboardingView: View {
@@ -83,12 +83,11 @@ struct OnboardingView: View {
                     .background(BudgieColor.accent, in: Capsule())
                     .contentShape(Capsule())
             }
-            .buttonStyle(PressScaleStyle(scale: 0.98))
+            .buttonStyle(PressScaleStyle())
             .accessibilityIdentifier("onboarding.next")
         }
         .padding(EdgeInsets(top: Metrics.spacingXS, leading: Metrics.spacingL, bottom: Metrics.spacingL, trailing: Metrics.spacingL))
-        .frame(maxWidth: Metrics.maxContentWidth)
-        .frame(maxWidth: .infinity)
+        .budgieContentColumn()
         .background(BudgieColor.background.ignoresSafeArea())
     }
 
@@ -129,11 +128,7 @@ struct OnboardingView: View {
     /// Flutter's `nextPage` (300ms easeInOut); a jump under Reduce Motion.
     /// VoiceOver hears the new page, as its focus stays on the control.
     private func show(_ index: Int) {
-        if reduceMotion {
-            page = index
-        } else {
-            withAnimation(Motion.easeInOut(Motion.normal)) { page = index }
-        }
+        Motion.animate(Motion.easeInOut(Motion.normal), reduceMotion: reduceMotion) { page = index }
         let shown = Self.pages[index]
         AccessibilityNotification.Announcement(
             "Tutorial page \(index + 1) of \(Self.pages.count). \(shown.title) \(shown.body)"

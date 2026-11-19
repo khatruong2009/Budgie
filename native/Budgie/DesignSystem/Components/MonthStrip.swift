@@ -54,12 +54,10 @@ private struct MonthChip: View {
     let isSelected: Bool
     let action: () -> Void
 
-    private static let text = TextSpec(face: .gabaritoSemiBold, size: 14, height: 1.25, relativeTo: .subheadline)
-
     var body: some View {
         Button(action: action) {
             Text("\(DartDateFormat.MMM(month)) \(DartDateFormat.y(month))")
-                .textStyle(Self.text)
+                .textStyle(.chipLabel)
                 .foregroundStyle(isSelected ? BudgieColor.selectionText : BudgieColor.textSecondary)
                 .lineLimit(1)
                 .padding(.horizontal, 16)

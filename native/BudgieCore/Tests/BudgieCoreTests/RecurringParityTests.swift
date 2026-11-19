@@ -7,23 +7,13 @@ import Testing
 /// one whose DST change happens at midnight).
 let recurringZones = fixtureZones
 
-private func recurringFixture(_ zone: String, _ file: String) throws -> J {
-    try Fixtures.json("\(Fixtures.zonePath("recurring", zone))/\(file)")
-}
-
-/// A fixture instant, from its microseconds (an ambiguous local time
-/// cannot be re-derived from its ISO text).
-private func instant(_ j: J, _ tz: TimeZone) -> DartDateTime {
-    DartDateTime(microsecondsSinceEpoch: Int64(j["us"].int!), timeZone: tz)
-}
-
 @Suite("Recurring: form preview and generation against Dart in five time zones")
 struct RecurringParityTests {
     @Test("Next 3 Occurrences preview", arguments: recurringZones)
     func preview(zone: String) throws {
         let tz = TimeZone(identifier: zone)!
         let calendar = DartCalendar(timeZone: tz)
-        let fixture = try recurringFixture(zone, "preview.json")
+        let fixture = try Fixtures.json("recurring", zone: zone, "preview.json")
         #expect(fixture["tz"].string == zone)
         #expect(fixture["cases"].array.count >= 25)
         for c in fixture["cases"].array {
@@ -41,13 +31,6 @@ struct RecurringParityTests {
         }
     }
 
-    private func load(_ template: RecurringTemplate, _ calendar: DartCalendar) -> FinancialData {
-        FinancialData.load(
-            FinancialSnapshot(revision: 0, sections: JSONObject(ordered: [(Section.recurringTransactions, .array([.object(template.raw)]))])),
-            preferences: InMemoryPreferences(), calendar: calendar, now: { calendar.date(2026, 1, 1, 12) }, newID: { "id" }
-        ).data
-    }
-
     /// Every case, the old-cursor one included: an active template whose
     /// cursor fell behind (the app was not opened for weeks) back-fills
     /// within the 90-day lookback exactly as Dart does.
@@ -55,10 +38,10 @@ struct RecurringParityTests {
     func generate(zone: String) throws {
         let tz = TimeZone(identifier: zone)!
         let calendar = DartCalendar(timeZone: tz)
-        let fixture = try recurringFixture(zone, "generate.json")
+        let fixture = try Fixtures.json("recurring", zone: zone, "generate.json")
         for c in fixture["cases"].array {
             let template = RecurringTemplate.parse(c["template"].value!, calendar: calendar, newID: { "x" })!
-            var data = load(template, calendar)
+            var data = financialData(holding: template, calendar: calendar)
             let now = instant(c["now"], tz)
             _ = RecurringGenerator.generateDue(in: &data, now: now, clock: { now }, newID: { UUID().uuidString })
             let label = "\(zone) \(c["label"].string!)"
@@ -83,10 +66,10 @@ struct RecurringParityTests {
     func resumed(zone: String) throws {
         let tz = TimeZone(identifier: zone)!
         let calendar = DartCalendar(timeZone: tz)
-        let fixture = try recurringFixture(zone, "generate.json")
+        let fixture = try Fixtures.json("recurring", zone: zone, "generate.json")
         let c = try #require(fixture["cases"].array.first { $0["label"].string == "resumed weekly with an old cursor" })
         let template = RecurringTemplate.parse(c["template"].value!, calendar: calendar, newID: { "x" })!
-        var data = load(template, calendar)
+        var data = financialData(holding: template, calendar: calendar)
         let now = instant(c["now"], tz)
         let paused = data.setTemplateActive(id: template.id, false, now: now)
         let resumed = data.setTemplateActive(id: template.id, true, now: now)

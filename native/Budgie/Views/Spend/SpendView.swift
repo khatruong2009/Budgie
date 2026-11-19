@@ -48,8 +48,7 @@ struct SpendView: View {
                 ProgressView().frame(maxHeight: .infinity)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(BudgieColor.background)
+        .budgiePageBackground()
         .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(item: $drillIn) { CategoryTransactionsView(drillIn: $0) }
         .sheet(isPresented: $showsMonthSheet) {
@@ -125,17 +124,10 @@ struct SpendView: View {
             }
         }
         if let tail = breakdown.tail {
-            if expanded {
-                rows.append(SpendListRow(kind: .collapse, formatter: formatter) {
-                    rowTaps += 1
-                    tailExpanded = false
-                })
-            } else {
-                rows.append(SpendListRow(kind: .tail(tail), formatter: formatter) {
-                    rowTaps += 1
-                    tailExpanded = true
-                })
-            }
+            rows.append(SpendListRow(kind: expanded ? .collapse : .tail(tail), formatter: formatter) {
+                rowTaps += 1
+                tailExpanded = !expanded
+            })
         }
         return rows
     }
@@ -180,7 +172,7 @@ extension SpendPaletteSlot {
     /// and `getDonutRemainder`.
     var color: Color {
         switch self {
-        case .accent: BudgieColor.chartAccent
+        case .accent: BudgieColor.purple
         case .income: BudgieColor.income
         case .danger: BudgieColor.danger
         case .warning: BudgieColor.warning

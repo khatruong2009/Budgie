@@ -7,10 +7,6 @@ import Testing
 /// midnight (Santiago).
 private let voiceRequestZones = ["America/New_York", "America/Santiago"]
 
-private func fixture(_ zone: String) throws -> J {
-    try Fixtures.json("\(Fixtures.zonePath("voicerequest", zone))/request.json")
-}
-
 private struct Part {
     let name: String?
     let filename: String?
@@ -76,7 +72,7 @@ struct VoiceRequestParityTests {
     /// prompt for that date and category vocabulary, response_format).
     @Test("chat request", arguments: voiceRequestZones)
     func chat(zone: String) async throws {
-        let f = try fixture(zone)
+        let f = try Fixtures.json("voicerequest", zone: zone, "request.json")
         #expect(f["tz"].string == zone)
         let tz = TimeZone(identifier: zone)!
         let cases = f["chat"].array
@@ -111,7 +107,7 @@ struct VoiceRequestParityTests {
     /// Content-Type first) byte for byte.
     @Test("transcription request", arguments: voiceRequestZones)
     func transcription(zone: String) async throws {
-        let f = try fixture(zone)
+        let f = try Fixtures.json("voicerequest", zone: zone, "request.json")
         let cases = f["transcription"].array
         #expect(cases.count == 6)
         for c in cases {

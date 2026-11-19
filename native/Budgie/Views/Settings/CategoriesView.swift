@@ -9,14 +9,6 @@ import SwiftUI
 /// in one card with hairlines between them (REDESIGN_PLAN 4.7). The bar's
 /// "+" opens the editor for the selected type; each row's menu offers Edit,
 /// Move up, Move down and Archive / Restore.
-///
-/// Differences from Flutter (PARITY_GAPS): no duplicate FAB; Move up / Move
-/// down step over hidden archived rows (`categoryMoveOffset`); the editor is
-/// the redesign's centred card with inline errors; the row menu is the
-/// system menu. Refused row actions (archiving the last active category)
-/// show Flutter's copy in the neutral toast (its default SnackBar), a
-/// failed write the save-failed toast. Neither the type nor the switch is
-/// persisted (as Flutter).
 struct CategoriesView: View {
     @Environment(AppModel.self) private var model
 
@@ -46,8 +38,7 @@ struct CategoriesView: View {
                     ) { perform($0, on: item.element) }
                 })
                 .padding(EdgeInsets(top: 0, leading: Metrics.pageHorizontal, bottom: Metrics.spacingXL, trailing: Metrics.pageHorizontal))
-                .frame(maxWidth: Metrics.maxContentWidth)
-                .frame(maxWidth: .infinity)
+                .budgieContentColumn()
             }
             // A new list per type, starting at the top: the kept offset of a
             // scrolled Expenses list left the shorter Income list above the
@@ -55,8 +46,7 @@ struct CategoriesView: View {
             .id(typeIndex)
             .accessibilityIdentifier("categories.list")
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(BudgieColor.background)
+        .budgiePageBackground()
         .budgiePushedTitle("Categories", singleLine: true)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -97,8 +87,7 @@ struct CategoriesView: View {
         }
         .padding(.horizontal, Metrics.pageHorizontal + Metrics.spacingXS)
         .frame(minHeight: 56)
-        .frame(maxWidth: Metrics.maxContentWidth)
-        .frame(maxWidth: .infinity)
+        .budgieContentColumn()
     }
 
     // MARK: - Row actions

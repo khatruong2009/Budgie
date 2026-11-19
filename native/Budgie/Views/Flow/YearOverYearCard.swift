@@ -52,9 +52,6 @@ private struct YearOverYearRow: View {
     let row: CashFlowMath.YearOverYearRow
     let deltaColor: Color
 
-    /// `badge` at 13.
-    private static let deltaStyle = TextSpec(face: .gabaritoBold, size: 13, relativeTo: .footnote)
-
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: Metrics.spacingS) {
@@ -63,7 +60,7 @@ private struct YearOverYearRow: View {
                     .foregroundStyle(BudgieColor.textSecondary)
                 Spacer(minLength: 0)
                 Text(row.deltaLabel)
-                    .textStyle(Self.deltaStyle)
+                    .textStyle(.footnoteBold)
                     .foregroundStyle(deltaColor)
             }
             GlowProgressBar(value: row.thisYearFraction, height: 12, color: BudgieColor.accent)

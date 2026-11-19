@@ -35,7 +35,7 @@ final class CSVImportUITests: XCTestCase {
         XCTAssertEqual(title.label, "Import 2 transactions?")
         XCTAssertEqual(app.element("csvimport.confirm.message").label, "2 duplicates will be skipped\n1 row could not be read")
         app.element("csvimport.confirm.cancel").tapSettled()
-        XCTAssertTrue(screen.waitUntil(5) { !title.exists })
+        XCTAssertTrue(waitUntil(5) { !title.exists })
         XCTAssertEqual(screen.transactionCount(), 3, "Cancel imports nothing")
 
         screen.tapRow("settings.importCSV")
@@ -45,7 +45,7 @@ final class CSVImportUITests: XCTestCase {
         XCTAssertEqual(screen.transactionCount(), 5)
         app.goToHomeRoot()
         for name in ["UITest Refund", "UITest Coffee"] {
-            XCTAssertTrue(screen.containing(name).waitForExistence(timeout: 10), name)
+            XCTAssertTrue(app.labelled(containing: name).waitForExistence(timeout: 10), name)
         }
     }
 

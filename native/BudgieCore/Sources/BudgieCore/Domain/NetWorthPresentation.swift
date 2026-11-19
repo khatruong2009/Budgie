@@ -28,6 +28,19 @@ public enum NetWorthGrowthRange: String, CaseIterable, Sendable {
     }
 }
 
+private extension Array where Element == Double {
+    /// The Dart `min`/`max` folds of the values; nil when empty.
+    var dartBounds: (low: Double, high: Double)? {
+        guard let first else { return nil }
+        return (dropFirst().reduce(first, dartMin), dropFirst().reduce(first, dartMax))
+    }
+}
+
+extension NetWorthEntryType {
+    /// Assets want a rise, liabilities a fall.
+    func isFavorable(change: Double) -> Bool { self == .asset ? change >= 0 : change <= 0 }
+}
+
 /// Padded y-axis bounds of the two line charts.
 public struct NetWorthChartScale: Equatable, Sendable {
     public let min: Double
@@ -36,8 +49,7 @@ public struct NetWorthChartScale: Equatable, Sendable {
     /// `_netWorthChartScale` (NW:826-836): range at least 1 and 10% of
     /// `|max|`, padded 18% each side. nil for no values.
     public static func growth(_ values: [Double]) -> NetWorthChartScale? {
-        guard let first = values.first else { return nil }
-        let low = values.dropFirst().reduce(first, dartMin), high = values.dropFirst().reduce(first, dartMax)
+        guard let (low, high) = values.dartBounds else { return nil }
         let range = dartMax(high - low, dartMax(1.0, abs(high) * 0.10))
         return NetWorthChartScale(min: low - range * 0.18, max: high + range * 0.18)
     }
@@ -45,8 +57,7 @@ public struct NetWorthChartScale: Equatable, Sendable {
     /// `_AccountHistoryChart` (NW:1936-1943): range at least 1 and 8% of the
     /// larger magnitude, padded 20% each side. nil for no values.
     public static func account(_ values: [Double]) -> NetWorthChartScale? {
-        guard let first = values.first else { return nil }
-        let low = values.dropFirst().reduce(first, dartMin), high = values.dropFirst().reduce(first, dartMax)
+        guard let (low, high) = values.dartBounds else { return nil }
         let baseline = dartMax(1.0, dartMax(abs(high), abs(low)) * 0.08)
         let range = dartMax(high - low, baseline)
         return NetWorthChartScale(min: low - range * 0.20, max: high + range * 0.20)
@@ -122,8 +133,7 @@ public enum NetWorthPresentation {
     /// sits low (`y` 0.5) for points in the upper half of the values, else
     /// high (`y` -0.6).
     public static func hoverAlignment(index: Int, values: [Double]) -> (x: Double, y: Double, useBottom: Bool) {
-        let low = values.dropFirst().reduce(values[0], dartMin)
-        let high = values.dropFirst().reduce(values[0], dartMax)
+        let (low, high) = values.dartBounds!
         let useBottom = values[index] >= (low + high) / 2
         let x = values.count <= 1 ? 0.0 : dartClamp(Double(index) / Double(values.count - 1) * 2 - 1, -0.84, 0.84)
         return (x, useBottom ? 0.5 : -0.6, useBottom)
@@ -202,7 +212,7 @@ extension NetWorthEntryRecord {
         }
         return NetWorthAccountRowStats(
             effective: effective, previous: previous, amount: amount, share: share, percentChange: percentChange,
-            changeIsFavorable: percentChange.map { type == .asset ? $0 >= 0 : $0 <= 0 })
+            changeIsFavorable: percentChange.map(type.isFavorable))
     }
 }
 
@@ -232,7 +242,7 @@ public struct NetWorthAccountHistory: Sendable {
         let newestFirst = Array(chart.reversed())
         timeline = newestFirst.indices.map { i in
             let delta = i < newestFirst.count - 1 ? newestFirst[i].amount - newestFirst[i + 1].amount : nil
-            return (newestFirst[i], delta, delta.map { type == .asset ? $0 >= 0 : $0 <= 0 })
+            return (newestFirst[i], delta, delta.map(type.isFavorable))
         }
         let last = chart.last, beforeLast = chart.count > 1 ? chart[chart.count - 2] : nil
         latest = last
@@ -240,16 +250,17 @@ public struct NetWorthAccountHistory: Sendable {
         latestAmount = last?.amount ?? 0
         if let last, let beforeLast { changeFromPrevious = last.amount - beforeLast.amount } else { changeFromPrevious = nil }
         totalChange = chart.count > 1 ? chart.last!.amount - chart.first!.amount : nil
-        totalChangeIsPositive = totalChange.map { type == .asset ? $0 >= 0 : $0 <= 0 }
-        peak = chart.isEmpty ? nil : chart.dropFirst().reduce(chart[0].amount) { dartMax($0, $1.amount) }
-        low = chart.isEmpty ? nil : chart.dropFirst().reduce(chart[0].amount) { dartMin($0, $1.amount) }
+        totalChangeIsPositive = totalChange.map(type.isFavorable)
+        let bounds = chart.map(\.amount).dartBounds
+        peak = bounds?.high
+        low = bounds?.low
     }
 }
 
 /// The row icon (`_iconForEntry`, NW:1305-1345), named after the Material
 /// symbol Flutter shows; views map it to an SF Symbol. First match wins, on
 /// Dart `toLowerCase().contains`.
-public enum NetWorthAccountIcon: String, Sendable, CaseIterable {
+public enum NetWorthAccountIcon: String, Sendable {
     case accountBalance, savings, trendingUp, home, accountBalanceWallet, northEast
     case attachMoney, southWest
 

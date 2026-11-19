@@ -95,7 +95,7 @@ struct LaunchZoneParityTests {
         let tz = TimeZone(identifier: zone)!
         for name in launchScenarioNames {
             let label = "\(zone) \(name)"
-            let fixture = try Fixtures.json("\(Fixtures.zonePath("launch", zone))/\(name).json")
+            let fixture = try Fixtures.json("launch", zone: zone, "\(name).json")
             #expect(fixture["tz"].string == zone, "\(label) tz")
             #expect(fixture["scenario"].string == name, "\(label) scenario")
 
@@ -135,7 +135,7 @@ struct LaunchZoneParityTests {
             var shifted: [String: String] = [:]
             Self.gapDates(in: .object(before.sections), timeZone: tz, into: &shifted)
             // The zones whose DST change is at midnight hold inputs on it.
-            if name == "typical" && (zone == "America/Santiago") {
+            if name == "typical" && zone == "America/Santiago" {
                 #expect(!shifted.isEmpty, "\(label) expected a stored date in the spring-forward hour")
             }
             if !shifted.isEmpty {

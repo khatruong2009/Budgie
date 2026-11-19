@@ -28,12 +28,9 @@ struct PillChip: View {
     var style: TextSpec = .badge
     var horizontalPadding: CGFloat = 10
     var verticalPadding: CGFloat = 5
-    var action: (() -> Void)? = nil
-
-    @State private var taps = 0
 
     var body: some View {
-        let chip = HStack(spacing: 6) {
+        HStack(spacing: 6) {
             if let symbol {
                 Image(systemName: symbol).font(.system(size: 13, weight: .medium)).accessibilityHidden(true)
             }
@@ -44,19 +41,6 @@ struct PillChip: View {
         .padding(.vertical, verticalPadding)
         .background(outlined ? Color.clear : color.opacity(0.14), in: Capsule())
         .overlay { if outlined { Capsule().strokeBorder(color.opacity(0.4), lineWidth: 1) } }
-
-        if let action {
-            Button {
-                taps += 1
-                action()
-            } label: {
-                chip
-            }
-            .buttonStyle(.plain)
-            .sensoryFeedback(.impact(weight: .light), trigger: taps)
-        } else {
-            chip
-        }
     }
 }
 
@@ -79,14 +63,9 @@ struct PillButton: View {
     var loading = false
     let action: () -> Void
 
-    @State private var taps = 0
-
     var body: some View {
         let foreground = filled ? BudgieColor.onAccent : color
-        Button {
-            taps += 1
-            action()
-        } label: {
+        HapticButton(action: action) {
             HStack(spacing: filled ? 6 : 8) {
                 if let symbol {
                     Image(systemName: symbol)
@@ -107,7 +86,6 @@ struct PillButton: View {
             .contentShape(Capsule())
         }
         .buttonStyle(PressScaleStyle(scale: 0.96))
-        .sensoryFeedback(.impact(weight: .light), trigger: taps)
         .overlay {
             if loading {
                 Capsule().fill(color)
@@ -198,7 +176,7 @@ struct SegmentedPills: View {
 /// Month/range selector pill (`MonthPill`, budgie_header.dart:80-132):
 /// chip surface and a 1pt 8% border around padding 16 x 9 (Flutter's
 /// Container adds the border's width to the padding), the label in
-/// `rowTitle` at 14 (w600, height 1.25) and a 16pt `expand_more` chevron,
+/// `chipLabel` (14 w600) and a 16pt `expand_more` chevron,
 /// 6 apart. `dimmed` greys the label for a pill whose choice is no longer
 /// applied (the SEE ALL month after the dates changed).
 struct MonthPill: View {
@@ -206,15 +184,10 @@ struct MonthPill: View {
     var dimmed = false
     var action: (() -> Void)? = nil
 
-    @State private var taps = 0
-
-    /// `rowTitle` with fontSize 14.
-    private static let labelText = TextSpec(face: .gabaritoSemiBold, size: 14, height: 1.25, relativeTo: .subheadline)
-
     var body: some View {
         let pill = HStack(spacing: 6) {
             Text(label)
-                .textStyle(Self.labelText)
+                .textStyle(.chipLabel)
                 .foregroundStyle(dimmed ? BudgieColor.textSecondary : BudgieColor.textPrimary)
                 // One line, shrunk if it must be: "6 months" must not break
                 // letter by letter at the largest text sizes.
@@ -233,15 +206,11 @@ struct MonthPill: View {
         .overlay(Capsule().strokeBorder(BudgieColor.pillBorder, lineWidth: Metrics.borderThin))
 
         if let action {
-            Button {
-                taps += 1
-                action()
-            } label: {
+            HapticButton(action: action) {
                 // The pill draws 38pt tall; the tap area is 44.
                 pill.tapArea(vertical: 3)
             }
             .buttonStyle(.plain)
-            .sensoryFeedback(.impact(weight: .light), trigger: taps)
             .accessibilityHint("Choose a month")
         } else {
             pill

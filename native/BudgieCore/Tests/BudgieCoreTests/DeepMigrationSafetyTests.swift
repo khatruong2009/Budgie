@@ -12,7 +12,7 @@ struct DeepMigrationSafetyTests {
         for episode in 0..<3 {
             files.set(StoreFile.primaryName, Array("primary-\(episode)".utf8))
             files.set(StoreFile.backupName, Array("backup-\(episode)".utf8))
-            let store = FinancialStore(fileSystem: files, preferences: prefs, protectedData: AlwaysAvailable(), clock: fixedNow)
+            let store = testStore(files, preferences: prefs)
             do {
                 _ = try await store.read()
                 Issue.record("Corruption must block")
@@ -29,7 +29,7 @@ struct DeepMigrationSafetyTests {
     @Test("a checksummed but undecodable primary cannot overwrite a usable backup")
     func undecodablePrimaryDuringCommit() async throws {
         let files = InMemoryFileSystem(files: try typicalFiles())
-        let store = FinancialStore(fileSystem: files, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow)
+        let store = testStore(files)
         _ = try await store.read()
         let backup = files.snapshot[StoreFile.backupName]!
         let payload = Array("[42]".utf8)
@@ -49,12 +49,12 @@ struct DeepMigrationSafetyTests {
     func missingPreviouslySavedFiles() async throws {
         let files = InMemoryFileSystem()
         let prefs = InMemoryPreferences([PreferenceKey.baseCurrencyCode: .string("GBP")])
-        let store = FinancialStore(fileSystem: files, preferences: prefs, protectedData: AlwaysAvailable(), clock: fixedNow)
+        let store = testStore(files, preferences: prefs)
         try await store.updateSections([("valuable", .int(42))])
         files.set(StoreFile.primaryName, nil)
         files.set(StoreFile.backupName, nil)
         let original = prefs.all
-        let relaunched = FinancialStore(fileSystem: files, preferences: prefs, protectedData: AlwaysAvailable(), clock: fixedNow)
+        let relaunched = testStore(files, preferences: prefs)
         await #expect(throws: FinancialStoreError.self) { try await relaunched.read() }
         #expect(files.snapshot.isEmpty)
         #expect(prefs.all == original)
@@ -64,7 +64,7 @@ struct DeepMigrationSafetyTests {
     func acknowledgedAfterPriorSave() async throws {
         let files = InMemoryFileSystem()
         let prefs = InMemoryPreferences()
-        let store = FinancialStore(fileSystem: files, preferences: prefs, protectedData: AlwaysAvailable(), clock: fixedNow)
+        let store = testStore(files, preferences: prefs)
         try await store.updateSections([("valuable", .int(42))])
         files.set(StoreFile.primaryName, Array("damaged".utf8))
         await store.resetInMemoryState()
@@ -85,7 +85,7 @@ struct DeepMigrationSafetyTests {
             let base = InMemoryFileSystem(files: try typicalFiles())
             let files = LockAfterStage(base: base, gate: gate, stagedName: stagedName)
             let prefs = InMemoryPreferences()
-            let store = FinancialStore(fileSystem: files, preferences: prefs, protectedData: gate, clock: fixedNow)
+            let store = testStore(files, preferences: prefs, protectedData: gate)
             let before = try await store.read()
             let originalPrimary = base.snapshot[StoreFile.primaryName]
             await #expect(throws: FinancialStoreError.protectedDataUnavailable) {
@@ -94,7 +94,7 @@ struct DeepMigrationSafetyTests {
             #expect(base.snapshot[StoreFile.primaryName] == originalPrimary)
             #expect(prefs.string(PreferenceKey.lastCommittedChecksum) == nil)
             gate.set(true)
-            #expect(try await FinancialStore(fileSystem: base, preferences: prefs, protectedData: gate, clock: fixedNow).read() == before)
+            #expect(try await testStore(base, preferences: prefs, protectedData: gate).read() == before)
         }
     }
 
@@ -106,7 +106,7 @@ struct DeepMigrationSafetyTests {
         let dir = parent.appendingPathComponent(StoreFile.directoryName)
         let original = Data("preserve this file".utf8)
         try original.write(to: dir)
-        let store = FinancialStore(fileSystem: DirectoryFileSystem(directory: dir), preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow)
+        let store = testStore(DirectoryFileSystem(directory: dir))
         #expect(throws: StoreFileSystemError.self) { try DirectoryFileSystem(directory: dir).read(StoreFile.primaryName) }
         await #expect(throws: FinancialStoreError.self) { try await store.read() }
         #expect(try Data(contentsOf: dir) == original)
@@ -123,10 +123,10 @@ struct DeepMigrationSafetyTests {
                 let original = prefs.all
                 let expected = LegacyMigration.migrate(prefs)!.snapshot
                 let files = InMemoryFileSystem()
-                let store = FinancialStore(fileSystem: FaultyFileSystem(base: files, failAt: operation, fault: fault), preferences: prefs, protectedData: AlwaysAvailable(), clock: fixedNow)
+                let store = testStore(FaultyFileSystem(base: files, failAt: operation, fault: fault), preferences: prefs)
                 await #expect(throws: FinancialStoreError.self) { try await store.read() }
                 #expect(prefs.all == original)
-                let retry = FinancialStore(fileSystem: files, preferences: prefs, protectedData: AlwaysAvailable(), clock: fixedNow)
+                let retry = testStore(files, preferences: prefs)
                 #expect(try await retry.read() == expected)
                 #expect(!prefs.contains(PreferenceKey.transactions))
             }
@@ -139,10 +139,10 @@ struct DeepMigrationSafetyTests {
             for operation in 0..<2 {
                 let original = try typicalFiles()[StoreFile.primaryName]!
                 let files = InMemoryFileSystem(files: [StoreFile.primaryName: Array("broken".utf8), StoreFile.backupName: original])
-                let store = FinancialStore(fileSystem: FaultyFileSystem(base: files, failAt: operation, fault: fault), preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow)
+                let store = testStore(FaultyFileSystem(base: files, failAt: operation, fault: fault))
                 await #expect(throws: FinancialStoreError.self) { try await store.read() }
                 #expect(files.snapshot[StoreFile.backupName] == original)
-                let retry = FinancialStore(fileSystem: files, preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow)
+                let retry = testStore(files)
                 #expect(try await retry.read() == StoreFile.decode(original))
             }
         }
@@ -169,12 +169,12 @@ struct DeepMigrationSafetyTests {
         try fs.writeStaged(StoreFile.primaryName, original)
         try fs.commitStaged(StoreFile.primaryName)
         let prefs = InMemoryPreferences()
-        let store = FinancialStore(fileSystem: fs, preferences: prefs, protectedData: AlwaysAvailable(), clock: fixedNow)
-        let loaded = FinancialData.load(try await store.read(), preferences: prefs, calendar: DartCalendar(timeZone: testZone), now: fixedNow, newID: { UUID().uuidString })
+        let store = testStore(fs, preferences: prefs)
+        let loaded = FinancialData.load(try await store.read(), preferences: prefs, calendar: DartCalendar(timeZone: newYorkZone), now: fixedNow, newID: { UUID().uuidString })
         #expect(loaded.data.transactions.count == rows.count)
         #expect(DartJSON.encode(loaded.data.transactionsSection()) == DartJSON.encode(.array(rows)))
         try await store.updateSections([(Section.transactions, loaded.data.transactionsSection())])
-        let reloaded = try await FinancialStore(fileSystem: fs, preferences: prefs, protectedData: AlwaysAvailable(), clock: fixedNow).read()
+        let reloaded = try await testStore(fs, preferences: prefs).read()
         #expect(DartJSON.encode(.object(reloaded.sections)) == DartJSON.encode(.object(snapshot.sections)))
         #expect(try fs.read(StoreFile.backupName) == original)
     }

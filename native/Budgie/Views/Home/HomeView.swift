@@ -13,7 +13,7 @@ struct HomeView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var sheet: HomeSheet?
     @State private var monthPanelOpen = false
-    @State private var page: HomePage?
+    @State private var page: SeeAllPage?
     /// A category picked in the quick-expense sheet; its form opens once
     /// that sheet has been dismissed.
     @State private var pendingQuickCategory: String?
@@ -76,7 +76,7 @@ struct HomeView: View {
         BudgieHeader(showLogo: true, centerTrailing: true) {
             MonthPill(label: DartDateFormat.yMMMM(model.selectedMonth)) {
                 // Explicit, so the sections below move with the panel.
-                withAnimation(reduceMotion ? nil : Motion.easeInOut(0.25)) { monthPanelOpen.toggle() }
+                Motion.animate(Motion.easeInOut(0.25), reduceMotion: reduceMotion) { monthPanelOpen.toggle() }
             }
             .accessibilityIdentifier("home.monthPill")
         } accessory: {
@@ -150,11 +150,11 @@ struct HomeView: View {
     }
 }
 
-/// The page Home pushes from SEE ALL. Pushed by item, never with
+/// The page Home and Flow push from SEE ALL. Pushed by item, never with
 /// `navigationDestination(isPresented:)`: that form rebuilt the pushed page
 /// each time an accessibility client read the screen, which kept the main
 /// thread busy under XCUITest (see UI_SPEC "Shell").
-private enum HomePage {
+enum SeeAllPage {
     case transactions
 }
 

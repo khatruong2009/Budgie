@@ -92,15 +92,7 @@ struct DeleteTagDialog: View {
     var body: some View {
         VStack(spacing: 0) {
             DialogTitle(text: "Delete tag?")
-            DialogScroll {
-                Text("This removes \"\(tag.name)\" from your tags and from any merchant rule that uses it.")
-                    .textStyle(.bodyMedium)
-                    .foregroundStyle(BudgieColor.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(.top, 12)
+            DialogMessage(text: "This removes \"\(tag.name)\" from your tags and from any merchant rule that uses it.")
             DialogButtons(
                 cancelId: "tags.delete.cancel", submitTitle: "Delete", submitId: "tags.delete.confirm",
                 color: BudgieColor.danger, cancel: onClose, submit: delete)

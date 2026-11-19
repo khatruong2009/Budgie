@@ -1,16 +1,10 @@
 import BudgieCore
 import SwiftUI
 
-/// The Worth tab (`NetWorthPage`, net_worth_page.dart:23-251): the "Net
-/// worth" header, the month chip strip (D13) bound to the persisted
-/// `selectedNetWorthMonth`, the hero, the growth chart, the assets vs
-/// liabilities split, the Assets / Liabilities toggle and that side's
-/// accounts, with the add button floating bottom-trailing. Without any
-/// account it shows the empty card instead. The Assets tab and the 1Y range
-/// are view state, as in Flutter.
-///
-/// Every mutation is an awaited `AppModel` call; the account editor is a
-/// centred `budgieDialog` like Flutter's `showDialog`.
+/// The Worth tab (`NetWorthPage`, net_worth_page.dart:23-251). The Assets
+/// tab and the 1Y range are view state, as in Flutter. Every mutation is an
+/// awaited `AppModel` call; the account editor is a centred `budgieDialog`
+/// like Flutter's `showDialog`.
 struct WorthView: View {
     @Environment(AppModel.self) private var model
     @State private var isAssetsTab = true
@@ -54,14 +48,8 @@ struct WorthView: View {
         .budgieDialog(item: $editor, padding: 0) { request in
             AccountEditorDialog(request: request) { editor = nil }
         }
-        .alert("Delete account?", isPresented: Binding(isPresent: $pendingDelete), presenting: pendingDelete) { entry in
-            Button("Cancel", role: .cancel) {}
-            // Flutter's accent TextButton: a plain role, as on the history page.
-            Button("Delete") {
-                Task { await delete(entry) }
-            }
-        } message: { entry in
-            Text(NetWorthText.deleteAccountMessage(name: entry.name))
+        .deleteAccountAlert(pending: $pendingDelete) { entry in
+            Task { await delete(entry) }
         }
         .sensoryFeedback(.selection, trigger: monthTaps)
     }
@@ -151,23 +139,19 @@ struct WorthView: View {
     }
 }
 
-/// Private text styles of the Worth views, built from the bundled faces.
+/// Text styles of the Worth views, built from the bundled faces.
 enum WorthStyle {
     /// `rowSubtitle` w600 (labels).
     static let label = TextSpec(face: .gabaritoSemiBold, size: 12, height: 1.25, relativeTo: .caption)
-    /// `rowTitle` at 14, w700 or w600 (toggles and dialog buttons).
+    /// `rowTitle` at 14, w700 (toggles and dialog buttons; w600 is `chipLabel`).
     static let chipBold = TextSpec(face: .gabaritoBold, size: 14, height: 1.25, relativeTo: .subheadline)
-    static let chip = TextSpec(face: .gabaritoSemiBold, size: 14, height: 1.25, relativeTo: .subheadline)
 }
 
 // MARK: - Hero
 
-/// `_NetWorthHero` (NW:255-320), centred: the `TOTAL · MONTH YEAR` eyebrow,
-/// the net worth as a rolling odometer in heroMedium, and the delta pill
-/// when the month has a change. The odometer
-/// rolls the rounded whole-unit amount in the base currency, with a leading
-/// "-" when negative; Flutter's widget truncates the fraction and
-/// hard-codes "$" (D6). Hide balances shows dots, as Home's hero does.
+/// `_NetWorthHero` (NW:255-320), centred. Flutter's odometer truncates the
+/// fraction and hard-codes "$" (D6). Hide balances shows dots, as Home's hero
+/// does.
 struct WorthHero: View {
     let month: DartDateTime
     let netWorth: Double
@@ -215,9 +199,6 @@ private struct DeltaPill: View {
     let previousNetWorth: Double
     let formatter: MoneyFormatter
 
-    /// `badge` at 13.
-    private static let text = TextSpec(face: .gabaritoBold, size: 13, relativeTo: .footnote)
-
     var body: some View {
         let color = change >= 0 ? BudgieColor.income : BudgieColor.danger
         let label = NetWorthText.deltaPill(change: change, previousNetWorth: previousNetWorth, formatter: formatter)
@@ -228,7 +209,7 @@ private struct DeltaPill: View {
                 .frame(width: 15, height: 15)
                 .accessibilityHidden(true)
             Text(label)
-                .textStyle(Self.text)
+                .textStyle(.footnoteBold)
                 .singleLine()
                 .truncationMode(.tail)
         }
@@ -297,21 +278,33 @@ struct AccountEditorRequest: Identifiable {
     let initialType: NetWorthEntryType
     let calendar: DartCalendar
 
+}
+
+extension AccountEditorRequest {
     /// The page's selected month and calendar, for `entry` (nil: a new account).
     @MainActor
     init(model: AppModel, entry: NetWorthEntryRecord?, initialType: NetWorthEntryType) {
         self.init(month: model.selectedNetWorthMonth, entry: entry, initialType: initialType, calendar: model.calendar)
     }
+}
 
-    init(month: DartDateTime, entry: NetWorthEntryRecord?, initialType: NetWorthEntryType, calendar: DartCalendar) {
-        self.month = month
-        self.entry = entry
-        self.initialType = initialType
-        self.calendar = calendar
+extension View {
+    /// The "Delete account?" confirmation for `pending`: Cancel and a plain
+    /// Delete (Flutter's accent TextButton, not red) that runs `delete`.
+    func deleteAccountAlert(
+        pending: Binding<NetWorthEntryRecord?>, delete: @escaping (NetWorthEntryRecord) -> Void
+    ) -> some View {
+        alert("Delete account?", isPresented: Binding(isPresent: pending), presenting: pending.wrappedValue) { entry in
+            Button("Cancel", role: .cancel) {}
+            Button("Delete") { delete(entry) }
+        } message: { entry in
+            Text(NetWorthText.deleteAccountMessage(name: entry.name))
+        }
     }
 }
 
 extension NetWorthEntryType {
     /// Income green for an asset, danger rose for a liability.
     var tint: Color { self == .asset ? BudgieColor.income : BudgieColor.danger }
+    var arrowSymbol: String { self == .asset ? "arrow.up.right" : "arrow.down.left" }
 }

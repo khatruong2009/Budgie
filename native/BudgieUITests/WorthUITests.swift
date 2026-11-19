@@ -32,20 +32,6 @@ final class WorthUITests: XCTestCase {
         field.typeSettled(text)
     }
 
-    /// Scrolls the page until `element` is wholly above the floating tab
-    /// bar. A fresh install's only account row sits almost entirely behind
-    /// the bar, so XCUITest aims at the row's one visible corner: a tap
-    /// there still reaches the row's button, but a long press there never
-    /// starts the context menu and the button fires on release instead
-    /// (the editor opens, not the menu).
-    private func revealAboveTabBar(_ element: XCUIElement) {
-        let tabBar = app.tabBars.firstMatch
-        for _ in 0..<3 where element.frame.maxY > tabBar.frame.minY {
-            app.swipeUp()
-        }
-        XCTAssertLessThanOrEqual(element.frame.maxY, tabBar.frame.minY, "\(element) is behind the tab bar")
-    }
-
     /// net_worth_page_widget_test.dart:18: the add button opens "Add
     /// account" with "Balance month", and Cancel closes it.
     func testAddAccountDialogOpensAndCancels() throws {
@@ -81,7 +67,7 @@ final class WorthUITests: XCTestCase {
         XCTAssertFalse(app.element("worth.editor").exists)
 
         // Tap the row: the editor, prefilled; change the balance and save.
-        revealAboveTabBar(row)
+        app.revealAboveTabBar(row)
         row.tap()
         XCTAssertTrue(app.element("worth.editor").waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Edit account"].exists)
@@ -95,7 +81,7 @@ final class WorthUITests: XCTestCase {
         XCTAssertEqual(row.label, "\(Self.account), $1,250")
 
         // Long-press: View History.
-        revealAboveTabBar(row)
+        app.revealAboveTabBar(row)
         row.press(forDuration: 1.0)
         let viewHistory = app.buttons["View History"]
         XCTAssertTrue(viewHistory.waitForExistence(timeout: 5))
@@ -114,7 +100,7 @@ final class WorthUITests: XCTestCase {
         XCTAssertTrue(row.waitForExistence(timeout: 5))
 
         // Long-press: Delete Account, confirmed.
-        revealAboveTabBar(row)
+        app.revealAboveTabBar(row)
         row.press(forDuration: 1.0)
         let deleteAction = app.buttons["Delete Account"]
         XCTAssertTrue(deleteAction.waitForExistence(timeout: 5))

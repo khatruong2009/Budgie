@@ -1,13 +1,7 @@
 import BudgieCore
 
-/// The amount fields' helpers: the parse itself lives in BudgieCore
-/// (`AmountParser`); the symbols below are for the field prefix glyph.
+/// The amount fields' prefix glyphs (parsing is `AmountParser` in BudgieCore).
 enum AmountInput {
-    /// The amount typed into a field (see `AmountParser.parse`).
-    nonisolated static func parse(_ text: String, formatter: MoneyFormatter) -> Double? {
-        AmountParser.parse(text, formatter: formatter)
-    }
-
     /// The SF Symbol for an amount field's prefix glyph in the base
     /// currency (Flutter always shows `$`): the goal, allocation and rule
     /// forms.

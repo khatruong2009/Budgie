@@ -8,7 +8,7 @@ import Testing
 /// cursor). The clock is 2026-09-28 09:15:30.250125 New York.
 @Suite("Recurring form rules")
 struct RecurringFormTests {
-    let calendar = DartCalendar(timeZone: TimeZone(identifier: "America/New_York")!)
+    let calendar = DartCalendar(timeZone: newYorkZone)
     var now: DartDateTime { calendar.date(2026, 9, 28, 9, 15, 30, 250, 125) }
     let en = Locale(identifier: "en_US")
 
@@ -174,15 +174,11 @@ struct RecurringFormTests {
 
 @Suite("Recurring edit cursor (approved divergence Q2)")
 struct RecurringEditCursorTests {
-    let calendar = DartCalendar(timeZone: TimeZone(identifier: "America/New_York")!)
+    let calendar = DartCalendar(timeZone: newYorkZone)
     var now: DartDateTime { calendar.date(2026, 9, 28, 9, 15, 30, 250, 125) }
 
     func data() -> FinancialData {
-        let now = self.now
-        return FinancialData.load(
-            FinancialSnapshot(revision: 1, sections: JSONObject()), preferences: InMemoryPreferences(), calendar: calendar,
-            now: { now }, newID: { UUID().uuidString.lowercased() }
-        ).data
+        loadFinancialData(JSONObject(), calendar: calendar, now: now).data
     }
 
     func edit(_ t: RecurringTemplate, pattern: RecurrencePattern? = nil, start: DartDateTime? = nil, day: Int? = nil,

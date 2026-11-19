@@ -2,11 +2,9 @@ import BudgieCore
 import SwiftUI
 
 /// Add / edit savings goal dialog (`_GoalFormDialog`,
-/// savings_goals_page.dart:1026-1216): Goal name, Target amount, Saved so
-/// far (edit only) and the target date tile, then Cancel and Add / Update.
-/// Validation runs on submit and shows every error at once.
+/// savings_goals_page.dart:1026-1216). Validation runs on submit and shows
+/// every error at once.
 ///
-/// Amounts parse with the money format's separators (`AmountInput`, D6).
 /// An edit prefills both amounts rounded to cents (locale-grouped, like the
 /// budget limit sheet), and a field left as prefilled keeps the stored
 /// value exactly. The date keeps the stored value (edit) or six months from
@@ -65,10 +63,9 @@ struct GoalFormDialog: View {
     }
 
     var body: some View {
-        let amountSymbol = AmountInput.currencySymbolName(formatter)
         VStack(spacing: 0) {
             DialogTitle(text: goal == nil ? "Add savings goal" : "Edit savings goal")
-            DialogScroll { fields(amountSymbol: amountSymbol) }
+            DialogScroll { fields }
                 .padding(.top, 20)
             DialogButtons(
                 cancelId: "goals.form.cancel", submitTitle: goal == nil ? "Add" : "Update", submitId: "goals.form.submit",
@@ -84,13 +81,13 @@ struct GoalFormDialog: View {
         .sensoryFeedback(.selection, trigger: picks)
     }
 
-    private func fields(amountSymbol: String) -> some View {
+    private var fields: some View {
         VStack(spacing: 12) {
             BudgieField(
                 title: "Goal name", text: $name, prompt: "Vacation, emergency fund, new car", symbol: "flag.fill",
                 capitalization: .sentences, error: nameError)
             BudgieField(
-                title: "Target amount", text: $targetText, prompt: "0.00", symbol: amountSymbol, keyboard: .decimalPad,
+                title: "Target amount", text: $targetText, prompt: "0.00", symbol: AmountInput.currencySymbolName(formatter), keyboard: .decimalPad,
                 error: targetError)
             if goal != nil {
                 BudgieField(
@@ -147,6 +144,6 @@ struct GoalFormDialog: View {
     /// The stored amount while the field reads its prefill, else the parse.
     private func amount(_ text: String, prefill: String, stored: Double?) -> Double? {
         if let stored, text == prefill { return stored }
-        return AmountInput.parse(text, formatter: formatter)
+        return AmountParser.parse(text, formatter: formatter)
     }
 }

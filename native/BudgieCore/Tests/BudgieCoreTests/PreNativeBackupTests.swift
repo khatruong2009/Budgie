@@ -56,15 +56,13 @@ struct PreNativeBackupTests {
 
         // The Swift app commits; its own write does not trigger a new copy.
         let prefs = InMemoryPreferences()
-        let swiftStore = FinancialStore(
-            fileSystem: DirectoryFileSystem(directory: store), preferences: prefs, protectedData: AlwaysAvailable(), clock: fixedNow)
+        let swiftStore = testStore(DirectoryFileSystem(directory: store), preferences: prefs)
         try await swiftStore.updateSections([("probe", .int(1))])
         let last = prefs.string(PreferenceKey.lastCommittedChecksum)
         guard case .alreadyCurrent = try backup.ensure(lastCommittedChecksum: last) else { Issue.record(); return }
 
         // Someone else (a reinstalled Flutter build) writes: a new copy.
-        let other = FinancialStore(
-            fileSystem: DirectoryFileSystem(directory: store), preferences: InMemoryPreferences(), protectedData: AlwaysAvailable(), clock: fixedNow)
+        let other = testStore(DirectoryFileSystem(directory: store))
         try await other.updateSections([("probe", .int(2))])
         guard case .created = try backup.ensure(lastCommittedChecksum: last) else { Issue.record(); return }
         #expect(try backup.completeSnapshots().count == 2)

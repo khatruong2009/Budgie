@@ -57,7 +57,7 @@ enum VoiceTestHooks {
 }
 
 /// Which of the two OpenAI calls a request is.
-enum VoiceStubEndpoint: Equatable, Sendable {
+enum VoiceStubEndpoint: Hashable, Sendable {
     case transcribe, chat
 
     /// Matches `OpenAIVoiceClient`'s two URLs; anything else is nil.
@@ -171,20 +171,14 @@ struct VoiceStubPlan: Equatable, Sendable {
 /// A plan being consumed: the next answer per endpoint, the last repeating.
 struct VoiceStubQueue: Sendable {
     let plan: VoiceStubPlan
-    private var transcribeCount = 0
-    private var chatCount = 0
+    private var counts: [VoiceStubEndpoint: Int] = [:]
 
     init(plan: VoiceStubPlan) { self.plan = plan }
 
     mutating func next(for endpoint: VoiceStubEndpoint) -> VoiceStubResponse? {
-        switch endpoint {
-        case .transcribe:
-            defer { transcribeCount += 1 }
-            return plan.transcribe.isEmpty ? nil : plan.transcribe[min(transcribeCount, plan.transcribe.count - 1)]
-        case .chat:
-            defer { chatCount += 1 }
-            return plan.chat.isEmpty ? nil : plan.chat[min(chatCount, plan.chat.count - 1)]
-        }
+        let list = endpoint == .transcribe ? plan.transcribe : plan.chat
+        defer { counts[endpoint, default: 0] += 1 }
+        return list.isEmpty ? nil : list[min(counts[endpoint, default: 0], list.count - 1)]
     }
 }
 
@@ -233,15 +227,9 @@ final class VoiceStubProtocol: URLProtocol, @unchecked Sendable {
 
     private func deliver(url: URL?, status: Int, data: Data, failure: VoiceStubResponse.Failure?) {
         guard !cancelled.withLock({ $0 }) else { return }
-        switch failure {
-        case .timeout?:
-            client?.urlProtocol(self, didFailWithError: URLError(.timedOut))
+        if let failure {
+            client?.urlProtocol(self, didFailWithError: URLError(failure == .timeout ? .timedOut : .notConnectedToInternet))
             return
-        case .offline?:
-            client?.urlProtocol(self, didFailWithError: URLError(.notConnectedToInternet))
-            return
-        case nil:
-            break
         }
         let http = HTTPURLResponse(
             url: url ?? URL(fileURLWithPath: "/"), statusCode: status, httpVersion: "HTTP/1.1",

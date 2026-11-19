@@ -107,12 +107,10 @@ private struct DonutRing: View {
         DonutArcs(geometry: geometry, colors: colors, selectedIndex: selectedIndex, sweep: reduceMotion ? 1 : sweep)
             .onAppear {
                 guard sweep < 1 else { return }
-                if reduceMotion {
-                    sweep = 1
-                } else {
-                    let (x1, y1, x2, y2) = DonutGeometry.sweepCurve
-                    withAnimation(.timingCurve(x1, y1, x2, y2, duration: DonutGeometry.sweepDuration)) { sweep = 1 }
-                }
+                let (x1, y1, x2, y2) = DonutGeometry.sweepCurve
+                Motion.animate(
+                    .timingCurve(x1, y1, x2, y2, duration: DonutGeometry.sweepDuration), reduceMotion: reduceMotion
+                ) { sweep = 1 }
             }
     }
 }

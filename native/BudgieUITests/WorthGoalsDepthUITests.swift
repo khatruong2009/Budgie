@@ -44,20 +44,10 @@ final class WorthGoalsDepthUITests: XCTestCase {
 
     private func account(_ name: String) -> XCUIElement { app.element("worth.account.\(name)") }
 
-    /// Scrolls until `element` is wholly above the floating tab bar (a long
-    /// press behind it never raises the context menu).
-    private func revealAboveTabBar(_ element: XCUIElement) {
-        let tabBar = app.tabBars.firstMatch
-        for _ in 0..<3 where element.frame.maxY > tabBar.frame.minY {
-            app.swipeUp()
-        }
-        XCTAssertLessThanOrEqual(element.frame.maxY, tabBar.frame.minY, "\(element) is behind the tab bar")
-    }
-
     /// Opens a row's context menu and picks `item` ("View History",
     /// "Delete Account").
     private func choose(_ item: String, on row: XCUIElement) {
-        revealAboveTabBar(row)
+        app.revealAboveTabBar(row)
         row.press(forDuration: 1.0)
         let action = app.buttons[item]
         XCTAssertTrue(action.waitForExistence(timeout: 5), "\(item) in the context menu")
@@ -80,21 +70,11 @@ final class WorthGoalsDepthUITests: XCTestCase {
         if Calendar.current.component(.year, from: month) != Calendar.current.component(.year, from: Date()) {
             editor.buttons["Previous year"].tapSettled()
         }
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "LLLL yyyy"
-        let cell = editor.buttons[formatter.string(from: month)]
-        XCTAssertTrue(cell.waitForExistence(timeout: 5), "the month grid offers \(formatter.string(from: month))")
+        let name = monthName("LLLL yyyy", monthsAgo: monthsAgo)
+        let cell = editor.buttons[name]
+        XCTAssertTrue(cell.waitForExistence(timeout: 5), "the month grid offers \(name)")
         cell.tapSettled()
         XCTAssertTrue(cell.waitForNonExistence(timeout: 5), "the grid closed after a pick")
-    }
-
-    private func monthLabel(monthsAgo: Int, _ pattern: String = "LLLL yyyy") -> String {
-        let month = Calendar.current.date(byAdding: .month, value: -monthsAgo, to: Date()) ?? Date()
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = pattern
-        return formatter.string(from: month)
     }
 
     /// Deletes this run's accounts from both tabs, through the context menu.
@@ -184,14 +164,14 @@ final class WorthGoalsDepthUITests: XCTestCase {
         app.buttons["worth.empty.add"].tapSettled()
         fillAccount(name: name, balanceLabel: "Asset balance", balance: "500")
         pickEditorMonth(monthsAgo: 3)
-        XCTAssertTrue(app.staticTexts[monthLabel(monthsAgo: 3)].exists, "the editor banner names the month")
+        XCTAssertTrue(app.staticTexts[monthName("LLLL yyyy", monthsAgo: 3)].exists, "the editor banner names the month")
         app.buttons["worth.editor.save"].tapSettled()
         XCTAssertTrue(account(name).waitForExistence(timeout: 10))
         XCTAssertEqual(account(name).label, "\(name), $500", "the balance carries forward to this month")
 
         // The month strip has this month and that month; this month is selected.
-        let now = app.buttons[monthLabel(monthsAgo: 0)]
-        let past = app.buttons[monthLabel(monthsAgo: 3)]
+        let now = app.buttons[monthName("LLLL yyyy", monthsAgo: 0)]
+        let past = app.buttons[monthName("LLLL yyyy", monthsAgo: 3)]
         XCTAssertTrue(now.waitForExistence(timeout: 5), "a chip for this month")
         XCTAssertTrue(past.exists, "a chip for the past month")
         XCTAssertTrue(now.isSelected)
@@ -199,14 +179,14 @@ final class WorthGoalsDepthUITests: XCTestCase {
         XCTAssertTrue(past.waitUntil("isSelected == true"), "the past month is selected")
         XCTAssertFalse(now.isSelected)
         XCTAssertTrue(
-            app.staticTexts["TOTAL \u{00B7} \(monthLabel(monthsAgo: 3).uppercased())"].waitForExistence(timeout: 5),
+            app.staticTexts["TOTAL \u{00B7} \(monthName("LLLL yyyy", monthsAgo: 3).uppercased())"].waitForExistence(timeout: 5),
             "the hero names the month")
         XCTAssertEqual(app.element("worth.hero").label, "Net worth $500.00")
 
         // A second balance, in this month: edit the row from this month's chip.
         now.tapSettled()
         XCTAssertTrue(now.waitUntil("isSelected == true"))
-        revealAboveTabBar(account(name))
+        app.revealAboveTabBar(account(name))
         account(name).tapSettled()
         XCTAssertTrue(app.element("worth.editor").waitForExistence(timeout: 5))
         let balance = app.textFields["Asset balance"]

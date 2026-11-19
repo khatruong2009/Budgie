@@ -35,9 +35,7 @@ struct DartSemanticsFixTests {
              {"id":" ﻿ x","type":"expense","description":"b","amount":1.0,"category":"General","date":"2026-09-01T00:00:00.000","createdAt":"2026-09-01T00:00:00.000","updatedAt":"2026-09-01T00:00:00.000"}]}
             """#).objectValue!
         var ids = ["fresh-1", "fresh-2"]
-        let result = FinancialData.load(
-            FinancialSnapshot(revision: 1, sections: sections), preferences: InMemoryPreferences([:]), calendar: calendar,
-            now: { now }, newID: { ids.removeFirst() })
+        let result = loadFinancialData(sections, calendar: calendar, now: now, newID: { ids.removeFirst() })
         let transactions = result.data.transactions
         #expect(transactions.map(\.id) == ["fresh-2", " \u{FEFF}\u{A0}x"])
         // Categories are seeded as well (no stored section).

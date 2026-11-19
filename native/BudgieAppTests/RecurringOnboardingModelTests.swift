@@ -3,51 +3,12 @@ import XCTest
 
 @testable import Runner
 
-/// A full `AppModel` bootstrap against a scratch Application Support
-/// directory and a scratch preferences suite (never the host app's data).
-@MainActor
-private final class ScratchApp {
-    let directory: URL
-    private let scratchPreferences: ScratchPreferences
-    var suite: String { scratchPreferences.suite }
-    var defaults: UserDefaults { scratchPreferences.defaults }
-    var preferences: UserDefaultsPreferences { scratchPreferences.preferences }
-
-    init() throws {
-        directory = TestDirectory.make("budgie-model")
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        scratchPreferences = ScratchPreferences("model", onboardingCompleted: false)
-    }
-
-    func makeModel() -> AppModel { AppModel(applicationSupport: directory, preferences: preferences) }
-
-    var storeDirectory: URL { directory.appendingPathComponent(StoreFile.directoryName, isDirectory: true) }
-
-    func store() -> FinancialStore {
-        scratchStore(storeDirectory: storeDirectory, preferences: preferences)
-    }
-
-    /// Writes `sections` as an existing store (before the model starts).
-    func seed(_ sections: JSONObject) async throws {
-        try FileManager.default.createDirectory(at: storeDirectory, withIntermediateDirectories: true)
-        _ = try await store().replace(sections: sections)
-    }
-
-    /// What is on disk now, read by a fresh store.
-    func stored() async throws -> FinancialSnapshot { try await scratchStored(storeDirectory: storeDirectory, preferences: preferences) }
-
-    func remove() {
-        scratchPreferences.remove()
-        try? FileManager.default.removeItem(at: directory)
-    }
-}
-
 @MainActor
 final class OnboardingModelTests: XCTestCase {
-    private var scratch: ScratchApp!
+    private var scratch: Scratch!
 
     override func setUp() async throws {
-        scratch = try ScratchApp()
+        scratch = try Scratch(onboardingCompleted: false)
     }
 
     override func tearDown() async throws {
@@ -114,12 +75,10 @@ final class OnboardingModelTests: XCTestCase {
 
 @MainActor
 final class RecurringModelTests: XCTestCase {
-    private var scratch: ScratchApp!
+    private var scratch: Scratch!
 
     override func setUp() async throws {
-        scratch = try ScratchApp()
-        // Past the tour, like every other launch in these tests.
-        OnboardingFlag.markCompleted(scratch.preferences)
+        scratch = try Scratch()
     }
 
     override func tearDown() async throws {
@@ -200,7 +159,7 @@ final class RecurringModelTests: XCTestCase {
 
     /// A failed write stays unsaved: a later "Generate Due Transactions"
     /// with nothing due retries it and reports success only once it is on
-    /// disk (it used to show the success toast under the unsaved banner).
+    /// disk.
     func testGenerateDueWithNothingDueRetriesAnUnsavedWrite() async throws {
         _ = try await seedPausedWeekly()
         let model = scratch.makeModel()
@@ -209,10 +168,7 @@ final class RecurringModelTests: XCTestCase {
         XCTAssertTrue(resumed)
 
         // The store directory refuses new files: every write fails.
-        let directory = scratch.storeDirectory.path
-        try FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: directory)
-        var restored = false
-        defer { if !restored { try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: directory) } }
+        let unlock = try scratch.lockStoreDirectory()
 
         let failed = await model.generateDueNow()
         XCTAssertEqual(failed, AppModel.DueGeneration(generated: 1, saved: false))
@@ -224,8 +180,7 @@ final class RecurringModelTests: XCTestCase {
         XCTAssertEqual(stillFailing.toast.message, Toast.saveFailed.message)
         XCTAssertTrue(model.hasUnsavedChanges)
 
-        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: directory)
-        restored = true
+        unlock()
         let healed = await model.generateDueNow()
         XCTAssertEqual(healed, AppModel.DueGeneration(generated: 0, saved: true))
         XCTAssertEqual(healed.toast.message, Toast.dueGenerated.message)

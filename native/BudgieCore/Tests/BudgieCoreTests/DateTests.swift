@@ -21,8 +21,8 @@ let logicZones = fixtureZones + beirutZones
 /// without one (Kolkata with a half-hour offset, UTC).
 let dstFixtureZones = ["America/New_York", "America/Santiago", "Australia/Lord_Howe", "Asia/Kolkata", "UTC"]
 
-func zoneDirectory(_ zone: String) -> String {
-    Fixtures.zonePath("logic", zone)
+private func datesFixture(_ zone: String) throws -> [String: Any] {
+    try Fixtures.jsonObject(Fixtures.zonePath("logic", zone) + "/dates.json") as! [String: Any]
 }
 
 func expectDart(_ actual: DartDateTime, _ expected: [String: Any], _ context: String) {
@@ -37,7 +37,7 @@ struct DateTests {
     @Test("DateTime.parse vectors", arguments: logicZones)
     func parse(zone: String) throws {
         let tz = TimeZone(identifier: zone)!
-        let fixture = try Fixtures.jsonObject(zoneDirectory(zone) + "/dates.json") as! [String: Any]
+        let fixture = try datesFixture(zone)
         for vector in fixture["parse"] as! [[String: Any]] {
             let input = vector["input"] as! String
             if let result = vector["result"] as? [String: Any] {
@@ -53,7 +53,7 @@ struct DateTests {
     func constructed(zone: String) throws {
         let tz = TimeZone(identifier: zone)!
         let cal = DartCalendar(timeZone: tz)
-        let fixture = try Fixtures.jsonObject(zoneDirectory(zone) + "/dates.json") as! [String: Any]
+        let fixture = try datesFixture(zone)
         for vector in fixture["constructed"] as! [[String: Any]] {
             let label = vector["label"] as! String
             let actual: DartDateTime
@@ -76,7 +76,7 @@ struct DateTests {
     func arithmetic(zone: String) throws {
         let tz = TimeZone(identifier: zone)!
         let cal = DartCalendar(timeZone: tz)
-        let fixture = try Fixtures.jsonObject(zoneDirectory(zone) + "/dates.json") as! [String: Any]
+        let fixture = try datesFixture(zone)
         for vector in fixture["arithmetic"] as! [[String: Any]] {
             let start = vector["start"] as! [String: Any]
             let base = DartDateTime(
@@ -100,7 +100,7 @@ struct DateTests {
     func keys(zone: String) throws {
         let tz = TimeZone(identifier: zone)!
         let cal = DartCalendar(timeZone: tz)
-        let fixture = try Fixtures.jsonObject(zoneDirectory(zone) + "/dates.json") as! [String: Any]
+        let fixture = try datesFixture(zone)
         for vector in fixture["keys"] as! [[String: Any]] {
             let d = vector["date"] as! [String: Any]
             let value = DartDateTime(microsecondsSinceEpoch: (d["us"] as! NSNumber).int64Value, timeZone: tz)
@@ -112,7 +112,7 @@ struct DateTests {
 
     @Test("every stored date string in the typical store round-trips through parse/format")
     func storedStringsRoundTrip() throws {
-        let tz = TimeZone(identifier: "America/New_York")!
+        let tz = newYorkZone
         let text = try String(contentsOf: Fixtures.url("store/typical/input/financial_store_v2.json"), encoding: .utf8)
         let regex = try NSRegularExpression(pattern: #""(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}(\d{3})?)""#)
         let matches = regex.matches(in: text, range: NSRange(text.startIndex..., in: text))

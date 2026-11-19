@@ -119,8 +119,8 @@ private struct GrowthChart: View {
                 .id(values.count)
                 .motion(.linear(duration: 0.15), value: TrendValues(values: values))
             if let shown {
-                HoverCard(point: points[shown], formatter: formatter)
-                    .modifier(HoverPlacement(alignment: NetWorthPresentation.hoverAlignment(index: shown, values: values)))
+                let align = NetWorthPresentation.hoverAlignment(index: shown, values: values)
+                FractionalAlign(x: align.x, y: align.y) { HoverCard(point: points[shown], formatter: formatter) }
                     .allowsHitTesting(false)
             }
         }
@@ -212,13 +212,7 @@ private struct GrowthPlot: View, Animatable {
             }
             context.stroke(grid, with: .color(BudgieColor.hairline), lineWidth: 1)
 
-            var curve = Path()
-            curve.move(to: first)
-            for (index, controls) in CashFlowMath.trendControlPoints(spots, smoothness: NetWorthPresentation.curveSmoothness)
-                .enumerated()
-            {
-                curve.addCurve(to: spots[index + 1], control1: controls.0, control2: controls.1)
-            }
+            let curve = Path(smoothCurveThrough: spots, smoothness: NetWorthPresentation.curveSmoothness)
             var area = curve
             area.addLine(to: CGPoint(x: last.x, y: bottom))
             area.addLine(to: CGPoint(x: first.x, y: bottom))
@@ -238,11 +232,8 @@ private struct GrowthPlot: View, Animatable {
                 let center = spots[index]
                 // `FlDotCirclePainter`: the stroke circle at radius 5 + 3/2.
                 context.stroke(
-                    Path(ellipseIn: CGRect(x: center.x - 6.5, y: center.y - 6.5, width: 13, height: 13)),
-                    with: .color(green.opacity(white ? 0.5 : 0.25)), lineWidth: 3)
-                context.fill(
-                    Path(ellipseIn: CGRect(x: center.x - 5, y: center.y - 5, width: 10, height: 10)),
-                    with: .color(white ? BudgieColor.trendDot : green))
+                    Path(circleAt: center, radius: 6.5), with: .color(green.opacity(white ? 0.5 : 0.25)), lineWidth: 3)
+                context.fill(Path(circleAt: center, radius: 5), with: .color(white ? BudgieColor.textPrimary : green))
             }
         }
         .padding(-Self.overhang)
@@ -253,14 +244,6 @@ private struct GrowthPlot: View, Animatable {
 /// Places the hover card like Flutter's `Align(Alignment(x, y))` inside the
 /// chart box: the card's own size (at most 200 wide) positioned so that -1
 /// / 1 put it flush with an edge.
-private struct HoverPlacement: ViewModifier {
-    let alignment: (x: Double, y: Double, useBottom: Bool)
-
-    func body(content: Content) -> some View {
-        FractionalAlign(x: alignment.x, y: alignment.y) { content }
-    }
-}
-
 private struct FractionalAlign: Layout {
     let x: Double
     let y: Double
@@ -288,8 +271,7 @@ private struct HoverCard: View {
     let point: NetWorthHistoryPoint
     let formatter: MoneyFormatter
 
-    /// `rowSubtitle` at 11: w600 (title) and w400 (rows).
-    private static let title = TextSpec(face: .gabaritoSemiBold, size: 11, height: 1.25, relativeTo: .caption2)
+    /// `rowSubtitle` at 11, w400.
     private static let row = TextSpec(face: .gabaritoRegular, size: 11, height: 1.25, relativeTo: .caption2)
     /// `monoLabel` at 9.
     private static let snapshot = TextSpec(face: .monoMedium, size: 9, tracking: 1, relativeTo: .caption2)
@@ -297,7 +279,7 @@ private struct HoverCard: View {
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: Metrics.radiusL, style: .continuous)
         VStack(alignment: .leading, spacing: 0) {
-            Text(NetWorthText.hoverTitle(point)).textStyle(Self.title).foregroundStyle(BudgieColor.textSecondary)
+            Text(NetWorthText.hoverTitle(point)).textStyle(AccountHistoryText.tooltipDate).foregroundStyle(BudgieColor.textSecondary)
             Text(formatter.formatSigned(point.netWorth))
                 .textStyle(.amount)
                 .foregroundStyle(point.netWorth >= 0 ? BudgieColor.income : BudgieColor.danger)
@@ -337,12 +319,10 @@ private struct HoverCard: View {
 // MARK: - Scrub gesture
 
 /// fl_chart's `longPressDuration: 150ms` scrub: `onChanged` with the touch's
-/// x in the chart from the moment the press is recognised (Flutter selects
-/// at long-press start, before any movement), `onEnded` when it lifts or is
-/// cancelled. On iOS 18+ a UIKit long press (which any scroll made before
-/// the 150ms wins over); iOS 17 keeps a SwiftUI long press sequenced before
-/// a drag, and takes the location at recognition from a zero-distance drag
-/// running alongside (the sequenced drag has none until the finger moves).
+/// x from the moment the press is recognised (Flutter selects at long-press
+/// start, before any movement), `onEnded` when it lifts or is cancelled. iOS 17
+/// takes the location at recognition from a zero-distance drag running
+/// alongside (the sequenced drag has none until the finger moves).
 private struct ScrubGesture: ViewModifier {
     let onChanged: (CGFloat) -> Void
     let onEnded: () -> Void

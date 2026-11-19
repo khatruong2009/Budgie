@@ -203,7 +203,7 @@ struct InsightEngineDetailTests {
     /// than 8x fails even when the absolute bound is noisy.
     @Test("10k rows: every rule within budget, growing linearly")
     func large() {
-        let calendar = DartCalendar(timeZone: TimeZone(identifier: "America/New_York")!)
+        let calendar = DartCalendar(timeZone: newYorkZone)
         let now = calendar.date(2026, 9, 28, 9, 15)
         let rows = generatedFlowRows(seed: 777, count: 10_000, startYear: 2022, months: 60).map {
             TransactionRecord.parse($0, calendar: calendar, newID: { "unused" })!
@@ -236,7 +236,7 @@ struct InsightEngineDetailTests {
 /// fixture, prefs.json, covers what Flutter can load without throwing).
 @Suite("Insights: preferences")
 struct InsightPreferencesTests {
-    let zone = TimeZone(identifier: "America/New_York")!
+    let zone = newYorkZone
     var calendar: DartCalendar { DartCalendar(timeZone: zone) }
 
     func load(_ dismissed: PreferenceValue?, _ snoozed: PreferenceValue?) -> InsightPreferences {

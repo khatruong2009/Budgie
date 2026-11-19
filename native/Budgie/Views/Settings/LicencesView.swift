@@ -28,18 +28,13 @@ struct LicencesView: View {
                 }
             }
             .padding(EdgeInsets(top: Metrics.spacingM, leading: Metrics.pageHorizontal, bottom: Metrics.spacingXL, trailing: Metrics.pageHorizontal))
-            .frame(maxWidth: Metrics.maxContentWidth)
-            .frame(maxWidth: .infinity)
+            .budgieContentColumn()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(BudgieColor.background)
+        .budgiePageBackground()
         .budgiePushedTitle("Licences", singleLine: true)
     }
 
     static func text(_ name: String) -> String {
-        guard let url = Bundle.main.url(forResource: name, withExtension: "txt"),
-            let text = try? String(contentsOf: url, encoding: .utf8)
-        else { return "" }
-        return text
+        Bundle.main.url(forResource: name, withExtension: "txt").flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? ""
     }
 }

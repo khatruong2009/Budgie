@@ -13,24 +13,18 @@ import XCTest
 /// ended.
 @MainActor
 final class InsightModelTests: XCTestCase {
-    private var directory: URL!
-    private var scratchPreferences: ScratchPreferences!
-    private var preferences: UserDefaultsPreferences { scratchPreferences.preferences }
+    private var scratch: Scratch!
+    private var preferences: UserDefaultsPreferences { scratch.preferences }
 
     override func setUp() async throws {
-        directory = TestDirectory.make("budgie-insights")
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        scratchPreferences = ScratchPreferences("insights", onboardingCompleted: true)
+        scratch = try Scratch()
     }
 
     override func tearDown() async throws {
-        scratchPreferences.remove()
-        try? FileManager.default.removeItem(at: directory)
+        scratch.remove()
     }
 
     private let calendar = DartCalendar(timeZone: .autoupdatingCurrent)
-
-    private func makeModel() -> AppModel { AppModel(applicationSupport: directory, preferences: preferences) }
 
     /// Noon today: in the current month whatever the clock says.
     private var today: DartDateTime {
@@ -59,10 +53,6 @@ final class InsightModelTests: XCTestCase {
     private func seed(
         duplicates: Int = 2, previousMonthDuplicates: Bool = false, filler: Int = 0, goals: [JSONValue] = []
     ) async throws {
-        let storeDirectory = directory.appendingPathComponent(StoreFile.directoryName, isDirectory: true)
-        try FileManager.default.createDirectory(at: storeDirectory, withIntermediateDirectories: true)
-        let store = FinancialStore(
-            fileSystem: DirectoryFileSystem(directory: storeDirectory), preferences: preferences, protectedData: AlwaysAvailable())
         var rows = (0..<duplicates).map { row("c\($0)", "Corner Cafe", 4.5, "Eating Out") }
         rows.append(row("g", "Market", 150, "Groceries"))
         if previousMonthDuplicates {
@@ -71,7 +61,7 @@ final class InsightModelTests: XCTestCase {
         rows += (0..<filler).map {
             row("f\($0)", "Filler \($0)", Double($0 % 500) + 1, "Filler", date: calendar.date(2020, 1, 1 + $0 % 28, 12))
         }
-        _ = try await store.replace(sections: JSONObject(ordered: [
+        try await scratch.seed(JSONObject(ordered: [
             (Section.transactions, .array(rows)),
             (Section.categoryBudgetLimits, .object(JSONObject(ordered: [("Groceries", .double(100))]))),
             (Section.savingsGoals, .array(goals)),
@@ -106,7 +96,7 @@ final class InsightModelTests: XCTestCase {
 
     func testTheFirstCardsAreReadyWithTheData() async throws {
         try await seed()
-        let model = makeModel()
+        let model = scratch.makeModel()
         await model.start()
         XCTAssertEqual(model.phase, .ready)
         XCTAssertEqual(model.insights.map(\.id), [paceID, duplicateID], "urgent first, then warning")
@@ -118,7 +108,7 @@ final class InsightModelTests: XCTestCase {
     /// string list (never the store), and later launches keep it hidden.
     func testDismissHidesTheCardForGood() async throws {
         try await seed()
-        let model = makeModel()
+        let model = scratch.makeModel()
         await model.start()
         let revision = try await storeRevision()
 
@@ -131,7 +121,7 @@ final class InsightModelTests: XCTestCase {
         let after = try await storeRevision()
         XCTAssertEqual(after, revision, "preferences only, no store write")
 
-        let relaunched = makeModel()
+        let relaunched = scratch.makeModel()
         await relaunched.start()
         XCTAssertEqual(relaunched.insights.map(\.id), [paceID])
         XCTAssertEqual(relaunched.insightPreferences.dismissed, [duplicateID])
@@ -142,7 +132,7 @@ final class InsightModelTests: XCTestCase {
     /// once that time is no longer after `now`.
     func testSnoozeHidesForThirtyDays() async throws {
         try await seed()
-        let model = makeModel()
+        let model = scratch.makeModel()
         await model.start()
         let before = calendar.now()
         model.snoozeInsight(id: paceID)
@@ -161,7 +151,7 @@ final class InsightModelTests: XCTestCase {
         XCTAssertTrue(loaded.excludedIDs(now: until.adding(days: -1)).contains(paceID))
         XCTAssertFalse(loaded.excludedIDs(now: until).contains(paceID), "back once the time is not after now")
 
-        let relaunched = makeModel()
+        let relaunched = scratch.makeModel()
         await relaunched.start()
         XCTAssertEqual(relaunched.insights.map(\.id), [duplicateID])
     }
@@ -174,7 +164,7 @@ final class InsightModelTests: XCTestCase {
         preferences.set(
             .string("{\"\(paceID)\":\"\(now.adding(days: -1).toIso8601String())\",\"\(duplicateID)\":\"\(now.adding(days: 29).toIso8601String())\"}"),
             forKey: PreferenceKey.localInsightsSnoozed)
-        let model = makeModel()
+        let model = scratch.makeModel()
         await model.start()
         XCTAssertEqual(model.insights.map(\.id), [paceID])
     }
@@ -183,7 +173,7 @@ final class InsightModelTests: XCTestCase {
     /// one dismissal hides both.
     func testRepeatedIDsShowTwiceAndGoTogether() async throws {
         try await seed(duplicates: 3)
-        let model = makeModel()
+        let model = scratch.makeModel()
         await model.start()
         XCTAssertEqual(model.insights.map(\.id), [paceID, duplicateID, duplicateID])
         model.dismissInsight(id: duplicateID)
@@ -195,7 +185,7 @@ final class InsightModelTests: XCTestCase {
     /// Adding rows, a budget and moving the selected month recompute the
     /// cards; a dismissed card is replaced by the next candidate.
     func testDataAndMonthChangesRecompute() async throws {
-        let model = makeModel()
+        let model = scratch.makeModel()
         await model.start()
         XCTAssertEqual(model.insights, [])
 
@@ -242,7 +232,7 @@ final class InsightModelTests: XCTestCase {
     /// would show until the newest result replaced it.
     func testAResultForSupersededInputsIsDropped() async throws {
         try await seed(previousMonthDuplicates: true, filler: 20_000)
-        let model = makeModel()
+        let model = scratch.makeModel()
         let clock = ContinuousClock()
         let launch = await clock.measure { await model.start() }
         XCTAssertEqual(model.insights.map(\.id), [paceID, duplicateID])
@@ -269,7 +259,7 @@ final class InsightModelTests: XCTestCase {
         let goal = SavingsGoalRecord.make(
             id: "trip", name: "Trip", targetAmount: 1000, targetDate: today.adding(days: 60), now: today.adding(days: -60))
         try await seed(goals: [.object(goal.raw)])
-        let model = makeModel()
+        let model = scratch.makeModel()
         await model.start()
         XCTAssertEqual(model.insights.map(\.id), [paceID, duplicateID, "goal-behind:trip"])
 
@@ -288,7 +278,7 @@ final class InsightModelTests: XCTestCase {
         try await seed()
         let until = calendar.now().adding(microseconds: 1_500_000)
         preferences.set(.string("{\"\(paceID)\":\"\(until.toIso8601String())\"}"), forKey: PreferenceKey.localInsightsSnoozed)
-        let model = makeModel()
+        let model = scratch.makeModel()
         await model.start()
         XCTAssertEqual(model.insights.map(\.id), [duplicateID])
 
@@ -300,9 +290,6 @@ final class InsightModelTests: XCTestCase {
     }
 
     private func storeRevision() async throws -> Int64 {
-        let storeDirectory = directory.appendingPathComponent(StoreFile.directoryName, isDirectory: true)
-        let store = FinancialStore(
-            fileSystem: DirectoryFileSystem(directory: storeDirectory), preferences: preferences, protectedData: AlwaysAvailable())
-        return try await store.read().revision
+        try await scratch.stored().revision
     }
 }

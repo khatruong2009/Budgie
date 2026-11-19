@@ -6,11 +6,6 @@ import SwiftUI
 /// redesign tokens (D1, D15): one `RecurringCard` per template, active ones
 /// first, then paused ones, each in stored order; Flutter's empty state; the
 /// bar's refresh runs "Generate Due Transactions" and "+" opens the form.
-///
-/// Differences from Flutter (PARITY_GAPS): the "+" add button, pause /
-/// resume and the Paused state (approved MVP behaviours); the empty state
-/// also offers "Add Recurring"; the generate and delete writes are awaited
-/// and a failed write shows the save-failed toast instead of Flutter's.
 struct RecurringView: View {
     @Environment(AppModel.self) private var model
 
@@ -82,16 +77,13 @@ struct RecurringView: View {
                 Task { await delete(template) }
             }
         } message: { template in
-            Text(Self.deleteMessage(template.description))
+            // `_deleteRecurring`'s content (recurring_transactions_page.dart:170-176).
+            Text(
+                "This will stop generating future transactions for \"\(template.description)\". "
+                    + "Previously generated transactions will not be affected.")
         }
         .sensoryFeedback(.impact(weight: .light), trigger: generateTaps)
         .sensoryFeedback(.impact(weight: .heavy), trigger: deleteConfirms)
-    }
-
-    /// `_deleteRecurring`'s content (recurring_transactions_page.dart:170-176).
-    static func deleteMessage(_ description: String) -> String {
-        "This will stop generating future transactions for \"\(description)\". "
-            + "Previously generated transactions will not be affected."
     }
 
     // MARK: - Content
@@ -108,8 +100,7 @@ struct RecurringView: View {
                 }
             }
             .padding(EdgeInsets(top: Metrics.spacingM, leading: Metrics.pageHorizontal, bottom: Metrics.spacingXL, trailing: Metrics.pageHorizontal))
-            .frame(maxWidth: Metrics.maxContentWidth)
-            .frame(maxWidth: .infinity)
+            .budgieContentColumn()
         }
         .accessibilityIdentifier("recurring.list")
     }
@@ -146,18 +137,14 @@ struct RecurringView: View {
     }
 
     private func setActive(_ template: RecurringTemplate, _ active: Bool) async {
-        guard hasTemplate(template.id) else { return }
+        guard model.hasTemplate(template.id) else { return }
         if !(await model.setTemplateActive(id: template.id, active)) { model.showToast(.saveFailed) }
     }
 
     private func delete(_ template: RecurringTemplate) async {
         // Already gone (deleted elsewhere): nothing failed.
-        guard hasTemplate(template.id) else { return }
+        guard model.hasTemplate(template.id) else { return }
         let saved = await model.deleteTemplate(id: template.id)
         model.showToast(saved ? .recurringDeleted : .saveFailed)
-    }
-
-    private func hasTemplate(_ id: String) -> Bool {
-        model.data?.templates.contains { $0.id == id } ?? false
     }
 }

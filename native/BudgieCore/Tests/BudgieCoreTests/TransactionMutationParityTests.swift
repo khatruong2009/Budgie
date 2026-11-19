@@ -7,21 +7,6 @@ import Testing
 /// midnight (Santiago) and of 30 minutes (Lord Howe).
 private let transactionZones = ["America/New_York", "America/Santiago", "Australia/Lord_Howe"]
 
-private func fixture(_ zone: String, _ file: String) throws -> J {
-    try Fixtures.json("\(Fixtures.zonePath("transactions", zone))/\(file)")
-}
-
-private func hex(_ value: Double) -> String {
-    let text = String(value.bitPattern, radix: 16)
-    return String(repeating: "0", count: 16 - text.count) + text
-}
-
-/// A fixture instant from its microseconds: an ambiguous wall time cannot be
-/// re-derived from its ISO text.
-private func instant(_ j: J, _ tz: TimeZone) -> DartDateTime {
-    DartDateTime(microsecondsSinceEpoch: Int64(j["us"].int!), timeZone: tz)
-}
-
 /// Every field of a row, strings as UTF-16 (Dart compares code units).
 private func fields(
     _ t: TransactionRecord, idMap: [String: String] = [:], instants: Bool = true
@@ -68,13 +53,6 @@ private func templateFields(_ j: J) -> [[UInt16]] {
     return parts.map { Array($0.utf16) }
 }
 
-private func load(_ sections: JSONObject, calendar: DartCalendar, now: DartDateTime) -> FinancialData {
-    FinancialData.load(
-        FinancialSnapshot(revision: 1, sections: sections), preferences: InMemoryPreferences([:]), calendar: calendar,
-        now: { now }, newID: { UUID().uuidString.lowercased() }
-    ).data
-}
-
 private func initialSections(_ scenario: J) throws -> JSONObject {
     try scenario["initial"].string.map { try JSONParser.parse($0).objectValue! } ?? JSONObject()
 }
@@ -114,7 +92,7 @@ struct TransactionMutationParityTests {
     /// identical. Whatever Swift wrote loads back to the same memory.
     @Test("mutation scenarios", arguments: transactionZones)
     func mutations(zone: String) throws {
-        let f = try fixture(zone, "mutations.json")
+        let f = try Fixtures.json("transactions", zone: zone, "mutations.json")
         #expect(f["tz"].string == zone)
         let tz = TimeZone(identifier: zone)!
         let calendar = DartCalendar(timeZone: tz)
@@ -127,7 +105,7 @@ struct TransactionMutationParityTests {
             let gapTexts = s["gapTexts"].array
             var now = instant(s["launch"], tz)
             let initial = try initialSections(s)
-            var data = load(initial, calendar: calendar, now: now)
+            var data = loadFinancialData(initial, calendar: calendar, now: now).data
             let loaded = s["loaded"].array
             #expect(data.transactions.count == loaded.count, "\(label) load count")
             // Rows Dart gave a fresh id get their own in Swift: same position.
@@ -226,7 +204,7 @@ struct TransactionMutationParityTests {
                 var written = JSONObject()
                 written[Section.transactions] = data.transactionsSection()
                 #expect(
-                    load(written, calendar: calendar, now: now).transactions.map { fields($0, instants: false) }
+                    loadFinancialData(written, calendar: calendar, now: now).data.transactions.map { fields($0, instants: false) }
                         == data.transactions.map { fields($0, instants: false) },
                     "\(at) reload")
             }
@@ -245,7 +223,7 @@ struct TransactionMutationParityTests {
     /// must produce.
     @Test("recurring template scenarios", arguments: transactionZones)
     func templates(zone: String) throws {
-        let f = try fixture(zone, "templates.json")
+        let f = try Fixtures.json("transactions", zone: zone, "templates.json")
         #expect(f["tz"].string == zone)
         let tz = TimeZone(identifier: zone)!
         let calendar = DartCalendar(timeZone: tz)
@@ -257,7 +235,7 @@ struct TransactionMutationParityTests {
             let byteComparable = s["byteComparable"].bool!
             let gapTexts = s["gapTexts"].array
             var now = instant(s["launch"], tz)
-            var data = load(try initialSections(s), calendar: calendar, now: now)
+            var data = loadFinancialData(try initialSections(s), calendar: calendar, now: now).data
             #expect(data.templates.map { fields($0) } == s["loaded"]["templates"].array.map(templateFields), "\(label) load templates")
             #expect(data.transactions.map { fields($0) } == s["loaded"]["transactions"].array.map(fields), "\(label) load transactions")
             /// The latest section text Dart stored, by section.
@@ -355,7 +333,7 @@ struct TransactionMutationParityTests {
                 var written = JSONObject()
                 written[Section.recurringTransactions] = data.templatesSection()
                 written[Section.transactions] = data.transactionsSection()
-                let reloaded = load(written, calendar: calendar, now: now)
+                let reloaded = loadFinancialData(written, calendar: calendar, now: now).data
                 #expect(
                     reloaded.templates.map { fields($0, instants: false) } == data.templates.map { fields($0, instants: false) },
                     "\(at) reload templates")

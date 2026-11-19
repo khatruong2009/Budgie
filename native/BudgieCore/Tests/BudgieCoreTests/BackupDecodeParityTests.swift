@@ -25,12 +25,9 @@ struct BackupDecodeParityTests {
         for item in cases {
             let name = item["name"].string!
             let bytes = base64Bytes(item["file"])
-            var counter = 0
+            let newID = sequentialIDs("swift-new-")
             let result = Result { () throws(BackupError) -> RestorePlan in
-                try BackupEnvelope.decode(bytes: bytes, calendar: calendar, now: now, newID: {
-                    counter += 1
-                    return "swift-new-\(counter)"
-                })
+                try BackupEnvelope.decode(bytes: bytes, calendar: calendar, now: now, newID: newID)
             }
             if let deviation = Self.deviation(name) {
                 #expect(throws: deviation, "\(zone) \(name)") { try result.get() }

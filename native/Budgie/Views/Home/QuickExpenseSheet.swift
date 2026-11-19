@@ -20,9 +20,7 @@ struct QuickExpenseSheet: View {
         let categories = model.categories(for: .expense)
         VStack(alignment: .leading, spacing: 0) {
             Text("Add expense")
-                .textStyle(.sheetTitle)
-                .foregroundStyle(BudgieColor.textPrimary)
-                .accessibilityAddTraits(.isHeader)
+                .sheetTitleStyle()
                 .padding(EdgeInsets(top: 8, leading: Metrics.pageHorizontal, bottom: 4, trailing: Metrics.pageHorizontal))
             Text("Choose a category, then enter the amount and description.")
                 .textStyle(Self.blurb)
@@ -31,7 +29,6 @@ struct QuickExpenseSheet: View {
             ScrollView {
                 // The rows in one field-style group (`fieldFill`, radius 16,
                 // 1pt card border), hairlines between them.
-                let shape = RoundedRectangle(cornerRadius: Metrics.fieldRadius, style: .continuous)
                 LazyVStack(spacing: 0) {
                     ForEach(categories.indices, id: \.self) { index in
                         if index > 0 {
@@ -40,8 +37,7 @@ struct QuickExpenseSheet: View {
                         row(categories[index])
                     }
                 }
-                .background(BudgieColor.fieldFill, in: shape)
-                .overlay(shape.strokeBorder(BudgieColor.cardBorder, lineWidth: Metrics.borderThin))
+                .modifier(FieldBox(radius: Metrics.fieldRadius))
                 .padding(EdgeInsets(top: 0, leading: Metrics.pageHorizontal, bottom: Metrics.spacingM, trailing: Metrics.pageHorizontal))
             }
         }

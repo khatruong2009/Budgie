@@ -50,7 +50,7 @@ public struct CategorizationRuleRecord: Identifiable, Hashable, Sendable {
     public private(set) var tagIds: [String]
     public private(set) var priority: Int
     public private(set) var isEnabled: Bool
-    public private(set) var raw: JSONObject
+    public internal(set) var raw: JSONObject
 
     /// Dart `CategorizationRule.fromJson`, with its defaults. nil where
     /// Dart's casts would throw.
@@ -80,20 +80,21 @@ public struct CategorizationRuleRecord: Identifiable, Hashable, Sendable {
 }
 
 extension CategorizationRuleRecord {
+    private static func bound(_ value: Double?) -> JSONValue { value.map { .double($0) } ?? .null }
+
     /// A new rule as Dart `CategorizationRule(...).toJson()` writes it
     /// (categorization_rule.dart:19-31, 59-70): the pattern trimmed, keys in
     /// Dart's order with null values written, bounds as doubles (`20.0`),
     /// `tagIds` as given (Flutter passes the selection order).
     public static func make(id: String, _ draft: RuleDraft) -> CategorizationRuleRecord {
         let pattern = DartString.trim(draft.merchantPattern)
-        func bound(_ value: Double?) -> JSONValue { value.map { .double($0) } ?? .null }
         let raw = JSONObject(ordered: [
             ("id", .string(id)),
             ("merchantPattern", .string(pattern)),
             ("matchType", .string(draft.matchType.rawValue)),
             ("transactionType", draft.transactionType.map { .string($0.rawValue) } ?? .null),
-            ("minimumAmount", bound(draft.minimumAmount)),
-            ("maximumAmount", bound(draft.maximumAmount)),
+            ("minimumAmount", Self.bound(draft.minimumAmount)),
+            ("maximumAmount", Self.bound(draft.maximumAmount)),
             ("category", .string(draft.category)),
             ("tagIds", .array(draft.tagIds.map { .string($0) })),
             ("priority", .int(draft.priority)),
@@ -150,12 +151,12 @@ extension CategorizationRuleRecord {
         }
         if draft.minimumAmount != minimumAmount {
             copy.minimumAmount = draft.minimumAmount
-            copy.raw["minimumAmount"] = draft.minimumAmount.map { .double($0) } ?? .null
+            copy.raw["minimumAmount"] = Self.bound(draft.minimumAmount)
             changed = true
         }
         if draft.maximumAmount != maximumAmount {
             copy.maximumAmount = draft.maximumAmount
-            copy.raw["maximumAmount"] = draft.maximumAmount.map { .double($0) } ?? .null
+            copy.raw["maximumAmount"] = Self.bound(draft.maximumAmount)
             changed = true
         }
         if !DartString.equal(draft.category, category) {

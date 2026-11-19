@@ -39,7 +39,7 @@ public enum BackupEnvelope {
         let categories = data.categories.map { JSONValue.object($0.canonicalJSON()) }
         let tags = data.tags.map { JSONValue.object($0.canonicalJSON()) }
         var rules: [JSONValue] = []
-        for record in rulesByPriority(data.rules) { rules.append(.object(try record.canonicalJSON())) }
+        for record in CategorizationEngine.ordered(data.rules) { rules.append(.object(try record.canonicalJSON())) }
         let settings = data.appSettings
 
         let envelope = JSONObject(ordered: [
@@ -71,12 +71,6 @@ public enum BackupEnvelope {
     /// from the local fields of `now`.
     public static func fileName(now: DartDateTime) -> String {
         "budgie_backup_\(DartDateFormat.yyyyMMdd_HHmmss(now)).json"
-    }
-
-    /// Dart `CategorizationProvider.rules`: a copy sorted by priority,
-    /// highest first, with Dart's `List.sort` (tie order included).
-    public static func rulesByPriority(_ rules: [CategorizationRuleRecord]) -> [CategorizationRuleRecord] {
-        CategorizationEngine.ordered(rules)
     }
 
     // MARK: - Copy (settings_page.dart, verbatim)
@@ -142,7 +136,7 @@ public enum BackupEnvelope {
                 var records: [Record] = []
                 records.reserveCapacity(items.count)
                 for item in items {
-                    guard case .object(_) = item, let record = parse(item) else { throw .corrupt }
+                    guard case .object = item, let record = parse(item) else { throw .corrupt }
                     records.append(record)
                 }
                 return records
@@ -160,6 +154,10 @@ public enum BackupEnvelope {
         func units(_ value: JSONValue?) -> [UInt16] {
             if case .string(let s)? = value { return s.codeUnits }
             return []
+        }
+        func hasType(_ item: JSONValue, _ first: String, _ second: String) -> Bool {
+            let type = item.objectValue?["type"]?.stringValue
+            return type == first || type == second
         }
 
         // Categories, tags and rules first (backup.dart:123-141).
@@ -201,23 +199,21 @@ public enum BackupEnvelope {
         case .number(let number)?:
             // Flutter: UnsupportedError for an infinite value (see above).
             try require(number.doubleValue.isFinite)
-            timeout = Int(DartNumbers.toInt(number.doubleValue, lexeme: number))
+            timeout = Int(DartNumbers.toInt(number))
             try require(timeout! >= 0)
         default: throw .corrupt
         }
 
         // BackupData arguments, in order (backup.dart:153-169).
         let transactions = try rows("transactions") { item -> TransactionRecord? in
-            let type = item.objectValue?["type"]?.stringValue
-            guard type == "expense" || type == "income",
+            guard hasType(item, "expense", "income"),
                 let record = TransactionRecord.parse(item, calendar: calendar, newID: newID),
                 record.amount.isFinite
             else { return nil }
             return try? record.canonicalized()
         }
         let netWorthEntries = try rows("netWorthEntries") { item -> NetWorthEntryRecord? in
-            let type = item.objectValue?["type"]?.stringValue
-            guard type == "asset" || type == "liability",
+            guard hasType(item, "asset", "liability"),
                 let record = NetWorthEntryRecord.parse(item, calendar: calendar, now: { now }),
                 record.snapshots.allSatisfy({ $0.amount.isFinite })
             else { return nil }
@@ -227,20 +223,10 @@ public enum BackupEnvelope {
         switch data["categoryBudgetLimits"] {
         case nil, .null?: budgetLimits = nil
         case .object(let object)?:
-            // Dart map semantics: first position, last value, keys as UTF-16.
-            var order: [[UInt16]] = []
-            var latest: [[UInt16]: JSONValue] = [:]
-            for member in object.members {
-                let key = member.key.codeUnits
-                if latest[key] == nil { order.append(key) }
-                latest[key] = member.value
+            budgetLimits = try object.dartMapEntries.map { entry throws(BackupError) -> RestorePlan.BudgetLimit in
+                guard let value = entry.value.numberValue?.doubleValue, value.isFinite else { throw .corrupt }
+                return RestorePlan.BudgetLimit(key: entry.key, value: value)
             }
-            var limits: [RestorePlan.BudgetLimit] = []
-            for key in order {
-                guard let value = latest[key]!.numberValue?.doubleValue, value.isFinite else { throw .corrupt }
-                limits.append(RestorePlan.BudgetLimit(key: JSONString(lexeme: DartJSON.escape(codeUnits: key)), value: value))
-            }
-            budgetLimits = limits
         default: throw .corrupt
         }
         var goalCounter = 0
@@ -253,8 +239,7 @@ public enum BackupEnvelope {
             return try? record.canonicalized()
         }
         let templates = try rows("recurringTransactions") { item -> RecurringTemplate? in
-            let type = item.objectValue?["type"]?.stringValue
-            guard type == "expense" || type == "income",
+            guard hasType(item, "expense", "income"),
                 let record = RecurringTemplate.parse(item, calendar: calendar, newID: newID),
                 record.amount.isFinite
             else { return nil }
@@ -276,13 +261,9 @@ public enum BackupEnvelope {
         }
 
         // Flutter fails the first store write on a non-finite rule bound.
-        var canonicalRules: [CategorizationRuleRecord]? = nil
-        if let rules {
-            canonicalRules = []
-            for rule in rules {
-                guard let canonical = try? rule.canonicalized() else { throw .corrupt }
-                canonicalRules!.append(canonical)
-            }
+        let canonicalRules = try rules?.map { rule throws(BackupError) -> CategorizationRuleRecord in
+            guard let canonical = try? rule.canonicalized() else { throw .corrupt }
+            return canonical
         }
 
         let locale: RestorePlan.LocaleChange
@@ -320,16 +301,25 @@ extension FinancialData {
     /// position and last value per key, keys as UTF-16), with each key's
     /// exact code units (a Swift `String` cannot hold a lone surrogate).
     var budgetLimitEntries: [(key: JSONString, value: Double)] {
+        budgetLimitsObject.dartMapEntries.compactMap { entry in
+            guard let value = entry.value.numberValue?.doubleValue, value > 0 else { return nil }
+            return (entry.key, value)
+        }
+    }
+}
+
+private extension JSONObject {
+    /// Dart map semantics: first position, last value, keys as UTF-16 code
+    /// units (a Swift `String` cannot hold a lone surrogate, so each key is
+    /// re-escaped from its units).
+    var dartMapEntries: [(key: JSONString, value: JSONValue)] {
         var order: [[UInt16]] = []
-        var entries: [[UInt16]: JSONValue] = [:]
-        for member in budgetLimitsObject.members {
+        var latest: [[UInt16]: JSONValue] = [:]
+        for member in members {
             let units = member.key.codeUnits
-            if entries[units] == nil { order.append(units) }
-            entries[units] = member.value
+            if latest[units] == nil { order.append(units) }
+            latest[units] = member.value
         }
-        return order.compactMap { units in
-            guard let value = entries[units]!.numberValue?.doubleValue, value > 0 else { return nil }
-            return (JSONString(lexeme: DartJSON.escape(codeUnits: units)), value)
-        }
+        return order.map { (JSONString(lexeme: DartJSON.escape(codeUnits: $0)), latest[$0]!) }
     }
 }

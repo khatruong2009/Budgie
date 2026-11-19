@@ -39,8 +39,8 @@ final class RouteGateTests: XCTestCase {
         XCTAssertNil(model.takePendingAdd())
         XCTAssertEqual(model.pendingAdd, .income, "the route is kept for later")
         XCTAssertFalse(model.isLocked, "no data, no lock")
-        model.markUnlocked()
-        model.relock()
+        model.sessionUnlocked = true
+        model.sessionUnlocked = false
         XCTAssertEqual(model.pendingAdd, .income)
     }
 

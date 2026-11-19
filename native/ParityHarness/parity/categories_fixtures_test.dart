@@ -847,24 +847,6 @@ Future<List<Map<String, Object?>>> allScenarios() async => [
 
 // --- The canary: the real page's rename against `pageSave` -----------------
 
-/// Lets the page's chain of real store writes run to the end: waits until
-/// the store revision has been still for a while (the cascade is up to
-/// four commits, each awaited before the next starts).
-Future<void> settle(WidgetTester tester, {required int from}) async {
-  var last = from, still = 0;
-  for (var i = 0; i < 1000 && (last == from || still < 25); i++) {
-    await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 20)));
-    await tester.pump(const Duration(milliseconds: 50));
-    late int revision;
-    await tester.runAsync(() async =>
-        revision = (await AtomicFinancialStore.instance.read()).revision);
-    still = revision == last ? still + 1 : 0;
-    last = revision;
-  }
-  await tester.pumpAndSettle();
-}
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
