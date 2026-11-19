@@ -85,11 +85,10 @@ private extension View {
 
 /// `_SettingsRow` (sp:1227-1310): the tile, title (15 w600) and a one-line
 /// subtitle (12 secondary; two lines at accessibility text sizes), then the
-/// trailing view. With `action` the
-/// whole row is a button (light
-/// haptic, no visible press state, VoiceOver "title, subtitle"); without
-/// one it is plain. While `busy` VoiceOver hears `busyLabel` ("Exporting",
-/// "Importing", "Restoring") for the subtitle.
+/// trailing view. With `action` the whole row is a button (light haptic, no
+/// visible press state, VoiceOver "title, subtitle"); without one it is
+/// plain. While `busy` VoiceOver hears `busyLabel` ("Exporting", "Importing",
+/// "Restoring") for the subtitle.
 struct SettingsRow<Trailing: View>: View {
     let symbol: String
     let color: Color
@@ -114,7 +113,7 @@ struct SettingsRow<Trailing: View>: View {
     @ViewBuilder private var content: some View {
         let row = HStack(spacing: 14) {
             SettingsTile(symbol: symbol, color: color, tile: tile, iconSize: iconSize)
-            SettingsRowText(title: title, subtitle: subtitle, subtitleLines: 1)
+            SettingsRowText(title: title, subtitle: subtitle)
             trailing()
         }
         .settingsRowInsets()
@@ -168,7 +167,7 @@ struct SettingsToggleRow: View {
     var body: some View {
         HStack(spacing: 14) {
             SettingsTile(symbol: symbol, color: color, iconSize: iconSize)
-            SettingsRowText(title: title, subtitle: subtitle, subtitleLines: 1)
+            SettingsRowText(title: title, subtitle: subtitle)
                 .accessibilityHidden(true)
             Toggle(title, isOn: isOn)
                 .labelsHidden()
@@ -210,7 +209,7 @@ struct SettingsThemeRow: View {
     }
 
     private var text: some View {
-        // No subtitle (owner's call, 2026-10-04): the pills say it.
+        // No subtitle: the pills say it.
         Text("Theme")
             .textStyle(.rowTitle)
             .foregroundStyle(BudgieColor.textPrimary)
@@ -235,7 +234,6 @@ struct SettingsThemeRow: View {
 private struct SettingsRowText: View {
     let title: String
     let subtitle: String
-    let subtitleLines: Int?
 
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -247,9 +245,7 @@ private struct SettingsRowText: View {
             Text(subtitle)
                 .textStyle(.rowSubtitle)
                 .foregroundStyle(BudgieColor.textSecondary)
-                .lineLimit(subtitleLines == 1 && typeSize.isAccessibilitySize ? 2 : subtitleLines)
-                .truncationMode(.tail)
-                .fixedSize(horizontal: false, vertical: subtitleLines == nil)
+                .lineLimit(typeSize.isAccessibilitySize ? 2 : 1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

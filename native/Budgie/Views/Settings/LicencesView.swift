@@ -35,9 +35,6 @@ struct LicencesView: View {
     }
 
     static func text(_ name: String) -> String {
-        guard let url = Bundle.main.url(forResource: name, withExtension: "txt"),
-            let text = try? String(contentsOf: url, encoding: .utf8)
-        else { return "" }
-        return text
+        Bundle.main.url(forResource: name, withExtension: "txt").flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? ""
     }
 }

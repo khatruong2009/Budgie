@@ -1,6 +1,5 @@
 import AVFoundation
 import BudgieCore
-import Foundation
 
 /// Records one voice note at a time (the `record` package's `AudioRecorder`
 /// as `voice_recording_sheet.dart` configures it): AAC-LC, 16 kHz, mono,

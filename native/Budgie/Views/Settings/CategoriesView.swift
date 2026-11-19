@@ -9,14 +9,6 @@ import SwiftUI
 /// in one card with hairlines between them (REDESIGN_PLAN 4.7). The bar's
 /// "+" opens the editor for the selected type; each row's menu offers Edit,
 /// Move up, Move down and Archive / Restore.
-///
-/// Differences from Flutter (PARITY_GAPS): no duplicate FAB; Move up / Move
-/// down step over hidden archived rows (`categoryMoveOffset`); the editor is
-/// the redesign's centred card with inline errors; the row menu is the
-/// system menu. Refused row actions (archiving the last active category)
-/// show Flutter's copy in the neutral toast (its default SnackBar), a
-/// failed write the save-failed toast. Neither the type nor the switch is
-/// persisted (as Flutter).
 struct CategoriesView: View {
     @Environment(AppModel.self) private var model
 
