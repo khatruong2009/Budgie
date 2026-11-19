@@ -180,6 +180,10 @@ public struct JSONParser {
         return JSONString(lexeme: lexeme)
     }
 
+    private mutating func skipDigits() {
+        while index < bytes.count && bytes[index].isDigit { index += 1 }
+    }
+
     private mutating func parseNumber() throws(JSONParseError) -> JSONNumber {
         let start = index
         if bytes[index] == UInt8(ascii: "-") { index += 1 }
@@ -187,14 +191,14 @@ public struct JSONParser {
         if bytes[index] == UInt8(ascii: "0") {
             index += 1
         } else if bytes[index].isDigit {
-            while index < bytes.count && bytes[index].isDigit { index += 1 }
+            skipDigits()
         } else {
             throw .invalidNumber(offset: index)
         }
         if index < bytes.count && bytes[index] == UInt8(ascii: ".") {
             index += 1
             guard index < bytes.count, bytes[index].isDigit else { throw .invalidNumber(offset: index) }
-            while index < bytes.count && bytes[index].isDigit { index += 1 }
+            skipDigits()
         }
         if index < bytes.count && (bytes[index] == UInt8(ascii: "e") || bytes[index] == UInt8(ascii: "E")) {
             index += 1
@@ -202,7 +206,7 @@ public struct JSONParser {
                 index += 1
             }
             guard index < bytes.count, bytes[index].isDigit else { throw .invalidNumber(offset: index) }
-            while index < bytes.count && bytes[index].isDigit { index += 1 }
+            skipDigits()
         }
         return JSONNumber(lexeme: String(decoding: bytes[start..<index], as: UTF8.self))
     }

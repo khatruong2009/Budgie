@@ -136,21 +136,13 @@ public struct DartDateTime: Hashable, Sendable, Comparable {
     /// Dart `toIso8601String()`.
     public func toIso8601String() -> String {
         let f = fields
-        let y = (-9999...9999).contains(f.year) ? DartDateTime.fourDigits(f.year) : DartDateTime.sixDigits(f.year)
-        let us = f.microsecond == 0 ? "" : DartDateTime.threeDigits(f.microsecond)
-        let body = "\(y)-\(DartDateTime.twoDigits(f.month))-\(DartDateTime.twoDigits(f.day))T"
-            + "\(DartDateTime.twoDigits(f.hour)):\(DartDateTime.twoDigits(f.minute)):\(DartDateTime.twoDigits(f.second))"
-            + ".\(DartDateTime.threeDigits(f.millisecond))\(us)"
+        let pad = DartCalendar.pad
+        let y = (-9999...9999).contains(f.year) ? pad(f.year, 4) : DartDateTime.sixDigits(f.year)
+        let us = f.microsecond == 0 ? "" : pad(f.microsecond, 3)
+        let body = "\(y)-\(pad(f.month, 2))-\(pad(f.day, 2))T"
+            + "\(pad(f.hour, 2)):\(pad(f.minute, 2)):\(pad(f.second, 2))"
+            + ".\(pad(f.millisecond, 3))\(us)"
         return isUtc ? body + "Z" : body
-    }
-
-    static func fourDigits(_ n: Int) -> String {
-        let absN = abs(n)
-        let sign = n < 0 ? "-" : ""
-        if absN >= 1000 { return "\(n)" }
-        if absN >= 100 { return "\(sign)0\(absN)" }
-        if absN >= 10 { return "\(sign)00\(absN)" }
-        return "\(sign)000\(absN)"
     }
 
     static func sixDigits(_ n: Int) -> String {
@@ -158,16 +150,6 @@ public struct DartDateTime: Hashable, Sendable, Comparable {
         let sign = n < 0 ? "-" : "+"
         if absN >= 100_000 { return "\(sign)\(absN)" }
         return "\(sign)0\(absN)"
-    }
-
-    static func threeDigits(_ n: Int) -> String {
-        if n >= 100 { return "\(n)" }
-        if n >= 10 { return "0\(n)" }
-        return "00\(n)"
-    }
-
-    static func twoDigits(_ n: Int) -> String {
-        n >= 10 ? "\(n)" : "0\(n)"
     }
 
     // MARK: Parsing (Dart `DateTime.parse`)
@@ -254,11 +236,8 @@ public struct DartDateTime: Hashable, Sendable, Comparable {
             guard let month = digits(k, 2) else { continue }
             k += 2
             if k < n && s[k] == UInt8(ascii: "-") { k += 1 }
-            guard let day = digits(k, 2) else {
-                // Retry without consuming an optional '-' is irrelevant: a
-                // '-' is never a digit, so the regex fails the same way.
-                continue
-            }
+            // A '-' is never a digit, so retrying without consuming it cannot match.
+            guard let day = digits(k, 2) else { continue }
             k += 2
             m.year = yearSign * year
             m.month = month

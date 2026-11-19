@@ -183,7 +183,7 @@ public struct JSONObject: Hashable, Sendable {
 
     /// Builds an object in the given key order (keys are Swift strings).
     public init(_ pairs: KeyValuePairs<String, JSONValue>) {
-        members = pairs.map { Member(key: JSONString($0.key), value: $0.value) }
+        self.init(ordered: pairs.map { ($0.key, $0.value) })
     }
 
     public init(ordered pairs: [(String, JSONValue)]) {

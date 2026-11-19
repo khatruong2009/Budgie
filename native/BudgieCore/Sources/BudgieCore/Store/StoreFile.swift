@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 
 /// All financial state: the sections of `financial_store_v2.json`.
@@ -62,10 +63,8 @@ public enum StoreFile {
             hash ^= UInt64(byte)
             hash = hash &* 0x0000_0100_0000_01b3
         }
-        let signed = Int64(bitPattern: hash)
-        var text = signed < 0 ? "-" + String(signed.magnitude, radix: 16) : String(signed, radix: 16)
-        if text.count < 16 { text = String(repeating: "0", count: 16 - text.count) + text }
-        return text
+        let text = String(Int64(bitPattern: hash), radix: 16)
+        return String(repeating: "0", count: max(0, 16 - text.count)) + text
     }
 
     public struct Header: Hashable, Sendable {
@@ -121,4 +120,9 @@ public enum StoreFile {
         }
         return FinancialSnapshot(schemaVersion: header.schemaVersion, revision: header.revision, sections: sections)
     }
+}
+
+/// Lowercase hex SHA-256, as written into the backup manifests.
+func sha256Hex<D: DataProtocol>(_ data: D) -> String {
+    SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
 }

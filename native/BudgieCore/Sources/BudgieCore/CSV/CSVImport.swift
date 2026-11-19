@@ -245,8 +245,8 @@ public enum CSVImport {
     public static let importButtonTitle = "Import"
 
     /// "1 transaction", "2 transactions" (D6: Flutter always uses the plural).
-    static func count(_ n: Int, _ singular: String, _ plural: String) -> String {
-        "\(n) \(n == 1 ? singular : plural)"
+    static func count(_ n: Int, _ noun: String) -> String {
+        "\(n) \(noun)\(n == 1 ? "" : "s")"
     }
 
     /// "Could not import: {message}" (red). D6: the bare message, where
@@ -263,9 +263,9 @@ extension CSVImport.Summary {
         guard drafts.isEmpty else { return nil }
         let errors = rowErrors.count
         if errors > 0 {
-            let rows = CSVImport.count(errors, "row", "rows")
+            let rows = CSVImport.count(errors, "row")
             let text = duplicateCount > 0
-                ? "No new transactions: \(CSVImport.count(duplicateCount, "duplicate", "duplicates")) skipped, \(rows) could not be read"
+                ? "No new transactions: \(CSVImport.count(duplicateCount, "duplicate")) skipped, \(rows) could not be read"
                 : "No transactions imported: \(rows) could not be read"
             return CSVImport.Message(text: text, tone: .error)
         }
@@ -276,14 +276,14 @@ extension CSVImport.Summary {
 
     /// `_confirmImport` title: "Import 3 transactions?".
     public var confirmTitle: String {
-        "Import \(CSVImport.count(drafts.count, "transaction", "transactions"))?"
+        "Import \(CSVImport.count(drafts.count, "transaction"))?"
     }
 
     /// The dialog body lines (none when nothing was skipped).
     public var confirmDetails: [String] {
         var details: [String] = []
-        if duplicateCount > 0 { details.append("\(CSVImport.count(duplicateCount, "duplicate", "duplicates")) will be skipped") }
-        if !rowErrors.isEmpty { details.append("\(CSVImport.count(rowErrors.count, "row", "rows")) could not be read") }
+        if duplicateCount > 0 { details.append("\(CSVImport.count(duplicateCount, "duplicate")) will be skipped") }
+        if !rowErrors.isEmpty { details.append("\(CSVImport.count(rowErrors.count, "row")) could not be read") }
         return details
     }
 
@@ -295,10 +295,10 @@ extension CSVImport.Summary {
     /// The green toast after a verified write (D6: Flutter shows it even
     /// when the write failed).
     public var successMessage: CSVImport.Message {
-        let imported = "Imported \(CSVImport.count(drafts.count, "transaction", "transactions"))"
+        let imported = "Imported \(CSVImport.count(drafts.count, "transaction"))"
         return CSVImport.Message(
             text: duplicateCount > 0
-                ? "\(imported), \(CSVImport.count(duplicateCount, "duplicate", "duplicates")) skipped" : imported,
+                ? "\(imported), \(CSVImport.count(duplicateCount, "duplicate")) skipped" : imported,
             tone: .success)
     }
 }
@@ -327,13 +327,11 @@ extension FinancialData {
     ///   (D6: Dart's per-row `DateTime.now()` can repeat, which leaves the
     ///   same-day order to the random ids; this keeps the last file row on
     ///   top);
-    /// - then the naming step of the launch pass for the imported rows,
-    ///   which Flutter runs at its next launch: a category name without a
-    ///   definition gets one in the same commit, so the end state equals
-    ///   Flutter's after a relaunch. Only the imported names: the other
-    ///   rows' names were materialised when this data was loaded (running
-    ///   the whole pass again would re-add a padded legacy name once more,
-    ///   see PARITY_GAPS).
+    /// - then the launch pass's naming step for the imported rows only, so a
+    ///   category name without a definition gets one in the same commit and
+    ///   the end state equals Flutter's after a relaunch (the other rows were
+    ///   materialised on load; rerunning the whole pass would re-add a padded
+    ///   legacy name, see PARITY_GAPS).
     public func importTransactions(_ summary: CSVImport.Summary, now: DartDateTime, newID: () -> String) -> CSVImportResult {
         guard !summary.drafts.isEmpty else {
             return CSVImportResult(data: self, imported: [], addedCategories: [], sections: [])
